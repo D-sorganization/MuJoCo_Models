@@ -8,5 +8,16 @@ from mujoco_models.shared.body.body_model import (
     BodyModelSpec,
     create_full_body,
 )
+from mujoco_models.shared.body.segment_data import (
+    SEGMENT_TABLE,
+    segment_properties,
+    total_mass_fraction,
+)
 
-__all__ = ["BodyModelSpec", "create_full_body"]
+__all__ = [
+    "BodyModelSpec",
+    "SEGMENT_TABLE",
+    "create_full_body",
+    "segment_properties",
+    "total_mass_fraction",
+]

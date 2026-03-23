@@ -12,24 +12,30 @@ Biomechanical notes:
 - Hip hinge dominant pattern with simultaneous knee extension
 - MuJoCo Z-up convention: gravity = (0, 0, -9.80665)
 
-The barbell is welded to the left hand. Initial pose has significant hip
+The barbell is welded to both hands. Initial pose has significant hip
 and knee flexion to reach the bar on the ground.
 """
 
 from __future__ import annotations
 
+import logging
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
-from mujoco_models.shared.utils.mjcf_helpers import add_weld_constraint
+
+logger = logging.getLogger(__name__)
 
 PLATE_RADIUS = 0.225  # Standard 450mm diameter plate radius
+
+# Deep hip hinge starting position (radians)
+_INITIAL_HIP_FLEX = 1.3963  # ~80 degrees
+_INITIAL_KNEE_FLEX = -1.0472  # ~60 degrees
 
 
 class DeadliftModelBuilder(ExerciseModelBuilder):
     """Builds a conventional deadlift MuJoCo MJCF model.
 
-    The barbell is welded to the left hand and starts on the floor.
+    The barbell is welded to both hands and starts on the floor.
     """
 
     def __init__(self, config: ExerciseConfig | None = None) -> None:
@@ -45,16 +51,11 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
         body_bodies: dict[str, ET.Element],
         barbell_bodies: dict[str, ET.Element],
     ) -> None:
-        """Weld barbell shaft to left hand at shoulder-width grip.
+        """Weld barbell shaft to both hands at shoulder-width grip.
 
         Grip is slightly outside the knees (~0.22 m from center).
         """
-        add_weld_constraint(
-            equality,
-            name="barbell_to_left_hand",
-            body1="hand_l",
-            body2="barbell_shaft",
-        )
+        self._attach_barbell_to_hands(equality)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set the starting position: deep hip hinge, knees flexed.
@@ -62,6 +63,11 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
         The bar is on the floor at PLATE_RADIUS height, so the body
         must flex at the hips (~80 deg) and knees (~60 deg) to reach.
         """
+        logger.debug(
+            "Setting deadlift initial pose: hip_flex=%.2f, knee_flex=%.2f",
+            _INITIAL_HIP_FLEX,
+            _INITIAL_KNEE_FLEX,
+        )
 
 
 def build_deadlift_model(

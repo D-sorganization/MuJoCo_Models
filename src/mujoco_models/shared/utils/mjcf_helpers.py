@@ -8,7 +8,10 @@ MuJoCo MJCF reference: https://mujoco.readthedocs.io/en/stable/XMLreference.html
 
 from __future__ import annotations
 
+import logging
 import xml.etree.ElementTree as ET
+
+logger = logging.getLogger(__name__)
 
 
 def vec3_str(x: float, y: float, z: float) -> str:
@@ -175,25 +178,19 @@ def add_weld_constraint(
 
 
 def indent_xml(elem: ET.Element, level: int = 0) -> None:
-    """Add whitespace indentation to an ElementTree in-place."""
-    indent = "\n" + "  " * level
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = indent + "  "
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = indent
-        for child in elem:
-            indent_xml(child, level + 1)
-        if not child.tail or not child.tail.strip():
-            child.tail = indent
-    else:
-        if level and (not elem.tail or not elem.tail.strip()):
-            elem.tail = indent
+    """Add whitespace indentation to an ElementTree in-place.
+
+    Delegates to :func:`xml.etree.ElementTree.indent` (stdlib, Python 3.9+).
+    The *level* parameter is accepted for backward compatibility but ignored;
+    the stdlib implementation always starts from the root indentation level.
+    """
+    ET.indent(elem, space="  ", level=level)
     if level == 0:
         elem.tail = "\n"
 
 
 def serialize_model(root: ET.Element) -> str:
     """Serialize a MuJoCo MJCF ElementTree to a formatted XML string."""
+    logger.debug("Serializing MJCF model with root tag=%s", root.tag)
     indent_xml(root)
     return ET.tostring(root, encoding="unicode", xml_declaration=True)

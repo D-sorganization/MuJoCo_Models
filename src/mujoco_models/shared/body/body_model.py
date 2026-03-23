@@ -27,9 +27,11 @@ body elements -- they never manipulate segment internals.
 
 from __future__ import annotations
 
+import logging
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
+from mujoco_models.shared.body.segment_data import segment_properties
 from mujoco_models.shared.contracts.preconditions import (
     require_positive,
 )
@@ -42,6 +44,8 @@ from mujoco_models.shared.utils.mjcf_helpers import (
     add_free_joint,
     add_hinge_joint,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -59,27 +63,9 @@ class BodyModelSpec:
         require_positive(self.height, "height")
 
 
-# Winter (2009) segment mass fractions and length fractions of total height.
-_SEGMENT_TABLE: dict[str, dict[str, float]] = {
-    "pelvis": {"mass_frac": 0.142, "length_frac": 0.100, "radius_frac": 0.085},
-    "torso": {"mass_frac": 0.355, "length_frac": 0.288, "radius_frac": 0.080},
-    "head": {"mass_frac": 0.081, "length_frac": 0.130, "radius_frac": 0.060},
-    "upper_arm": {"mass_frac": 0.028, "length_frac": 0.186, "radius_frac": 0.023},
-    "forearm": {"mass_frac": 0.016, "length_frac": 0.146, "radius_frac": 0.018},
-    "hand": {"mass_frac": 0.006, "length_frac": 0.050, "radius_frac": 0.020},
-    "thigh": {"mass_frac": 0.100, "length_frac": 0.245, "radius_frac": 0.037},
-    "shank": {"mass_frac": 0.047, "length_frac": 0.246, "radius_frac": 0.025},
-    "foot": {"mass_frac": 0.014, "length_frac": 0.040, "radius_frac": 0.025},
-}
-
-
 def _seg(spec: BodyModelSpec, name: str) -> tuple[float, float, float]:
     """Return (mass, length, radius) for a named segment."""
-    s = _SEGMENT_TABLE[name]
-    mass = spec.total_mass * s["mass_frac"]
-    length = spec.height * s["length_frac"]
-    radius = spec.height * s["radius_frac"]
-    return mass, length, radius
+    return segment_properties(spec.total_mass, spec.height, name)
 
 
 def _add_bilateral_limb(
@@ -152,6 +138,12 @@ def create_full_body(
     """
     if spec is None:
         spec = BodyModelSpec()
+
+    logger.info(
+        "Building full-body model: mass=%.1f kg, height=%.2f m",
+        spec.total_mass,
+        spec.height,
+    )
 
     bodies: dict[str, ET.Element] = {}
 
@@ -232,7 +224,7 @@ def create_full_body(
     )
     bodies.update(arm_bodies)
 
-    ua_mass, ua_len, ua_rad = _seg(spec, "upper_arm")
+    _ua_mass, ua_len, _ua_rad = _seg(spec, "upper_arm")
     forearm_bodies = _add_bilateral_limb(
         bodies,
         spec,
@@ -246,7 +238,7 @@ def create_full_body(
     )
     bodies.update(forearm_bodies)
 
-    fa_mass, fa_len, fa_rad = _seg(spec, "forearm")
+    _fa_mass, fa_len, _fa_rad = _seg(spec, "forearm")
     hand_bodies = _add_bilateral_limb(
         bodies,
         spec,
@@ -276,7 +268,7 @@ def create_full_body(
     )
     bodies.update(thigh_bodies)
 
-    th_mass, th_len, th_rad = _seg(spec, "thigh")
+    _th_mass, th_len, _th_rad = _seg(spec, "thigh")
     shank_bodies = _add_bilateral_limb(
         bodies,
         spec,
@@ -290,7 +282,7 @@ def create_full_body(
     )
     bodies.update(shank_bodies)
 
-    sh_mass, sh_len, sh_rad = _seg(spec, "shank")
+    _sh_mass, sh_len, _sh_rad = _seg(spec, "shank")
     foot_bodies = _add_bilateral_limb(
         bodies,
         spec,
@@ -304,4 +296,5 @@ def create_full_body(
     )
     bodies.update(foot_bodies)
 
+    logger.debug("Created %d body segments", len(bodies))
     return bodies

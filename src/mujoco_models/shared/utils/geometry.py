@@ -9,6 +9,7 @@ Cylinder axis aligned with Z-axis (MuJoCo default for capsule/cylinder).
 
 from __future__ import annotations
 
+import logging
 import math
 
 import numpy as np
@@ -18,7 +19,10 @@ from mujoco_models.shared.contracts.postconditions import (
 )
 from mujoco_models.shared.contracts.preconditions import (
     require_positive,
+    require_shape,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def cylinder_inertia(
@@ -98,6 +102,7 @@ def parallel_axis_shift(
     """
     require_positive(mass, "mass")
     d = np.asarray(displacement, dtype=float)
+    require_shape(d, (3,), "displacement")
     dx, dy, dz = d[0], d[1], d[2]
     d_sq = float(np.dot(d, d))
 
