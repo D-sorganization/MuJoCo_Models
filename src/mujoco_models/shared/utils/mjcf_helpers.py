@@ -77,7 +77,7 @@ def add_body(
     if geom_size is not None:
         geom_attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
 
-    ET.SubElement(body, "geom", **geom_attrs)
+    ET.SubElement(body, "geom", attrib=geom_attrs)
 
     return body
 
@@ -171,7 +171,7 @@ def add_weld_constraint(
     if relpose is not None:
         attrs["relpose"] = " ".join(f"{v:.6f}" for v in relpose)
 
-    return ET.SubElement(equality, "weld", **attrs)
+    return ET.SubElement(equality, "weld", attrib=attrs)
 
 
 def indent_xml(elem: ET.Element, level: int = 0) -> None:
