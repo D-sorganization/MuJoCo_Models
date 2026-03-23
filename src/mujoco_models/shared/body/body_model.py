@@ -1,0 +1,307 @@
+"""Simplified full-body musculoskeletal model for MuJoCo MJCF.
+
+Segments (bilateral where noted):
+  pelvis, torso, head,
+  upper_arm_{l,r}, forearm_{l,r}, hand_{l,r},
+  thigh_{l,r}, shank_{l,r}, foot_{l,r}
+
+Joints:
+  ground_pelvis (freejoint -- 6 DOF),
+  lumbar (hinge -- flexion/extension),
+  neck (hinge),
+  shoulder_{l,r} (hinge -- simplified, flexion only for v0.1),
+  elbow_{l,r} (hinge),
+  wrist_{l,r} (hinge),
+  hip_{l,r} (hinge -- flexion/extension),
+  knee_{l,r} (hinge),
+  ankle_{l,r} (hinge)
+
+Anthropometric defaults are for a 50th-percentile male (height=1.75 m,
+mass=80 kg) following Winter (2009) segment proportions.
+
+MuJoCo convention: Z-up. Vertical axis is Z, not Y.
+
+Law of Demeter: exercise modules call create_full_body() and receive
+body elements -- they never manipulate segment internals.
+"""
+
+from __future__ import annotations
+
+import xml.etree.ElementTree as ET
+from dataclasses import dataclass
+
+from mujoco_models.shared.contracts.preconditions import (
+    require_positive,
+)
+from mujoco_models.shared.utils.geometry import (
+    cylinder_inertia,
+    rectangular_prism_inertia,
+)
+from mujoco_models.shared.utils.mjcf_helpers import (
+    add_body,
+    add_free_joint,
+    add_hinge_joint,
+)
+
+
+@dataclass(frozen=True)
+class BodyModelSpec:
+    """Anthropometric specification for the full-body model.
+
+    All lengths in meters, mass in kg.
+    """
+
+    total_mass: float = 80.0
+    height: float = 1.75
+
+    def __post_init__(self) -> None:
+        require_positive(self.total_mass, "total_mass")
+        require_positive(self.height, "height")
+
+
+# Winter (2009) segment mass fractions and length fractions of total height.
+_SEGMENT_TABLE: dict[str, dict[str, float]] = {
+    "pelvis": {"mass_frac": 0.142, "length_frac": 0.100, "radius_frac": 0.085},
+    "torso": {"mass_frac": 0.355, "length_frac": 0.288, "radius_frac": 0.080},
+    "head": {"mass_frac": 0.081, "length_frac": 0.130, "radius_frac": 0.060},
+    "upper_arm": {"mass_frac": 0.028, "length_frac": 0.186, "radius_frac": 0.023},
+    "forearm": {"mass_frac": 0.016, "length_frac": 0.146, "radius_frac": 0.018},
+    "hand": {"mass_frac": 0.006, "length_frac": 0.050, "radius_frac": 0.020},
+    "thigh": {"mass_frac": 0.100, "length_frac": 0.245, "radius_frac": 0.037},
+    "shank": {"mass_frac": 0.047, "length_frac": 0.246, "radius_frac": 0.025},
+    "foot": {"mass_frac": 0.014, "length_frac": 0.040, "radius_frac": 0.025},
+}
+
+
+def _seg(spec: BodyModelSpec, name: str) -> tuple[float, float, float]:
+    """Return (mass, length, radius) for a named segment."""
+    s = _SEGMENT_TABLE[name]
+    mass = spec.total_mass * s["mass_frac"]
+    length = spec.height * s["length_frac"]
+    radius = spec.height * s["radius_frac"]
+    return mass, length, radius
+
+
+def _add_bilateral_limb(
+    parent_bodies: dict[str, ET.Element],
+    spec: BodyModelSpec,
+    *,
+    seg_name: str,
+    parent_name: str,
+    parent_offset_z: float,
+    parent_lateral_x: float,
+    coord_prefix: str,
+    range_min: float,
+    range_max: float,
+) -> dict[str, ET.Element]:
+    """Add left and right limb segments with hinge joints.
+
+    MuJoCo convention: Z-up, so vertical offsets use Z coordinate.
+    Hinge joints rotate about the X-axis (medio-lateral) by default
+    for sagittal-plane flexion/extension.
+    """
+    mass, length, radius = _seg(spec, seg_name)
+    inertia = cylinder_inertia(mass, radius, length)
+
+    created: dict[str, ET.Element] = {}
+
+    # Determine if parent is bilateral (has _l/_r variants) or central
+    parent_is_bilateral = f"{parent_name}_l" in parent_bodies
+
+    for side, sign in [("l", -1.0), ("r", 1.0)]:
+        body_name = f"{seg_name}_{side}"
+        resolved_parent = (
+            f"{parent_name}_{side}" if parent_is_bilateral else parent_name
+        )
+        parent_el = parent_bodies[resolved_parent]
+
+        child_body = add_body(
+            parent_el,
+            name=body_name,
+            pos=(sign * parent_lateral_x, 0, parent_offset_z),
+            mass=mass,
+            inertia_diag=inertia,
+            geom_type="capsule",
+            geom_size=(radius, length / 2.0),
+            geom_rgba="0.8 0.6 0.4 1",
+        )
+
+        add_hinge_joint(
+            child_body,
+            name=f"{coord_prefix}_{side}_flex",
+            axis=(1, 0, 0),
+            range_min=range_min,
+            range_max=range_max,
+        )
+
+        created[body_name] = child_body
+
+    return created
+
+
+def create_full_body(
+    worldbody: ET.Element,
+    spec: BodyModelSpec | None = None,
+) -> dict[str, ET.Element]:
+    """Build the full-body model and append bodies to worldbody.
+
+    Returns dict of body name -> ET.Element for all created bodies.
+
+    MuJoCo convention: Z-up. The pelvis starts at approximately
+    standing hip height (0.93 m for a 1.75 m person).
+    """
+    if spec is None:
+        spec = BodyModelSpec()
+
+    bodies: dict[str, ET.Element] = {}
+
+    # --- Pelvis (connected to ground via freejoint) ---
+    p_mass, p_len, p_rad = _seg(spec, "pelvis")
+    p_inertia = rectangular_prism_inertia(p_mass, p_rad * 2, p_len, p_rad * 2)
+    pelvis_body = add_body(
+        worldbody,
+        name="pelvis",
+        pos=(0, 0, 0.93),
+        mass=p_mass,
+        inertia_diag=p_inertia,
+        geom_type="box",
+        geom_size=(p_rad, p_rad, p_len / 2.0),
+        geom_rgba="0.8 0.6 0.4 1",
+    )
+    add_free_joint(pelvis_body, name="ground_pelvis")
+    bodies["pelvis"] = pelvis_body
+
+    # --- Torso (child of pelvis) ---
+    t_mass, t_len, t_rad = _seg(spec, "torso")
+    t_inertia = rectangular_prism_inertia(t_mass, t_rad * 2, t_len, t_rad * 2)
+    torso_body = add_body(
+        pelvis_body,
+        name="torso",
+        pos=(0, 0, p_len / 2.0),
+        mass=t_mass,
+        inertia_diag=t_inertia,
+        geom_type="box",
+        geom_size=(t_rad, t_rad * 0.8, t_len / 2.0),
+        geom_rgba="0.8 0.6 0.4 1",
+    )
+    add_hinge_joint(
+        torso_body,
+        name="lumbar_flex",
+        axis=(1, 0, 0),
+        range_min=-0.5236,
+        range_max=0.7854,
+    )
+    bodies["torso"] = torso_body
+
+    # --- Head (child of torso) ---
+    h_mass, h_len, h_rad = _seg(spec, "head")
+    h_inertia = cylinder_inertia(h_mass, h_rad, h_len)
+    head_body = add_body(
+        torso_body,
+        name="head",
+        pos=(0, 0, t_len),
+        mass=h_mass,
+        inertia_diag=h_inertia,
+        geom_type="sphere",
+        geom_size=(h_rad,),
+        geom_rgba="0.9 0.75 0.6 1",
+    )
+    add_hinge_joint(
+        head_body,
+        name="neck_flex",
+        axis=(1, 0, 0),
+        range_min=-0.5236,
+        range_max=0.5236,
+    )
+    bodies["head"] = head_body
+
+    # --- Arms (children of torso) ---
+    shoulder_z = t_len * 0.95
+    shoulder_x = t_rad * 1.2
+
+    arm_bodies = _add_bilateral_limb(
+        bodies,
+        spec,
+        seg_name="upper_arm",
+        parent_name="torso",
+        parent_offset_z=shoulder_z,
+        parent_lateral_x=shoulder_x,
+        coord_prefix="shoulder",
+        range_min=-3.1416,
+        range_max=3.1416,
+    )
+    bodies.update(arm_bodies)
+
+    ua_mass, ua_len, ua_rad = _seg(spec, "upper_arm")
+    forearm_bodies = _add_bilateral_limb(
+        bodies,
+        spec,
+        seg_name="forearm",
+        parent_name="upper_arm",
+        parent_offset_z=-ua_len,
+        parent_lateral_x=0,
+        coord_prefix="elbow",
+        range_min=0,
+        range_max=2.618,
+    )
+    bodies.update(forearm_bodies)
+
+    fa_mass, fa_len, fa_rad = _seg(spec, "forearm")
+    hand_bodies = _add_bilateral_limb(
+        bodies,
+        spec,
+        seg_name="hand",
+        parent_name="forearm",
+        parent_offset_z=-fa_len,
+        parent_lateral_x=0,
+        coord_prefix="wrist",
+        range_min=-1.2217,
+        range_max=1.2217,
+    )
+    bodies.update(hand_bodies)
+
+    # --- Legs (children of pelvis) ---
+    hip_x = p_rad * 0.6
+
+    thigh_bodies = _add_bilateral_limb(
+        bodies,
+        spec,
+        seg_name="thigh",
+        parent_name="pelvis",
+        parent_offset_z=-p_len / 2.0,
+        parent_lateral_x=hip_x,
+        coord_prefix="hip",
+        range_min=-0.5236,
+        range_max=2.0944,
+    )
+    bodies.update(thigh_bodies)
+
+    th_mass, th_len, th_rad = _seg(spec, "thigh")
+    shank_bodies = _add_bilateral_limb(
+        bodies,
+        spec,
+        seg_name="shank",
+        parent_name="thigh",
+        parent_offset_z=-th_len,
+        parent_lateral_x=0,
+        coord_prefix="knee",
+        range_min=-2.618,
+        range_max=0,
+    )
+    bodies.update(shank_bodies)
+
+    sh_mass, sh_len, sh_rad = _seg(spec, "shank")
+    foot_bodies = _add_bilateral_limb(
+        bodies,
+        spec,
+        seg_name="foot",
+        parent_name="shank",
+        parent_offset_z=-sh_len,
+        parent_lateral_x=0,
+        coord_prefix="ankle",
+        range_min=-0.7854,
+        range_max=0.7854,
+    )
+    bodies.update(foot_bodies)
+
+    return bodies
