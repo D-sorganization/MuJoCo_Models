@@ -29,7 +29,8 @@ class TestBenchPressModelBuilder:
         root = ET.fromstring(xml_str)
         welds = root.findall(".//weld")
         weld_names = {w.get("name") for w in welds}
-        assert "barbell_to_left_hand" in weld_names
+        assert "barbell_to_hand_l" in weld_names
+        assert "barbell_to_hand_r" in weld_names
 
     def test_bench_height_constant(self) -> None:
         assert BENCH_HEIGHT == 0.43
@@ -41,11 +42,15 @@ class TestBenchPressModelBuilder:
         root = ET.fromstring(xml_str)
         assert root.tag == "mujoco"
 
-    def test_attach_barbell_adds_weld(self) -> None:
+    def test_attach_barbell_adds_bilateral_welds(self) -> None:
         builder = BenchPressModelBuilder()
         equality = ET.Element("equality")
         builder.attach_barbell(equality, {}, {})
-        assert len(equality.findall("weld")) == 1
+        welds = equality.findall("weld")
+        assert len(welds) == 2
+        weld_names = {w.get("name") for w in welds}
+        assert "barbell_to_hand_l" in weld_names
+        assert "barbell_to_hand_r" in weld_names
 
     def test_set_initial_pose_no_error(self) -> None:
         builder = BenchPressModelBuilder()

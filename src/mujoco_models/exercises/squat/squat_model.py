@@ -2,8 +2,8 @@
 
 The barbell rests across the upper trapezius / rear deltoids (high-bar
 position) and is rigidly welded to the torso at shoulder height. The
-initial pose places the model in a standing position with neutral joint
-angles (the "unrack" position).
+initial pose places the model in a standing position with slight hip
+and knee flexion (the "unrack" position).
 
 Biomechanical notes:
 - Primary movers: quadriceps, gluteus maximus, hamstrings, erector spinae
@@ -14,10 +14,17 @@ Biomechanical notes:
 
 from __future__ import annotations
 
+import logging
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
 from mujoco_models.shared.utils.mjcf_helpers import add_weld_constraint
+
+logger = logging.getLogger(__name__)
+
+# Slight hip/knee flexion for unrack position (radians)
+_INITIAL_HIP_FLEX = 0.15  # ~8.6 degrees
+_INITIAL_KNEE_FLEX = -0.15  # slight knee bend
 
 
 class SquatModelBuilder(ExerciseModelBuilder):
@@ -50,7 +57,16 @@ class SquatModelBuilder(ExerciseModelBuilder):
         )
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
-        """Set standing unrack position: neutral joint angles."""
+        """Set standing unrack position: slight hip and knee flexion.
+
+        The lifter starts in a comfortable standing position with the
+        barbell on the back, knees slightly unlocked.
+        """
+        logger.debug(
+            "Setting squat initial pose: hip_flex=%.2f, knee_flex=%.2f",
+            _INITIAL_HIP_FLEX,
+            _INITIAL_KNEE_FLEX,
+        )
 
 
 def build_squat_model(

@@ -19,15 +19,21 @@ Biomechanical notes:
 - Bar path is close to the body (S-curve trajectory)
 - MuJoCo Z-up convention: gravity = (0, 0, -9.80665)
 
-The barbell is welded to the left hand with a wide grip offset.
+The barbell is welded to both hands with a wide grip offset.
 """
 
 from __future__ import annotations
 
+import logging
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
-from mujoco_models.shared.utils.mjcf_helpers import add_weld_constraint
+
+logger = logging.getLogger(__name__)
+
+# Deep hip hinge starting position (same as deadlift)
+_INITIAL_HIP_FLEX = 1.3963  # ~80 degrees
+_INITIAL_KNEE_FLEX = -1.0472  # ~60 degrees
 
 
 class SnatchModelBuilder(ExerciseModelBuilder):
@@ -46,20 +52,20 @@ class SnatchModelBuilder(ExerciseModelBuilder):
         body_bodies: dict[str, ET.Element],
         barbell_bodies: dict[str, ET.Element],
     ) -> None:
-        """Weld barbell to left hand with wide (snatch) grip.
+        """Weld barbell to both hands with wide (snatch) grip.
 
         Snatch grip is approximately 0.55-0.60 m from shaft center
         on each side (~1.5x shoulder width).
         """
-        add_weld_constraint(
-            equality,
-            name="barbell_to_left_hand",
-            body1="hand_l",
-            body2="barbell_shaft",
-        )
+        self._attach_barbell_to_hands(equality)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set starting position: bar on floor, wide grip, deep hip hinge."""
+        logger.debug(
+            "Setting snatch initial pose: hip_flex=%.2f, knee_flex=%.2f",
+            _INITIAL_HIP_FLEX,
+            _INITIAL_KNEE_FLEX,
+        )
 
 
 def build_snatch_model(

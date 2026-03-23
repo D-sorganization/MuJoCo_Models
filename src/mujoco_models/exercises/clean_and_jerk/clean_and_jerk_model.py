@@ -23,15 +23,21 @@ Biomechanical notes:
 - Primary movers: entire posterior chain + quadriceps + deltoids + triceps
 - MuJoCo Z-up convention: gravity = (0, 0, -9.80665)
 
-The barbell is welded to the left hand at clean grip width.
+The barbell is welded to both hands at clean grip width.
 """
 
 from __future__ import annotations
 
+import logging
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
-from mujoco_models.shared.utils.mjcf_helpers import add_weld_constraint
+
+logger = logging.getLogger(__name__)
+
+# Deep hip hinge starting position (same as deadlift)
+_INITIAL_HIP_FLEX = 1.3963  # ~80 degrees
+_INITIAL_KNEE_FLEX = -1.0472  # ~60 degrees
 
 
 class CleanAndJerkModelBuilder(ExerciseModelBuilder):
@@ -54,19 +60,19 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
         body_bodies: dict[str, ET.Element],
         barbell_bodies: dict[str, ET.Element],
     ) -> None:
-        """Weld barbell to left hand at clean grip width.
+        """Weld barbell to both hands at clean grip width.
 
         Clean grip: approximately shoulder width, ~0.25 m from shaft center.
         """
-        add_weld_constraint(
-            equality,
-            name="barbell_to_left_hand",
-            body1="hand_l",
-            body2="barbell_shaft",
-        )
+        self._attach_barbell_to_hands(equality)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set starting position: bar on floor, clean grip, hip hinge."""
+        logger.debug(
+            "Setting clean & jerk initial pose: hip_flex=%.2f, knee_flex=%.2f",
+            _INITIAL_HIP_FLEX,
+            _INITIAL_KNEE_FLEX,
+        )
 
 
 def build_clean_and_jerk_model(

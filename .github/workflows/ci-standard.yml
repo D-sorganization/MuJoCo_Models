@@ -43,7 +43,7 @@ jobs:
       - name: Check Formatting (ruff)
         run: ruff format --check src scripts tests
 
-      - run: pip install mypy types-PyYAML types-requests types-lxml
+      - run: pip install mypy types-PyYAML types-requests
       - run: pip install -e .[dev]
       - run: mypy src --config-file pyproject.toml
 
@@ -62,11 +62,11 @@ jobs:
       - name: Security Audit
         run: |
           pip install pip-audit
-          pip-audit || echo "::warning::Security audit found issues"
+          pip-audit
 
       - name: Bandit Security Scan
         run: |
-          bandit -r src/ -ll -ii --format txt 2>&1 || echo "::warning::Bandit found issues"
+          bandit -r src/ -ll -ii --format txt
 
   tests:
     needs: quality-gate
@@ -74,7 +74,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python: ["3.11"]
+        python: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6

@@ -1,6 +1,6 @@
 """Bench press model builder for MuJoCo MJCF.
 
-The lifter lies supine on a bench. The barbell is gripped in the hands
+The lifter lies supine on a bench. The barbell is gripped in both hands
 at approximately shoulder width. The model starts in the lockout position
 (arms extended) and the motion descends the bar to the chest then presses
 back to lockout.
@@ -18,19 +18,25 @@ MuJoCo Z-up convention: gravity = (0, 0, -9.80665).
 
 from __future__ import annotations
 
+import logging
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
-from mujoco_models.shared.utils.mjcf_helpers import add_weld_constraint
+
+logger = logging.getLogger(__name__)
 
 BENCH_HEIGHT = 0.43  # IPF standard bench height (meters)
+
+# Supine lockout position hints (radians)
+_INITIAL_SHOULDER_FLEX = -1.5708  # arms overhead (~90 deg from standing)
+_INITIAL_ELBOW_FLEX = 0.0  # fully extended
 
 
 class BenchPressModelBuilder(ExerciseModelBuilder):
     """Builds a bench-press MuJoCo MJCF model.
 
     The pelvis is welded to ground in a supine orientation at bench height.
-    The barbell shaft is welded to the left hand at grip width.
+    The barbell shaft is welded to both hands at grip width.
     """
 
     def __init__(self, config: ExerciseConfig | None = None) -> None:
@@ -46,17 +52,12 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         body_bodies: dict[str, ET.Element],
         barbell_bodies: dict[str, ET.Element],
     ) -> None:
-        """Weld barbell to left hand at grip width.
+        """Weld barbell to both hands at grip width.
 
         The grip is approximately shoulder-width (~0.40 m from center
         on each side for a standard grip).
         """
-        add_weld_constraint(
-            equality,
-            name="barbell_to_left_hand",
-            body1="hand_l",
-            body2="barbell_shaft",
-        )
+        self._attach_barbell_to_hands(equality)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set supine lockout position.
@@ -64,6 +65,11 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         The ground_pelvis freejoint places the body supine on the bench
         with arms extended overhead (lockout).
         """
+        logger.debug(
+            "Setting bench press initial pose: shoulder=%.2f, elbow=%.2f",
+            _INITIAL_SHOULDER_FLEX,
+            _INITIAL_ELBOW_FLEX,
+        )
 
 
 def build_bench_press_model(
