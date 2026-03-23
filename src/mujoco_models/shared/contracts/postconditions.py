@@ -15,7 +15,7 @@ def ensure_valid_xml(xml_string: str) -> ET.Element:
     Raises ValueError if the string is not well-formed XML.
     """
     try:
-        return ET.fromstring(xml_string)
+        return ET.fromstring(xml_string)  # nosec B314 — parsing self-generated XML
     except ET.ParseError as exc:
         raise ValueError(f"Generated XML is not well-formed: {exc}") from exc
 
