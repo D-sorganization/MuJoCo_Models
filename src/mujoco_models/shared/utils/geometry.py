@@ -67,6 +67,34 @@ def rectangular_prism_inertia(
     return (ixx, iyy, izz)
 
 
+def capsule_inertia(
+    mass: float, radius: float, length: float
+) -> tuple[float, float, float]:
+    """Compute principal inertias (Ixx, Iyy, Izz) for a solid capsule.
+
+    The capsule axis is aligned with the Z-axis (MuJoCo convention).
+    length is the length of the cylinder part.
+    """
+    require_positive(mass, "mass")
+    require_positive(radius, "radius")
+    require_positive(length, "length")
+
+    v_cyl = math.pi * radius**2 * length
+    v_sph = (4.0 / 3.0) * math.pi * radius**3
+    v_total = v_cyl + v_sph
+
+    m_cyl = mass * (v_cyl / v_total)
+    m_sph = mass * (v_sph / v_total)
+
+    izz = 0.5 * m_cyl * radius**2 + 0.4 * m_sph * radius**2
+    ixx_cyl = m_cyl * (3.0 * radius**2 + length**2) / 12.0
+    ixx_sph = m_sph * (0.4 * radius**2 + (length / 2.0)**2)  # simplified parallel axis
+
+    ixx = iyy = ixx_cyl + ixx_sph
+    ensure_positive_definite_inertia(ixx, iyy, izz, "capsule")
+    return (ixx, iyy, izz)
+
+
 def sphere_inertia(mass: float, radius: float) -> tuple[float, float, float]:
     """Compute principal inertias for a solid sphere (uniform in all axes)."""
     require_positive(mass, "mass")
