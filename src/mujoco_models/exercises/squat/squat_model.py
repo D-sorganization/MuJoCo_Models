@@ -15,6 +15,7 @@ Biomechanical notes:
 from __future__ import annotations
 
 import logging
+import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
@@ -62,10 +63,19 @@ class SquatModelBuilder(ExerciseModelBuilder):
         The lifter starts in a comfortable standing position with the
         barbell on the back, knees slightly unlocked.
         """
+        for joint in worldbody.iter("joint"):
+            name = joint.get("name", "")
+            joint_type = joint.get("type", "hinge")
+            if joint_type != "hinge":
+                continue
+            if "hip" in name:
+                joint.set("ref", str(math.degrees(_INITIAL_HIP_FLEX)))
+            elif "knee" in name:
+                joint.set("ref", str(math.degrees(_INITIAL_KNEE_FLEX)))
         logger.debug(
-            "Setting squat initial pose: hip_flex=%.2f, knee_flex=%.2f",
-            _INITIAL_HIP_FLEX,
-            _INITIAL_KNEE_FLEX,
+            "Setting squat initial pose: hip_flex=%.1f°, knee_flex=%.1f°",
+            math.degrees(_INITIAL_HIP_FLEX),
+            math.degrees(_INITIAL_KNEE_FLEX),
         )
 
 

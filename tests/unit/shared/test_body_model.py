@@ -111,10 +111,15 @@ class TestCreateFullBody:
         assert mass == pytest.approx(100.0 * 0.142)
 
     def test_z_up_pelvis_position(self, worldbody: ET.Element) -> None:
-        bodies = create_full_body(worldbody)
+        from mujoco_models.shared.body.body_model import _LEG_HEIGHT_FRACTION
+
+        spec = BodyModelSpec()  # default: height=1.75
+        bodies = create_full_body(worldbody, spec)
         pelvis = bodies["pelvis"]
         pos = pelvis.get("pos")
         parts = [float(x) for x in pos.split()]
-        # Z should be ~0.93 (hip height), X and Y ~0
-        assert parts[2] == pytest.approx(0.93)
+        # Z is computed as height * _LEG_HEIGHT_FRACTION + p_len / 2.0
+        p_len = spec.height * 0.100  # pelvis length_frac from segment table
+        expected_z = spec.height * _LEG_HEIGHT_FRACTION + p_len / 2.0
+        assert parts[2] == pytest.approx(expected_z)
         assert parts[0] == pytest.approx(0.0)

@@ -25,6 +25,7 @@ The barbell is welded to both hands with a wide grip offset.
 from __future__ import annotations
 
 import logging
+import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
@@ -61,10 +62,19 @@ class SnatchModelBuilder(ExerciseModelBuilder):
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set starting position: bar on floor, wide grip, deep hip hinge."""
+        for joint in worldbody.iter("joint"):
+            name = joint.get("name", "")
+            joint_type = joint.get("type", "hinge")
+            if joint_type != "hinge":
+                continue
+            if "hip" in name:
+                joint.set("ref", str(math.degrees(_INITIAL_HIP_FLEX)))
+            elif "knee" in name:
+                joint.set("ref", str(math.degrees(_INITIAL_KNEE_FLEX)))
         logger.debug(
-            "Setting snatch initial pose: hip_flex=%.2f, knee_flex=%.2f",
-            _INITIAL_HIP_FLEX,
-            _INITIAL_KNEE_FLEX,
+            "Setting snatch initial pose: hip_flex=%.1f°, knee_flex=%.1f°",
+            math.degrees(_INITIAL_HIP_FLEX),
+            math.degrees(_INITIAL_KNEE_FLEX),
         )
 
 

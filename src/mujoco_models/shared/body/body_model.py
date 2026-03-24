@@ -47,6 +47,9 @@ from mujoco_models.shared.utils.mjcf_helpers import (
 
 logger = logging.getLogger(__name__)
 
+# Winter (2009): thigh(0.245) + shank(0.246) + foot(0.039) ≈ 0.530 of height
+_LEG_HEIGHT_FRACTION = 0.530
+
 
 @dataclass(frozen=True)
 class BodyModelSpec:
@@ -150,10 +153,11 @@ def create_full_body(
     # --- Pelvis (connected to ground via freejoint) ---
     p_mass, p_len, p_rad = _seg(spec, "pelvis")
     p_inertia = rectangular_prism_inertia(p_mass, p_rad * 2, p_len, p_rad * 2)
+    pelvis_z = spec.height * _LEG_HEIGHT_FRACTION + p_len / 2.0
     pelvis_body = add_body(
         worldbody,
         name="pelvis",
-        pos=(0, 0, 0.93),
+        pos=(0, 0, pelvis_z),
         mass=p_mass,
         inertia_diag=p_inertia,
         geom_type="box",

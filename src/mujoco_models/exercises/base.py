@@ -148,6 +148,29 @@ class ExerciseModelBuilder(ABC):
         # Exercise-specific initial pose
         self.set_initial_pose(worldbody)
 
+        # Add position actuators for all hinge joints
+        actuator = ET.SubElement(root, "actuator")
+        for joint in worldbody.iter("joint"):
+            if joint.get("type", "hinge") == "free":
+                continue
+            name = joint.get("name", "")
+            if name:
+                act = ET.SubElement(actuator, "position")
+                act.set("name", f"act_{name}")
+                act.set("joint", name)
+                act.set("kp", "100")
+
+        # Add joint position sensors
+        sensor = ET.SubElement(root, "sensor")
+        for joint in worldbody.iter("joint"):
+            if joint.get("type", "hinge") == "free":
+                continue
+            name = joint.get("name", "")
+            if name:
+                s = ET.SubElement(sensor, "jointpos")
+                s.set("name", f"pos_{name}")
+                s.set("joint", name)
+
         xml_str = serialize_model(root)
 
         # Postcondition: well-formed MJCF XML
