@@ -63,8 +63,6 @@ class TestBenchPressModelBuilder:
         assert joint.get("ref") is not None, "shoulder joint should have ref set"
 
     def test_set_initial_pose_shoulder_ref(self) -> None:
-        import math
-
         from mujoco_models.exercises.bench_press.bench_press_model import (
             _INITIAL_SHOULDER_FLEX,
         )
@@ -75,8 +73,9 @@ class TestBenchPressModelBuilder:
         ET.SubElement(body, "joint", name="shoulder_r_flex", type="hinge")
         builder.set_initial_pose(worldbody)
         joint = worldbody.find(".//joint")
+        # ref is stored in radians (matches <compiler angle='radian'>)
         assert float(joint.get("ref")) == pytest.approx(
-            math.degrees(_INITIAL_SHOULDER_FLEX), rel=1e-4
+            _INITIAL_SHOULDER_FLEX, rel=1e-4
         )
 
     def test_build_has_bench_body(self) -> None:

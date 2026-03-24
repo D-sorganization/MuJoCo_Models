@@ -29,16 +29,20 @@ The barbell is welded to both hands at clean grip width.
 from __future__ import annotations
 
 import logging
-import math
 import xml.etree.ElementTree as ET
 
-from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
+from mujoco_models.exercises.base import (
+    FLOOR_PULL_HIP_FLEX,
+    FLOOR_PULL_KNEE_FLEX,
+    ExerciseConfig,
+    ExerciseModelBuilder,
+)
 
 logger = logging.getLogger(__name__)
 
-# Deep hip hinge starting position (same as deadlift)
-_INITIAL_HIP_FLEX = 1.3963  # ~80 degrees
-_INITIAL_KNEE_FLEX = -1.0472  # ~60 degrees
+# Deep hip hinge starting position — same as deadlift (shared constants).
+_INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
+_INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
 
 
 class CleanAndJerkModelBuilder(ExerciseModelBuilder):
@@ -47,9 +51,6 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
     Uses shoulder-width grip. The model supports both the clean
     (floor to shoulders) and jerk (shoulders to overhead) phases.
     """
-
-    def __init__(self, config: ExerciseConfig | None = None) -> None:
-        super().__init__(config)
 
     @property
     def exercise_name(self) -> str:
@@ -68,20 +69,23 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
         self._attach_barbell_to_hands(equality)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
-        """Set starting position: bar on floor, clean grip, hip hinge."""
+        """Set starting position: bar on floor, clean grip, hip hinge.
+
+        Ref values are stored in radians to match <compiler angle='radian'>.
+        """
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
             joint_type = joint.get("type", "hinge")
             if joint_type != "hinge":
                 continue
             if "hip" in name:
-                joint.set("ref", str(math.degrees(_INITIAL_HIP_FLEX)))
+                joint.set("ref", str(_INITIAL_HIP_FLEX))
             elif "knee" in name:
-                joint.set("ref", str(math.degrees(_INITIAL_KNEE_FLEX)))
+                joint.set("ref", str(_INITIAL_KNEE_FLEX))
         logger.debug(
-            "Setting clean & jerk initial pose: hip_flex=%.1f°, knee_flex=%.1f°",
-            math.degrees(_INITIAL_HIP_FLEX),
-            math.degrees(_INITIAL_KNEE_FLEX),
+            "Setting clean & jerk initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad",
+            _INITIAL_HIP_FLEX,
+            _INITIAL_KNEE_FLEX,
         )
 
 

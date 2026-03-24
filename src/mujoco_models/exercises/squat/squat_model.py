@@ -15,7 +15,6 @@ Biomechanical notes:
 from __future__ import annotations
 
 import logging
-import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
@@ -35,9 +34,6 @@ class SquatModelBuilder(ExerciseModelBuilder):
     upper trapezius (high-bar squat). For a low-bar variant, the attachment
     point would be shifted ~5 cm inferior.
     """
-
-    def __init__(self, config: ExerciseConfig | None = None) -> None:
-        super().__init__(config)
 
     @property
     def exercise_name(self) -> str:
@@ -62,6 +58,8 @@ class SquatModelBuilder(ExerciseModelBuilder):
 
         The lifter starts in a comfortable standing position with the
         barbell on the back, knees slightly unlocked.
+
+        Ref values are stored in radians to match <compiler angle='radian'>.
         """
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
@@ -69,13 +67,13 @@ class SquatModelBuilder(ExerciseModelBuilder):
             if joint_type != "hinge":
                 continue
             if "hip" in name:
-                joint.set("ref", str(math.degrees(_INITIAL_HIP_FLEX)))
+                joint.set("ref", str(_INITIAL_HIP_FLEX))
             elif "knee" in name:
-                joint.set("ref", str(math.degrees(_INITIAL_KNEE_FLEX)))
+                joint.set("ref", str(_INITIAL_KNEE_FLEX))
         logger.debug(
-            "Setting squat initial pose: hip_flex=%.1f°, knee_flex=%.1f°",
-            math.degrees(_INITIAL_HIP_FLEX),
-            math.degrees(_INITIAL_KNEE_FLEX),
+            "Setting squat initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad",
+            _INITIAL_HIP_FLEX,
+            _INITIAL_KNEE_FLEX,
         )
 
 
