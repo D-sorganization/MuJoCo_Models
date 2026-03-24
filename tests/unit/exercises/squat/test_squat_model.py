@@ -23,13 +23,13 @@ class TestSquatModelBuilder:
     def test_model_name(self) -> None:
         xml_str = build_squat_model()
         root = ET.fromstring(xml_str)
-        assert root.get("model") == "back_squat"
+        assert root.get("model") == "back_squat"  # type: ignore
 
     def test_has_barbell_weld(self) -> None:
         xml_str = build_squat_model()
         root = ET.fromstring(xml_str)
         welds = root.findall(".//weld")
-        weld_names = {w.get("name") for w in welds}
+        weld_names = {w.get("name") for w in welds}  # type: ignore
         assert "barbell_to_torso" in weld_names
 
     def test_has_gravity(self) -> None:
@@ -37,7 +37,7 @@ class TestSquatModelBuilder:
         root = ET.fromstring(xml_str)
         option = root.find("option")
         assert option is not None
-        assert "-9.806650" in option.get("gravity")
+        assert "-9.806650" in option.get("gravity")  # type: ignore
 
     def test_custom_body_mass(self) -> None:
         xml_str = build_squat_model(body_mass=100.0)
@@ -72,9 +72,9 @@ class TestSquatModelBuilder:
         body = ET.SubElement(worldbody, "body")
         joint = ET.SubElement(body, "joint", name="hip_l_flex", type="hinge")
         builder.set_initial_pose(worldbody)
-        assert joint.get("ref") is not None
+        assert joint.get("ref") is not None  # type: ignore
         # ref is stored in radians (matches <compiler angle='radian'>)
-        assert float(joint.get("ref")) == pytest.approx(_INITIAL_HIP_FLEX, rel=1e-4)
+        assert float(joint.get("ref")) == pytest.approx(_INITIAL_HIP_FLEX, rel=1e-4)  # type: ignore
 
     def test_set_initial_pose_modifies_knee_joints(self) -> None:
         from mujoco_models.exercises.squat.squat_model import _INITIAL_KNEE_FLEX
@@ -84,9 +84,9 @@ class TestSquatModelBuilder:
         body = ET.SubElement(worldbody, "body")
         joint = ET.SubElement(body, "joint", name="knee_r_flex", type="hinge")
         builder.set_initial_pose(worldbody)
-        assert joint.get("ref") is not None
+        assert joint.get("ref") is not None  # type: ignore
         # ref is stored in radians (matches <compiler angle='radian'>)
-        assert float(joint.get("ref")) == pytest.approx(_INITIAL_KNEE_FLEX, rel=1e-4)
+        assert float(joint.get("ref")) == pytest.approx(_INITIAL_KNEE_FLEX, rel=1e-4)  # type: ignore
 
     def test_build_has_actuators(self) -> None:
         xml_str = build_squat_model()

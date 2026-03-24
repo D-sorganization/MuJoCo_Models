@@ -145,5 +145,5 @@ class TestFullBodyModelProperties:
         for name, body in bodies.items():
             inertial = body.find("inertial")
             assert inertial is not None, f"{name} missing inertial"
-            m = float(inertial.get("mass"))
+            m = float(inertial.get("mass"))  # type: ignore
             assert m > 0, f"{name} mass={m}"

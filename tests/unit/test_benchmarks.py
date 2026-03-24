@@ -8,6 +8,8 @@ Run with: python3 -m pytest tests/unit/test_benchmarks.py --benchmark-only -p no
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from mujoco_models.exercises.base import ExerciseConfig
@@ -24,27 +26,27 @@ from mujoco_models.exercises.squat.squat_model import SquatModelBuilder
 class TestModelBuildBenchmarks:
     """Benchmark the build time for each exercise model."""
 
-    def test_squat_build(self, benchmark: object) -> None:
+    def test_squat_build(self, benchmark: Any) -> None:
         config = ExerciseConfig()
         builder = SquatModelBuilder(config)
         benchmark(builder.build)
 
-    def test_bench_press_build(self, benchmark: object) -> None:
+    def test_bench_press_build(self, benchmark: Any) -> None:
         config = ExerciseConfig()
         builder = BenchPressModelBuilder(config)
         benchmark(builder.build)
 
-    def test_deadlift_build(self, benchmark: object) -> None:
+    def test_deadlift_build(self, benchmark: Any) -> None:
         config = ExerciseConfig()
         builder = DeadliftModelBuilder(config)
         benchmark(builder.build)
 
-    def test_snatch_build(self, benchmark: object) -> None:
+    def test_snatch_build(self, benchmark: Any) -> None:
         config = ExerciseConfig()
         builder = SnatchModelBuilder(config)
         benchmark(builder.build)
 
-    def test_clean_and_jerk_build(self, benchmark: object) -> None:
+    def test_clean_and_jerk_build(self, benchmark: Any) -> None:
         config = ExerciseConfig()
         builder = CleanAndJerkModelBuilder(config)
         benchmark(builder.build)

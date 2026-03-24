@@ -88,7 +88,9 @@ def capsule_inertia(
 
     izz = 0.5 * m_cyl * radius**2 + 0.4 * m_sph * radius**2
     ixx_cyl = m_cyl * (3.0 * radius**2 + length**2) / 12.0
-    ixx_sph = m_sph * (0.4 * radius**2 + (length / 2.0)**2)  # simplified parallel axis
+    ixx_sph = m_sph * (
+        0.4 * radius**2 + (length / 2.0) ** 2
+    )  # simplified parallel axis
 
     ixx = iyy = ixx_cyl + ixx_sph
     ensure_positive_definite_inertia(ixx, iyy, izz, "capsule")

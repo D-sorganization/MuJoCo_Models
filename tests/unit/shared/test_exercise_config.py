@@ -20,23 +20,23 @@ class TestExerciseConfigDefaults:
 
     def test_default_body_spec(self) -> None:
         config = ExerciseConfig()
-        assert config.body_spec.total_mass == 80.0
+        assert config.body_spec.total_mass == 80.0  # type: ignore
         assert config.body_spec.height == 1.75
 
     def test_default_barbell_spec(self) -> None:
         config = ExerciseConfig()
-        assert config.barbell_spec.bar_mass == 20.0
+        assert config.barbell_spec.bar_mass == 20.0  # type: ignore
         assert config.barbell_spec.plate_mass_per_side == 0.0
 
     def test_custom_body_spec(self) -> None:
         spec = BodyModelSpec(total_mass=100.0, height=1.90)
         config = ExerciseConfig(body_spec=spec)
-        assert config.body_spec.total_mass == 100.0
+        assert config.body_spec.total_mass == 100.0  # type: ignore
 
     def test_custom_barbell_spec(self) -> None:
         spec = BarbellSpec.womens_olympic(plate_mass_per_side=30.0)
         config = ExerciseConfig(barbell_spec=spec)
-        assert config.barbell_spec.bar_mass == 15.0
+        assert config.barbell_spec.bar_mass == 15.0  # type: ignore
         assert config.barbell_spec.plate_mass_per_side == 30.0
 
     def test_custom_gravity(self) -> None:
@@ -71,10 +71,10 @@ class TestExerciseConfigComposition:
         config = ExerciseConfig(
             barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=60.0),
         )
-        assert config.barbell_spec.total_mass == pytest.approx(140.0)
+        assert config.barbell_spec.total_mass == pytest.approx(140.0)  # type: ignore
 
     def test_womens_bar_total_mass(self) -> None:
         config = ExerciseConfig(
             barbell_spec=BarbellSpec.womens_olympic(plate_mass_per_side=40.0),
         )
-        assert config.barbell_spec.total_mass == pytest.approx(95.0)
+        assert config.barbell_spec.total_mass == pytest.approx(95.0)  # type: ignore

@@ -21,13 +21,13 @@ class TestCleanAndJerkModelBuilder:
     def test_model_name(self) -> None:
         xml_str = build_clean_and_jerk_model()
         root = ET.fromstring(xml_str)
-        assert root.get("model") == "clean_and_jerk"
+        assert root.get("model") == "clean_and_jerk"  # type: ignore
 
     def test_has_barbell_weld(self) -> None:
         xml_str = build_clean_and_jerk_model()
         root = ET.fromstring(xml_str)
         welds = root.findall(".//weld")
-        weld_names = {w.get("name") for w in welds}
+        weld_names = {w.get("name") for w in welds}  # type: ignore
         assert "barbell_to_hand_l" in weld_names
         assert "barbell_to_hand_r" in weld_names
 
@@ -44,7 +44,7 @@ class TestCleanAndJerkModelBuilder:
         builder.attach_barbell(equality, {}, {})
         welds = equality.findall("weld")
         assert len(welds) == 2
-        weld_names = {w.get("name") for w in welds}
+        weld_names = {w.get("name") for w in welds}  # type: ignore
         assert "barbell_to_hand_l" in weld_names
         assert "barbell_to_hand_r" in weld_names
 
