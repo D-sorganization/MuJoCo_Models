@@ -100,43 +100,34 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
 
     def build(self) -> str:
         """Build bench press model, adding bench body and pelvis weld."""
-        import xml.etree.ElementTree as _ET
-
-        xml_str = super().build()
-        # Parse to add bench — we need to inject bench before serialization.
-        # Instead, override to intercept before serialization by rebuilding.
-        # Re-build using the parent's logic with bench injection.
         return self._build_with_bench()
 
     def _build_with_bench(self) -> str:
         """Full build with bench body injected before serialization."""
-        import xml.etree.ElementTree as _ET
-
-        from mujoco_models.exercises.base import ExerciseModelBuilder
-        from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
-        from mujoco_models.shared.body import BodyModelSpec, create_full_body
+        from mujoco_models.shared.barbell import create_barbell_bodies
+        from mujoco_models.shared.body import create_full_body
         from mujoco_models.shared.contracts.postconditions import ensure_mjcf_root
         from mujoco_models.shared.utils.mjcf_helpers import serialize_model
 
         logger.info("Building %s model (with bench)", self.exercise_name)
 
-        root = _ET.Element("mujoco", model=self.exercise_name)
+        root = ET.Element("mujoco", model=self.exercise_name)
 
         g = self.config.gravity
-        _ET.SubElement(
+        ET.SubElement(
             root,
             "option",
             gravity=f"{g[0]:.6f} {g[1]:.6f} {g[2]:.6f}",
             timestep="0.001",
         )
-        _ET.SubElement(root, "compiler", angle="radian", coordinate="local")
+        ET.SubElement(root, "compiler", angle="radian", coordinate="local")
 
-        default = _ET.SubElement(root, "default")
-        _ET.SubElement(default, "joint", damping="5.0", armature="0.1")
-        _ET.SubElement(default, "geom", contype="1", conaffinity="1", condim="3")
+        default = ET.SubElement(root, "default")
+        ET.SubElement(default, "joint", damping="5.0", armature="0.1")
+        ET.SubElement(default, "geom", contype="1", conaffinity="1", condim="3")
 
-        worldbody = _ET.SubElement(root, "worldbody")
-        _ET.SubElement(
+        worldbody = ET.SubElement(root, "worldbody")
+        ET.SubElement(
             worldbody,
             "geom",
             name="ground",
@@ -145,7 +136,7 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
             rgba="0.9 0.9 0.9 1",
         )
 
-        equality = _ET.SubElement(root, "equality")
+        equality = ET.SubElement(root, "equality")
 
         body_bodies = create_full_body(worldbody, self.config.body_spec)
         barbell_bodies = create_barbell_bodies(
@@ -157,25 +148,25 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         self.set_initial_pose(worldbody)
 
         # Add position actuators for all hinge joints
-        actuator = _ET.SubElement(root, "actuator")
+        actuator = ET.SubElement(root, "actuator")
         for joint in worldbody.iter("joint"):
             if joint.get("type", "hinge") == "free":
                 continue
             jname = joint.get("name", "")
             if jname:
-                act = _ET.SubElement(actuator, "position")
+                act = ET.SubElement(actuator, "position")
                 act.set("name", f"act_{jname}")
                 act.set("joint", jname)
                 act.set("kp", "100")
 
         # Add joint position sensors
-        sensor = _ET.SubElement(root, "sensor")
+        sensor = ET.SubElement(root, "sensor")
         for joint in worldbody.iter("joint"):
             if joint.get("type", "hinge") == "free":
                 continue
             jname = joint.get("name", "")
             if jname:
-                s = _ET.SubElement(sensor, "jointpos")
+                s = ET.SubElement(sensor, "jointpos")
                 s.set("name", f"pos_{jname}")
                 s.set("joint", jname)
 
