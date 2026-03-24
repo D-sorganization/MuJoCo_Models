@@ -26,8 +26,13 @@ from mujoco_models.shared.utils.mjcf_helpers import (
 
 logger = logging.getLogger(__name__)
 
+# Shared initial angles for floor-pull exercises (deadlift, snatch, clean-and-jerk).
+# Defined here so subclasses can import from a single authoritative location.
+FLOOR_PULL_HIP_FLEX: float = 1.3963  # ~80° hip flexion (radians)
+FLOOR_PULL_KNEE_FLEX: float = -1.0472  # ~60° knee flexion (radians)
 
-@dataclass
+
+@dataclass(frozen=True)
 class ExerciseConfig:
     """Configuration common to all exercise models."""
 
@@ -65,6 +70,17 @@ class ExerciseModelBuilder(ABC):
     @abstractmethod
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set default coordinate values for the starting position."""
+
+    def _post_worldbody_hook(  # noqa: B027
+        self, worldbody: ET.Element, equality: ET.Element
+    ) -> None:
+        """No-op hook called after worldbody is built, before actuator generation.
+
+        Subclasses may override to inject additional bodies or constraints
+        (e.g. BenchPressModelBuilder adds the bench body here).
+        This is an intentional empty method — not abstract — so the base class
+        remains instantiable and subclasses are not required to override it.
+        """
 
     def _attach_barbell_to_hands(
         self,
@@ -110,8 +126,8 @@ class ExerciseModelBuilder(ABC):
             timestep="0.001",
         )
 
-        # Compiler settings (Z-up)
-        ET.SubElement(root, "compiler", angle="radian", coordinate="local")
+        # Compiler settings (Z-up). coordinate='local' was removed in MuJoCo 2.1.4.
+        ET.SubElement(root, "compiler", angle="radian")
 
         # Default joint damping
         default = ET.SubElement(root, "default")
@@ -145,14 +161,17 @@ class ExerciseModelBuilder(ABC):
         # Exercise-specific attachment
         self.attach_barbell(equality, body_bodies, barbell_bodies)
 
+        # Subclass hook: inject extra bodies/constraints before actuator generation
+        self._post_worldbody_hook(worldbody, equality)
+
         # Exercise-specific initial pose
         self.set_initial_pose(worldbody)
 
-        # Add position actuators for all hinge joints
+        # Add position actuators for all hinge joints.
+        # Note: worldbody.iter("joint") only finds <joint> elements, never
+        # <freejoint> elements, so no freejoint guard is needed here.
         actuator = ET.SubElement(root, "actuator")
         for joint in worldbody.iter("joint"):
-            if joint.get("type", "hinge") == "free":
-                continue
             name = joint.get("name", "")
             if name:
                 act = ET.SubElement(actuator, "position")
@@ -160,11 +179,11 @@ class ExerciseModelBuilder(ABC):
                 act.set("joint", name)
                 act.set("kp", "100")
 
-        # Add joint position sensors
+        # Add joint position sensors.
+        # Note: worldbody.iter("joint") only finds <joint> elements, never
+        # <freejoint> elements, so no freejoint guard is needed here.
         sensor = ET.SubElement(root, "sensor")
         for joint in worldbody.iter("joint"):
-            if joint.get("type", "hinge") == "free":
-                continue
             name = joint.get("name", "")
             if name:
                 s = ET.SubElement(sensor, "jointpos")

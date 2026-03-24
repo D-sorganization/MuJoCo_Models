@@ -19,18 +19,22 @@ and knee flexion to reach the bar on the ground.
 from __future__ import annotations
 
 import logging
-import math
 import xml.etree.ElementTree as ET
 
-from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
+from mujoco_models.exercises.base import (
+    FLOOR_PULL_HIP_FLEX,
+    FLOOR_PULL_KNEE_FLEX,
+    ExerciseConfig,
+    ExerciseModelBuilder,
+)
 
 logger = logging.getLogger(__name__)
 
 PLATE_RADIUS = 0.225  # Standard 450mm diameter plate radius
 
-# Deep hip hinge starting position (radians)
-_INITIAL_HIP_FLEX = 1.3963  # ~80 degrees
-_INITIAL_KNEE_FLEX = -1.0472  # ~60 degrees
+# Re-export shared constants under the local names used by tests.
+_INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
+_INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
 
 
 class DeadliftModelBuilder(ExerciseModelBuilder):
@@ -38,9 +42,6 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
 
     The barbell is welded to both hands and starts on the floor.
     """
-
-    def __init__(self, config: ExerciseConfig | None = None) -> None:
-        super().__init__(config)
 
     @property
     def exercise_name(self) -> str:
@@ -63,6 +64,8 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
 
         The bar is on the floor at PLATE_RADIUS height, so the body
         must flex at the hips (~80 deg) and knees (~60 deg) to reach.
+
+        Ref values are stored in radians to match <compiler angle='radian'>.
         """
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
@@ -70,13 +73,13 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
             if joint_type != "hinge":
                 continue
             if "hip" in name:
-                joint.set("ref", str(math.degrees(_INITIAL_HIP_FLEX)))
+                joint.set("ref", str(_INITIAL_HIP_FLEX))
             elif "knee" in name:
-                joint.set("ref", str(math.degrees(_INITIAL_KNEE_FLEX)))
+                joint.set("ref", str(_INITIAL_KNEE_FLEX))
         logger.debug(
-            "Setting deadlift initial pose: hip_flex=%.1f°, knee_flex=%.1f°",
-            math.degrees(_INITIAL_HIP_FLEX),
-            math.degrees(_INITIAL_KNEE_FLEX),
+            "Setting deadlift initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad",
+            _INITIAL_HIP_FLEX,
+            _INITIAL_KNEE_FLEX,
         )
 
 

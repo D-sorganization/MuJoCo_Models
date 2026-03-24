@@ -65,8 +65,6 @@ class TestSquatModelBuilder:
         builder.set_initial_pose(worldbody)
 
     def test_set_initial_pose_modifies_hip_joints(self) -> None:
-        import math
-
         from mujoco_models.exercises.squat.squat_model import _INITIAL_HIP_FLEX
 
         builder = SquatModelBuilder()
@@ -75,13 +73,10 @@ class TestSquatModelBuilder:
         joint = ET.SubElement(body, "joint", name="hip_l_flex", type="hinge")
         builder.set_initial_pose(worldbody)
         assert joint.get("ref") is not None
-        assert float(joint.get("ref")) == pytest.approx(
-            math.degrees(_INITIAL_HIP_FLEX), rel=1e-4
-        )
+        # ref is stored in radians (matches <compiler angle='radian'>)
+        assert float(joint.get("ref")) == pytest.approx(_INITIAL_HIP_FLEX, rel=1e-4)
 
     def test_set_initial_pose_modifies_knee_joints(self) -> None:
-        import math
-
         from mujoco_models.exercises.squat.squat_model import _INITIAL_KNEE_FLEX
 
         builder = SquatModelBuilder()
@@ -90,9 +85,8 @@ class TestSquatModelBuilder:
         joint = ET.SubElement(body, "joint", name="knee_r_flex", type="hinge")
         builder.set_initial_pose(worldbody)
         assert joint.get("ref") is not None
-        assert float(joint.get("ref")) == pytest.approx(
-            math.degrees(_INITIAL_KNEE_FLEX), rel=1e-4
-        )
+        # ref is stored in radians (matches <compiler angle='radian'>)
+        assert float(joint.get("ref")) == pytest.approx(_INITIAL_KNEE_FLEX, rel=1e-4)
 
     def test_build_has_actuators(self) -> None:
         xml_str = build_squat_model()

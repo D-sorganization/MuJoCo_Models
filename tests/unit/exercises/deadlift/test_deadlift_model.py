@@ -60,8 +60,6 @@ class TestDeadliftModelBuilder:
         builder.set_initial_pose(worldbody)
 
     def test_set_initial_pose_modifies_hip_joints(self) -> None:
-        import math
-
         from mujoco_models.exercises.deadlift.deadlift_model import _INITIAL_HIP_FLEX
 
         builder = DeadliftModelBuilder()
@@ -70,9 +68,8 @@ class TestDeadliftModelBuilder:
         joint = ET.SubElement(body, "joint", name="hip_l_flex", type="hinge")
         builder.set_initial_pose(worldbody)
         assert joint.get("ref") is not None
-        assert float(joint.get("ref")) == pytest.approx(
-            math.degrees(_INITIAL_HIP_FLEX), rel=1e-4
-        )
+        # ref is stored in radians (matches <compiler angle='radian'>)
+        assert float(joint.get("ref")) == pytest.approx(_INITIAL_HIP_FLEX, rel=1e-4)
 
     def test_build_has_actuators(self) -> None:
         xml_str = build_deadlift_model()

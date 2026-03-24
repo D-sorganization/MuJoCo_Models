@@ -43,7 +43,7 @@ class TestSegmentTable:
 
     def test_total_mass_fraction_near_one(self) -> None:
         total = total_mass_fraction()
-        assert total == pytest.approx(1.0, abs=0.02)
+        assert total == pytest.approx(1.0, rel=1e-6)
 
     def test_segment_has_three_keys(self) -> None:
         for name, props in SEGMENT_TABLE.items():
