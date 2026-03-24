@@ -19,6 +19,7 @@ and knee flexion to reach the bar on the ground.
 from __future__ import annotations
 
 import logging
+import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
@@ -63,10 +64,19 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
         The bar is on the floor at PLATE_RADIUS height, so the body
         must flex at the hips (~80 deg) and knees (~60 deg) to reach.
         """
+        for joint in worldbody.iter("joint"):
+            name = joint.get("name", "")
+            joint_type = joint.get("type", "hinge")
+            if joint_type != "hinge":
+                continue
+            if "hip" in name:
+                joint.set("ref", str(math.degrees(_INITIAL_HIP_FLEX)))
+            elif "knee" in name:
+                joint.set("ref", str(math.degrees(_INITIAL_KNEE_FLEX)))
         logger.debug(
-            "Setting deadlift initial pose: hip_flex=%.2f, knee_flex=%.2f",
-            _INITIAL_HIP_FLEX,
-            _INITIAL_KNEE_FLEX,
+            "Setting deadlift initial pose: hip_flex=%.1f°, knee_flex=%.1f°",
+            math.degrees(_INITIAL_HIP_FLEX),
+            math.degrees(_INITIAL_KNEE_FLEX),
         )
 
 

@@ -2,6 +2,8 @@
 
 import xml.etree.ElementTree as ET
 
+import pytest
+
 from mujoco_models.exercises.deadlift.deadlift_model import (
     PLATE_RADIUS,
     DeadliftModelBuilder,
@@ -56,6 +58,35 @@ class TestDeadliftModelBuilder:
         builder = DeadliftModelBuilder()
         worldbody = ET.Element("worldbody")
         builder.set_initial_pose(worldbody)
+
+    def test_set_initial_pose_modifies_hip_joints(self) -> None:
+        import math
+
+        from mujoco_models.exercises.deadlift.deadlift_model import _INITIAL_HIP_FLEX
+
+        builder = DeadliftModelBuilder()
+        worldbody = ET.Element("worldbody")
+        body = ET.SubElement(worldbody, "body")
+        joint = ET.SubElement(body, "joint", name="hip_l_flex", type="hinge")
+        builder.set_initial_pose(worldbody)
+        assert joint.get("ref") is not None
+        assert float(joint.get("ref")) == pytest.approx(
+            math.degrees(_INITIAL_HIP_FLEX), rel=1e-4
+        )
+
+    def test_build_has_actuators(self) -> None:
+        xml_str = build_deadlift_model()
+        root = ET.fromstring(xml_str)
+        actuator = root.find("actuator")
+        assert actuator is not None
+        assert len(actuator.findall("position")) > 0
+
+    def test_build_has_sensors(self) -> None:
+        xml_str = build_deadlift_model()
+        root = ET.fromstring(xml_str)
+        sensor = root.find("sensor")
+        assert sensor is not None
+        assert len(sensor.findall("jointpos")) > 0
 
     def test_default_plate_mass(self) -> None:
         builder = DeadliftModelBuilder()
