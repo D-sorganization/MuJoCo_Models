@@ -26,7 +26,7 @@ class TestExtremeAnthropometrics:
         bodies = create_full_body(wb, BodyModelSpec(total_mass=30.0, height=1.20))
         assert len(bodies) == 15
         for name, body in bodies.items():
-            mass = float(body.find("inertial").get("mass"))
+            mass = float(body.find("inertial").get("mass"))  # type: ignore
             assert mass > 0, f"{name} mass not positive for light person"
 
     def test_very_heavy_person(self) -> None:
@@ -35,7 +35,7 @@ class TestExtremeAnthropometrics:
         bodies = create_full_body(wb, BodyModelSpec(total_mass=200.0, height=1.90))
         assert len(bodies) == 15
         for name, body in bodies.items():
-            mass = float(body.find("inertial").get("mass"))
+            mass = float(body.find("inertial").get("mass"))  # type: ignore
             assert mass > 0, f"{name} mass not positive for heavy person"
 
     def test_very_short_person(self) -> None:
@@ -64,18 +64,18 @@ class TestExtremeBarbell:
         config = ExerciseConfig(
             barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=0.0),
         )
-        assert config.barbell_spec.total_mass == pytest.approx(20.0)
+        assert config.barbell_spec.total_mass == pytest.approx(20.0)  # type: ignore
 
     def test_very_heavy_plates(self) -> None:
         config = ExerciseConfig(
             barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=250.0),
         )
-        assert config.barbell_spec.total_mass == pytest.approx(520.0)
+        assert config.barbell_spec.total_mass == pytest.approx(520.0)  # type: ignore
 
     def test_womens_bar_empty(self) -> None:
         spec = BarbellSpec.womens_olympic()
-        assert spec.bar_mass == 15.0
-        assert spec.total_mass == pytest.approx(15.0)
+        assert spec.bar_mass == 15.0  # type: ignore
+        assert spec.total_mass == pytest.approx(15.0)  # type: ignore
 
 
 class TestExtremeModelBuild:

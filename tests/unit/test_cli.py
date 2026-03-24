@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from mujoco_models.__main__ import _build_parser, main
 
 
@@ -34,7 +36,7 @@ class TestCLI:
         result = main(["squat"])
         assert result == 0
 
-    def test_main_with_output(self, tmp_path: object) -> None:
+    def test_main_with_output(self, tmp_path: Any) -> None:
         out_file = str(tmp_path / "test_model.xml")
         result = main(["deadlift", "-o", out_file])
         assert result == 0

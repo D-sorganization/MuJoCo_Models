@@ -24,13 +24,13 @@ class TestBenchPressModelBuilder:
     def test_model_name(self) -> None:
         xml_str = build_bench_press_model()
         root = ET.fromstring(xml_str)
-        assert root.get("model") == "bench_press"
+        assert root.get("model") == "bench_press"  # type: ignore
 
     def test_has_barbell_weld(self) -> None:
         xml_str = build_bench_press_model()
         root = ET.fromstring(xml_str)
         welds = root.findall(".//weld")
-        weld_names = {w.get("name") for w in welds}
+        weld_names = {w.get("name") for w in welds}  # type: ignore
         assert "barbell_to_hand_l" in weld_names
         assert "barbell_to_hand_r" in weld_names
 
@@ -50,7 +50,7 @@ class TestBenchPressModelBuilder:
         builder.attach_barbell(equality, {}, {})
         welds = equality.findall("weld")
         assert len(welds) == 2
-        weld_names = {w.get("name") for w in welds}
+        weld_names = {w.get("name") for w in welds}  # type: ignore
         assert "barbell_to_hand_l" in weld_names
         assert "barbell_to_hand_r" in weld_names
 
@@ -60,7 +60,7 @@ class TestBenchPressModelBuilder:
         body = ET.SubElement(worldbody, "body")
         joint = ET.SubElement(body, "joint", name="shoulder_l_flex", type="hinge")
         builder.set_initial_pose(worldbody)
-        assert joint.get("ref") is not None, "shoulder joint should have ref set"
+        assert joint.get("ref") is not None, "shoulder joint should have ref set"  # type: ignore
 
     def test_set_initial_pose_shoulder_ref(self) -> None:
         from mujoco_models.exercises.bench_press.bench_press_model import (
@@ -74,21 +74,21 @@ class TestBenchPressModelBuilder:
         builder.set_initial_pose(worldbody)
         joint = worldbody.find(".//joint")
         # ref is stored in radians (matches <compiler angle='radian'>)
-        assert float(joint.get("ref")) == pytest.approx(
+        assert float(joint.get("ref")) == pytest.approx(  # type: ignore
             _INITIAL_SHOULDER_FLEX, rel=1e-4
         )
 
     def test_build_has_bench_body(self) -> None:
         xml_str = build_bench_press_model()
         root = ET.fromstring(xml_str)
-        body_names = {b.get("name") for b in root.findall(".//body")}
+        body_names = {b.get("name") for b in root.findall(".//body")}  # type: ignore
         assert "bench" in body_names
 
     def test_build_has_pelvis_weld(self) -> None:
         xml_str = build_bench_press_model()
         root = ET.fromstring(xml_str)
         welds = root.findall(".//weld")
-        weld_names = {w.get("name") for w in welds}
+        weld_names = {w.get("name") for w in welds}  # type: ignore
         assert "pelvis_to_bench" in weld_names
 
     def test_build_has_actuators(self) -> None:

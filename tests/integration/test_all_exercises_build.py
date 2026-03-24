@@ -5,6 +5,7 @@ Each model must produce well-formed MJCF XML with the correct structure:
 """
 
 import xml.etree.ElementTree as ET
+from collections.abc import Callable
 
 import pytest
 
@@ -31,7 +32,7 @@ class TestAllExercisesBuild:
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_produces_valid_mjcf(self, name: str, builder: object) -> None:
+    def test_produces_valid_mjcf(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
         assert root.tag == "mujoco"
@@ -39,15 +40,15 @@ class TestAllExercisesBuild:
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_model_name_matches(self, name: str, builder: object) -> None:
+    def test_model_name_matches(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
-        assert root.get("model") == name
+        assert root.get("model") == name  # type: ignore
 
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_has_gravity(self, name: str, builder: object) -> None:
+    def test_has_gravity(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
         option = root.find("option")
@@ -59,10 +60,13 @@ class TestAllExercisesBuild:
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_z_up_gravity(self, name: str, builder: object) -> None:
+    def test_z_up_gravity(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
-        gravity = root.find("option").get("gravity")
+        option = root.find("option")
+        assert option is not None
+        gravity = option.get("gravity")
+        assert gravity is not None
         parts = [float(x) for x in gravity.split()]
         assert parts[0] == pytest.approx(0.0)
         assert parts[1] == pytest.approx(0.0)
@@ -71,23 +75,23 @@ class TestAllExercisesBuild:
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_has_worldbody(self, name: str, builder: object) -> None:
+    def test_has_worldbody(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
-        assert root.find("worldbody") is not None
+        assert root.find("worldbody") is not None  # type: ignore
 
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_has_equality(self, name: str, builder: object) -> None:
+    def test_has_equality(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
-        assert root.find("equality") is not None
+        assert root.find("equality") is not None  # type: ignore
 
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_minimum_body_count(self, name: str, builder: object) -> None:
+    def test_minimum_body_count(self, name: str, builder: Callable[[], str]) -> None:
         """Every exercise should have at least 18 bodies (15 body + 3 barbell)."""
         xml_str = builder()
         root = ET.fromstring(xml_str)
@@ -97,22 +101,22 @@ class TestAllExercisesBuild:
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_all_masses_positive(self, name: str, builder: object) -> None:
+    def test_all_masses_positive(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
         for body in root.findall(".//body"):
             inertial = body.find("inertial")
             if inertial is not None:
-                mass = float(inertial.get("mass"))
-                assert mass > 0, f"{body.get('name')} mass={mass}"
+                mass = float(inertial.get("mass"))  # type: ignore
+                assert mass > 0, f"{body.get('name')} mass={mass}"  # type: ignore
 
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_barbell_present(self, name: str, builder: object) -> None:
+    def test_barbell_present(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
-        body_names = {b.get("name") for b in root.findall(".//body")}
+        body_names = {b.get("name") for b in root.findall(".//body")}  # type: ignore
         assert "barbell_shaft" in body_names
         assert "barbell_left_sleeve" in body_names
         assert "barbell_right_sleeve" in body_names
@@ -120,30 +124,32 @@ class TestAllExercisesBuild:
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_has_compiler(self, name: str, builder: object) -> None:
+    def test_has_compiler(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
         compiler = root.find("compiler")
         assert compiler is not None
-        assert compiler.get("angle") == "radian"
+        assert compiler.get("angle") == "radian"  # type: ignore
 
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_has_ground_plane(self, name: str, builder: object) -> None:
+    def test_has_ground_plane(self, name: str, builder: Callable[[], str]) -> None:
         xml_str = builder()
         root = ET.fromstring(xml_str)
         worldbody = root.find("worldbody")
         ground_geoms = [
-            g for g in worldbody.findall("geom") if g.get("name") == "ground"
+            g
+            for g in worldbody.findall("geom")
+            if g.get("name") == "ground"  # type: ignore
         ]
         assert len(ground_geoms) == 1
-        assert ground_geoms[0].get("type") == "plane"
+        assert ground_geoms[0].get("type") == "plane"  # type: ignore
 
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
-    def test_actuator_sensor_count(self, name: str, builder: object) -> None:
+    def test_actuator_sensor_count(self, name: str, builder: Callable[[], str]) -> None:
         """Every exercise should have exactly 14 position actuators and 14 jointpos sensors."""
         xml_str = builder()
         root = ET.fromstring(xml_str)

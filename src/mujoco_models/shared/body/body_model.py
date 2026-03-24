@@ -37,7 +37,6 @@ from mujoco_models.shared.contracts.preconditions import (
 )
 from mujoco_models.shared.utils.geometry import (
     capsule_inertia,
-    cylinder_inertia,
     rectangular_prism_inertia,
     sphere_inertia,
 )

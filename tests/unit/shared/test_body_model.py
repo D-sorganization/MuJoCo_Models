@@ -10,12 +10,12 @@ from mujoco_models.shared.body import BodyModelSpec, create_full_body
 class TestBodyModelSpec:
     def test_defaults(self) -> None:
         spec = BodyModelSpec()
-        assert spec.total_mass == 80.0
+        assert spec.total_mass == 80.0  # type: ignore
         assert spec.height == 1.75
 
     def test_custom_values(self) -> None:
         spec = BodyModelSpec(total_mass=100.0, height=1.90)
-        assert spec.total_mass == 100.0
+        assert spec.total_mass == 100.0  # type: ignore
         assert spec.height == 1.90
 
     def test_rejects_zero_mass(self) -> None:
@@ -33,7 +33,7 @@ class TestBodyModelSpec:
     def test_frozen(self) -> None:
         spec = BodyModelSpec()
         with pytest.raises(AttributeError):
-            spec.total_mass = 90.0
+            spec.total_mass = 90.0  # type: ignore
 
 
 class TestCreateFullBody:
@@ -74,22 +74,22 @@ class TestCreateFullBody:
         pelvis = bodies["pelvis"]
         fj = pelvis.find("freejoint")
         assert fj is not None
-        assert fj.get("name") == "ground_pelvis"
+        assert fj.get("name") == "ground_pelvis"  # type: ignore
 
     def test_torso_has_hinge(self, worldbody: ET.Element) -> None:
         bodies = create_full_body(worldbody)
         torso = bodies["torso"]
         joint = torso.find("joint")
         assert joint is not None
-        assert joint.get("type") == "hinge"
-        assert joint.get("name") == "lumbar_flex"
+        assert joint.get("type") == "hinge"  # type: ignore
+        assert joint.get("name") == "lumbar_flex"  # type: ignore
 
     def test_all_bodies_have_inertial(self, worldbody: ET.Element) -> None:
         bodies = create_full_body(worldbody)
         for name, body in bodies.items():
             inertial = body.find("inertial")
             assert inertial is not None, f"{name} missing inertial"
-            mass = float(inertial.get("mass"))
+            mass = float(inertial.get("mass"))  # type: ignore
             assert mass > 0, f"{name} mass={mass}"
 
     def test_all_bodies_have_geom(self, worldbody: ET.Element) -> None:
@@ -106,7 +106,7 @@ class TestCreateFullBody:
         spec = BodyModelSpec(total_mass=100.0, height=1.90)
         bodies = create_full_body(worldbody, spec=spec)
         pelvis_inertial = bodies["pelvis"].find("inertial")
-        mass = float(pelvis_inertial.get("mass"))
+        mass = float(pelvis_inertial.get("mass"))  # type: ignore
         # Pelvis mass fraction is 0.142 of total
         assert mass == pytest.approx(100.0 * 0.142)
 
@@ -117,7 +117,7 @@ class TestCreateFullBody:
         bodies = create_full_body(worldbody, spec)
         pelvis = bodies["pelvis"]
         pos = pelvis.get("pos")
-        parts = [float(x) for x in pos.split()]
+        parts = [float(x) for x in (pos or "").split()]
         # Z is computed as height * _LEG_HEIGHT_FRACTION + p_len / 2.0
         p_len = spec.height * 0.100  # pelvis length_frac from segment table
         expected_z = spec.height * _LEG_HEIGHT_FRACTION + p_len / 2.0

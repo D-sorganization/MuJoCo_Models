@@ -1,5 +1,7 @@
 """Integration tests: verify MJCF models load into MuJoCo without errors."""
 
+from typing import Any
+
 import pytest
 
 try:
@@ -40,13 +42,13 @@ _IDS = [n for n, _ in ALL_BUILDERS]
 @_SKIP_MUJOCO
 class TestMuJoCoLoading:
     @pytest.mark.parametrize("name,builder", ALL_BUILDERS, ids=_IDS)
-    def test_model_loads_without_error(self, name: str, builder: object) -> None:
+    def test_model_loads_without_error(self, name: str, builder: Any) -> None:
         xml_str = builder()
         model = mujoco.MjModel.from_xml_string(xml_str)
         assert model.nbody > 1, f"{name}: no bodies after loading"
 
     @pytest.mark.parametrize("name,builder", ALL_BUILDERS, ids=_IDS)
-    def test_model_has_correct_joint_count(self, name: str, builder: object) -> None:
+    def test_model_has_correct_joint_count(self, name: str, builder: Any) -> None:
         xml_str = builder()
         model = mujoco.MjModel.from_xml_string(xml_str)
         # 14 hinge joints: lumbar, neck, 2 shoulder, 2 elbow, 2 wrist,

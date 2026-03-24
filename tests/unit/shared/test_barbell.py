@@ -11,14 +11,14 @@ class TestBarbellSpec:
     def test_mens_defaults(self) -> None:
         spec = BarbellSpec.mens_olympic()
         assert spec.total_length == 2.20
-        assert spec.bar_mass == 20.0
+        assert spec.bar_mass == 20.0  # type: ignore
         assert spec.shaft_diameter == 0.028
         assert spec.plate_mass_per_side == 0.0
 
     def test_womens_defaults(self) -> None:
         spec = BarbellSpec.womens_olympic()
         assert spec.total_length == 2.01
-        assert spec.bar_mass == 15.0
+        assert spec.bar_mass == 15.0  # type: ignore
         assert spec.shaft_diameter == 0.025
 
     def test_sleeve_length(self) -> None:
@@ -28,7 +28,7 @@ class TestBarbellSpec:
 
     def test_total_mass_with_plates(self) -> None:
         spec = BarbellSpec.mens_olympic(plate_mass_per_side=60.0)
-        assert spec.total_mass == pytest.approx(140.0)
+        assert spec.total_mass == pytest.approx(140.0)  # type: ignore
 
     def test_shaft_mass_proportional(self) -> None:
         spec = BarbellSpec.mens_olympic()
@@ -74,11 +74,11 @@ class TestBarbellSpec:
     def test_frozen(self) -> None:
         spec = BarbellSpec.mens_olympic()
         with pytest.raises(AttributeError):
-            spec.bar_mass = 25.0
+            spec.bar_mass = 25.0  # type: ignore
 
     def test_womens_plate_mass(self) -> None:
         spec = BarbellSpec.womens_olympic(plate_mass_per_side=30.0)
-        assert spec.total_mass == pytest.approx(75.0)
+        assert spec.total_mass == pytest.approx(75.0)  # type: ignore
 
 
 class TestCreateBarbellBodies:
@@ -119,7 +119,8 @@ class TestCreateBarbellBodies:
         spec = BarbellSpec.mens_olympic(plate_mass_per_side=50.0)
         create_barbell_bodies(worldbody, equality, spec)
         total = sum(
-            float(b.find("inertial").get("mass")) for b in worldbody.findall("body")
+            float(b.find("inertial").get("mass"))
+            for b in worldbody.findall("body")  # type: ignore
         )
         assert total == pytest.approx(spec.total_mass, rel=1e-4)
 
@@ -130,14 +131,14 @@ class TestCreateBarbellBodies:
         spec = BarbellSpec.mens_olympic()
         create_barbell_bodies(worldbody, equality, spec)
         for body in worldbody.findall("body"):
-            assert body.find("inertial") is not None
+            assert body.find("inertial") is not None  # type: ignore
 
     def test_bodies_have_geom(self, elements: tuple[ET.Element, ET.Element]) -> None:
         worldbody, equality = elements
         spec = BarbellSpec.mens_olympic()
         create_barbell_bodies(worldbody, equality, spec)
         for body in worldbody.findall("body"):
-            assert body.find("geom") is not None
+            assert body.find("geom") is not None  # type: ignore
 
     def test_shaft_cylinder_geom(self, elements: tuple[ET.Element, ET.Element]) -> None:
         worldbody, equality = elements
@@ -145,4 +146,4 @@ class TestCreateBarbellBodies:
         bodies = create_barbell_bodies(worldbody, equality, spec)
         shaft = bodies["barbell_shaft"]
         geom = shaft.find("geom")
-        assert geom.get("type") == "cylinder"
+        assert geom.get("type") == "cylinder"  # type: ignore
