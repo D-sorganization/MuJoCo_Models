@@ -139,3 +139,15 @@ class TestAllExercisesBuild:
         ]
         assert len(ground_geoms) == 1
         assert ground_geoms[0].get("type") == "plane"
+
+    @pytest.mark.parametrize(
+        "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
+    )
+    def test_actuator_sensor_count(self, name: str, builder: object) -> None:
+        """Every exercise should have exactly 14 position actuators and 14 jointpos sensors."""
+        xml_str = builder()
+        root = ET.fromstring(xml_str)
+        actuators = root.findall(".//actuator/position")
+        sensors = root.findall(".//sensor/jointpos")
+        assert len(actuators) == 14
+        assert len(sensors) == 14

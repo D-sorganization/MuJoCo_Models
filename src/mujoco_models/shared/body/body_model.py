@@ -36,8 +36,10 @@ from mujoco_models.shared.contracts.preconditions import (
     require_positive,
 )
 from mujoco_models.shared.utils.geometry import (
+    capsule_inertia,
     cylinder_inertia,
     rectangular_prism_inertia,
+    sphere_inertia,
 )
 from mujoco_models.shared.utils.mjcf_helpers import (
     add_body,
@@ -90,7 +92,7 @@ def _add_bilateral_limb(
     for sagittal-plane flexion/extension.
     """
     mass, length, radius = _seg(spec, seg_name)
-    inertia = cylinder_inertia(mass, radius, length)
+    inertia = capsule_inertia(mass, radius, length)
 
     created: dict[str, ET.Element] = {}
 
@@ -191,7 +193,7 @@ def create_full_body(
 
     # --- Head (child of torso) ---
     h_mass, h_len, h_rad = _seg(spec, "head")
-    h_inertia = cylinder_inertia(h_mass, h_rad, h_len)
+    h_inertia = sphere_inertia(h_mass, h_rad)
     head_body = add_body(
         torso_body,
         name="head",

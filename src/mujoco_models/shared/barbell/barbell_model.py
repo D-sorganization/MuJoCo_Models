@@ -146,6 +146,7 @@ def create_barbell_bodies(
         geom_type="cylinder",
         geom_size=(spec.shaft_radius, spec.shaft_length / 2.0),
         geom_rgba="0.7 0.7 0.7 1",
+        geom_euler=(0, 90, 0),
     )
 
     # Left sleeve offset along -X
@@ -158,6 +159,7 @@ def create_barbell_bodies(
         geom_type="cylinder",
         geom_size=(spec.sleeve_radius, spec.sleeve_length / 2.0),
         geom_rgba="0.5 0.5 0.5 1",
+        geom_euler=(0, 90, 0),
     )
 
     # Right sleeve offset along +X
@@ -170,6 +172,7 @@ def create_barbell_bodies(
         geom_type="cylinder",
         geom_size=(spec.sleeve_radius, spec.sleeve_length / 2.0),
         geom_rgba="0.5 0.5 0.5 1",
+        geom_euler=(0, 90, 0),
     )
 
     # Weld sleeves to shaft

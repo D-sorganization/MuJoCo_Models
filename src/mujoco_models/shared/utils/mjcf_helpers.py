@@ -34,6 +34,7 @@ def add_body(
     geom_type: str = "cylinder",
     geom_size: tuple[float, ...] | None = None,
     geom_rgba: str = "0.8 0.6 0.4 1",
+    geom_euler: tuple[float, float, float] | None = None,
 ) -> ET.Element:
     """Create an MJCF ``<body>`` with ``<inertial>`` and ``<geom>`` children.
 
@@ -56,6 +57,8 @@ def add_body(
         Geom size parameters (type-dependent). If None, a default is used.
     geom_rgba : str
         RGBA color string for visualization.
+    geom_euler : tuple or None
+        Euler angles (x, y, z) in degrees for geom rotation.
 
     Returns
     -------
@@ -79,6 +82,8 @@ def add_body(
     }
     if geom_size is not None:
         geom_attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
+    if geom_euler is not None:
+        geom_attrs["euler"] = " ".join(f"{s:.6f}" for s in geom_euler)
 
     ET.SubElement(body, "geom", attrib=geom_attrs)
 
