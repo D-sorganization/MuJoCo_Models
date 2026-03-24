@@ -1,5 +1,7 @@
 """Integration tests: verify MJCF models load into MuJoCo without errors."""
 
+from typing import Any
+
 import pytest
 
 try:
@@ -26,8 +28,6 @@ from mujoco_models.exercises.deadlift.deadlift_model import (  # noqa: E402
 )
 from mujoco_models.exercises.snatch.snatch_model import build_snatch_model  # noqa: E402
 from mujoco_models.exercises.squat.squat_model import build_squat_model  # noqa: E402
-
-from typing import Any
 
 ALL_BUILDERS = [
     ("squat", build_squat_model),

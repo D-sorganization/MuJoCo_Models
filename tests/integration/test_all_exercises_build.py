@@ -139,7 +139,9 @@ class TestAllExercisesBuild:
         root = ET.fromstring(xml_str)
         worldbody = root.find("worldbody")
         ground_geoms = [
-            g for g in worldbody.findall("geom") if g.get("name") == "ground"  # type: ignore
+            g
+            for g in worldbody.findall("geom")
+            if g.get("name") == "ground"  # type: ignore
         ]
         assert len(ground_geoms) == 1
         assert ground_geoms[0].get("type") == "plane"  # type: ignore

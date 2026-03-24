@@ -1,0 +1,25 @@
+title:	[Fleet Assessment][H] CI coverage is incomplete or absent
+state:	OPEN
+author:	dieterolson (Dieter Olson)
+labels:	
+comments:	0
+assignees:	
+projects:	
+milestone:	
+number:	41
+--
+## Assessment Finding
+
+- Category: `H`
+- Severity: `MAJOR`
+- Full-traversal evidence: inspected `411` files, read `344` text files in full, classified `67` binary files by metadata and signature.
+
+### Evidence
+- Workflow files: 1
+- Workflows with test execution signals: 1
+
+### Why This Matters
+Without reliable CI gates, code quality depends on manual discipline.
+
+### Recommended Action
+Add or tighten workflows to run tests, linting, and security checks on each push and PR.
