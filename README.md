@@ -11,6 +11,8 @@ MuJoCo musculoskeletal models for classical barbell exercises.
 | Deadlift       | `exercises.deadlift`       | Conventional deadlift from floor to lockout   |
 | Snatch         | `exercises.snatch`         | Wide-grip floor-to-overhead in one motion     |
 | Clean and Jerk | `exercises.clean_and_jerk` | Floor to shoulders (clean) + overhead (jerk)  |
+| Gait           | `exercises.gait`           | Walking gait cycle analysis                   |
+| Sit to Stand   | `exercises.sit_to_stand`   | Chair rise movement pattern                   |
 
 ## Quick Start
 
