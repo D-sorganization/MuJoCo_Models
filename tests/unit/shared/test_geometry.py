@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from mujoco_models.shared.utils.geometry import (
+    capsule_inertia,
     cylinder_inertia,
     parallel_axis_shift,
     rectangular_prism_inertia,
@@ -43,6 +44,51 @@ class TestCylinderInertia:
         ixx, iyy, izz = cylinder_inertia(mass=11.909, radius=0.014, length=1.31)
         assert izz > 0
         assert ixx > izz  # transverse > axial for long thin rod
+
+
+class TestCapsuleInertia:
+    def test_known_values(self) -> None:
+        """Capsule with known mass, radius, length produces positive inertias."""
+        ixx, iyy, izz = capsule_inertia(mass=2.0, radius=0.05, length=0.3)
+        assert ixx > 0
+        assert iyy > 0
+        assert izz > 0
+
+    def test_symmetry_transverse(self) -> None:
+        """Transverse inertias (Ixx, Iyy) must be equal for axially symmetric shape."""
+        ixx, iyy, izz = capsule_inertia(mass=5.0, radius=0.1, length=0.5)
+        assert ixx == pytest.approx(iyy)
+
+    def test_transverse_exceeds_axial_for_long_capsule(self) -> None:
+        """For a long, thin capsule the transverse inertia exceeds the axial."""
+        ixx, iyy, izz = capsule_inertia(mass=3.0, radius=0.02, length=1.0)
+        assert ixx > izz
+
+    def test_triangle_inequality(self) -> None:
+        """Principal inertias must satisfy the triangle inequality."""
+        ixx, iyy, izz = capsule_inertia(mass=1.0, radius=0.1, length=0.5)
+        assert ixx + iyy >= izz
+        assert ixx + izz >= iyy
+        assert iyy + izz >= ixx
+
+    def test_rejects_zero_mass(self) -> None:
+        with pytest.raises(ValueError, match="mass"):
+            capsule_inertia(0.0, 0.1, 0.5)
+
+    def test_rejects_zero_radius(self) -> None:
+        with pytest.raises(ValueError, match="radius"):
+            capsule_inertia(1.0, 0.0, 0.5)
+
+    def test_rejects_zero_length(self) -> None:
+        with pytest.raises(ValueError, match="length"):
+            capsule_inertia(1.0, 0.1, 0.0)
+
+    def test_approaches_sphere_for_zero_length_limit(self) -> None:
+        """As length shrinks, capsule inertia should approach sphere inertia."""
+        ixx_c, _, izz_c = capsule_inertia(mass=1.0, radius=0.5, length=0.001)
+        ixx_s, _, izz_s = sphere_inertia(mass=1.0, radius=0.5)
+        assert ixx_c == pytest.approx(ixx_s, rel=0.05)
+        assert izz_c == pytest.approx(izz_s, rel=0.05)
 
 
 class TestRectangularPrismInertia:
