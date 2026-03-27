@@ -55,6 +55,21 @@ class SquatModelBuilder(ExerciseModelBuilder):
             body2="barbell_shaft",
         )
 
+    def _post_worldbody_hook(self, worldbody: ET.Element, equality: ET.Element) -> None:
+        """Verify foot contact geometry is present for ground contact."""
+        contact_geoms = [
+            g
+            for g in worldbody.iter("geom")
+            if g.get("name", "").startswith("foot_") and g.get("name", "").endswith("_contact")
+        ]
+        if len(contact_geoms) < 2:
+            logger.warning(
+                "Expected 2 foot contact geoms for squat, found %d",
+                len(contact_geoms),
+            )
+        else:
+            logger.debug("Squat contact setup verified: %d foot contact geoms", len(contact_geoms))
+
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set standing unrack position: slight hip and knee flexion.
 
