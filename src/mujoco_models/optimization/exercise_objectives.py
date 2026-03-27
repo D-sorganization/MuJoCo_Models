@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
@@ -141,31 +142,40 @@ def _validate_phase_ordering(phases: list[Phase]) -> None:
             raise ValueError(msg)
 
 
-# Import data constants from the split data module and re-export them.
-from mujoco_models.optimization.exercise_objective_data import (  # noqa: E402
-    BENCH_PRESS_OBJECTIVE,
-    CLEAN_AND_JERK_OBJECTIVE,
-    DEADLIFT_OBJECTIVE,
-    GAIT_OBJECTIVE,
-    SIT_TO_STAND_OBJECTIVE,
-    SNATCH_OBJECTIVE,
-    SQUAT_OBJECTIVE,
-)
+def _build_registry() -> dict[str, ExerciseObjective]:
+    """Build the objective registry, importing data lazily to avoid cycles."""
+    from mujoco_models.optimization.exercise_objective_data import (
+        BENCH_PRESS_OBJECTIVE,
+        CLEAN_AND_JERK_OBJECTIVE,
+        DEADLIFT_OBJECTIVE,
+        GAIT_OBJECTIVE,
+        SIT_TO_STAND_OBJECTIVE,
+        SNATCH_OBJECTIVE,
+        SQUAT_OBJECTIVE,
+    )
 
-# All objectives by exercise name for programmatic access.
-OBJECTIVE_REGISTRY: dict[str, ExerciseObjective] = {
-    "back_squat": SQUAT_OBJECTIVE,
-    "squat": SQUAT_OBJECTIVE,
-    "deadlift": DEADLIFT_OBJECTIVE,
-    "bench_press": BENCH_PRESS_OBJECTIVE,
-    "snatch": SNATCH_OBJECTIVE,
-    "clean_and_jerk": CLEAN_AND_JERK_OBJECTIVE,
-    "gait": GAIT_OBJECTIVE,
-    "sit_to_stand": SIT_TO_STAND_OBJECTIVE,
-}
+    return {
+        "back_squat": SQUAT_OBJECTIVE,
+        "squat": SQUAT_OBJECTIVE,
+        "deadlift": DEADLIFT_OBJECTIVE,
+        "bench_press": BENCH_PRESS_OBJECTIVE,
+        "snatch": SNATCH_OBJECTIVE,
+        "clean_and_jerk": CLEAN_AND_JERK_OBJECTIVE,
+        "gait": GAIT_OBJECTIVE,
+        "sit_to_stand": SIT_TO_STAND_OBJECTIVE,
+    }
 
-# Canonical mapping used by get_exercise_objective().
-EXERCISE_OBJECTIVES: dict[str, ExerciseObjective] = OBJECTIVE_REGISTRY
+
+# Lazily-populated registries -- filled on first access.
+_REGISTRY: dict[str, ExerciseObjective] | None = None
+
+
+def _get_registry() -> dict[str, ExerciseObjective]:
+    """Return the objective registry, building it on first call."""
+    global _REGISTRY  # noqa: PLW0603
+    if _REGISTRY is None:
+        _REGISTRY = _build_registry()
+    return _REGISTRY
 
 
 def get_exercise_objective(name: str) -> ExerciseObjective:
@@ -180,8 +190,42 @@ def get_exercise_objective(name: str) -> ExerciseObjective:
     Raises:
         ValueError: If *name* is not a recognised exercise.
     """
+    registry = _get_registry()
     try:
-        return EXERCISE_OBJECTIVES[name]
+        return registry[name]
     except KeyError:
-        available = ", ".join(sorted(EXERCISE_OBJECTIVES))
+        available = ", ".join(sorted(registry))
         raise ValueError(f"Unknown exercise '{name}'. Available: {available}") from None
+
+
+if TYPE_CHECKING:
+    # Static type declarations for names resolved at runtime via __getattr__.
+    SQUAT_OBJECTIVE: ExerciseObjective
+    DEADLIFT_OBJECTIVE: ExerciseObjective
+    BENCH_PRESS_OBJECTIVE: ExerciseObjective
+    SNATCH_OBJECTIVE: ExerciseObjective
+    CLEAN_AND_JERK_OBJECTIVE: ExerciseObjective
+    GAIT_OBJECTIVE: ExerciseObjective
+    SIT_TO_STAND_OBJECTIVE: ExerciseObjective
+    OBJECTIVE_REGISTRY: dict[str, ExerciseObjective]
+    EXERCISE_OBJECTIVES: dict[str, ExerciseObjective]
+
+
+def __getattr__(name: str) -> object:
+    """Module-level __getattr__ for lazy re-exports of objective constants."""
+    _OBJECTIVE_NAMES = {
+        "SQUAT_OBJECTIVE",
+        "DEADLIFT_OBJECTIVE",
+        "BENCH_PRESS_OBJECTIVE",
+        "SNATCH_OBJECTIVE",
+        "CLEAN_AND_JERK_OBJECTIVE",
+        "GAIT_OBJECTIVE",
+        "SIT_TO_STAND_OBJECTIVE",
+        "OBJECTIVE_REGISTRY",
+        "EXERCISE_OBJECTIVES",
+    }
+    if name in {"OBJECTIVE_REGISTRY", "EXERCISE_OBJECTIVES"}:
+        return _get_registry()
+    if name in _OBJECTIVE_NAMES:
+        return _get_registry()[name.removesuffix("_OBJECTIVE").lower()]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
