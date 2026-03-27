@@ -19,6 +19,7 @@ MuJoCo Z-up convention: gravity = (0, 0, -9.80665).
 from __future__ import annotations
 
 import logging
+import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
@@ -30,6 +31,7 @@ BENCH_HEIGHT = 0.43  # IPF standard bench height (meters)
 
 # Supine lockout position hints (radians)
 _INITIAL_SHOULDER_FLEX = -1.5708  # arms overhead (~90 deg from standing)
+_INITIAL_SHOULDER_ADDUCT = math.radians(75)  # ~75° adduction for horizontal press plane
 _INITIAL_ELBOW_FLEX = 0.0  # fully extended
 
 
@@ -67,11 +69,14 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         bench.set("name", "bench")
         bench.set("pos", f"0 0 {BENCH_HEIGHT - 0.02:.6f}")
         bench_geom = ET.SubElement(bench, "geom")
+        bench_geom.set("name", "bench_contact")
         bench_geom.set("type", "box")
         bench_geom.set("size", "0.30 0.65 0.02")
         bench_geom.set("rgba", "0.5 0.35 0.2 1")
         bench_geom.set("contype", "1")
         bench_geom.set("conaffinity", "1")
+        bench_geom.set("condim", "3")
+        bench_geom.set("friction", "0.8 0.005 0.0001")
 
         add_weld_constraint(
             equality,
@@ -84,6 +89,8 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set supine lockout position: shoulder and elbow joint refs.
 
+        Shoulder adduction positions the arms in the horizontal press plane.
+
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
         for joint in worldbody.iter("joint"):
@@ -91,13 +98,17 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
             joint_type = joint.get("type", "hinge")
             if joint_type != "hinge":
                 continue
-            if "shoulder" in name:
+            if name.endswith("_flex") and "shoulder" in name:
                 joint.set("ref", str(_INITIAL_SHOULDER_FLEX))
+            elif "shoulder" in name and "adduct" in name:
+                joint.set("ref", str(_INITIAL_SHOULDER_ADDUCT))
             elif "elbow" in name:
                 joint.set("ref", str(_INITIAL_ELBOW_FLEX))
         logger.debug(
-            "Setting bench press initial pose: shoulder=%.4f rad, elbow=%.4f rad",
+            "Setting bench press initial pose: shoulder_flex=%.4f rad, "
+            "shoulder_adduct=%.4f rad, elbow=%.4f rad",
             _INITIAL_SHOULDER_FLEX,
+            _INITIAL_SHOULDER_ADDUCT,
             _INITIAL_ELBOW_FLEX,
         )
 

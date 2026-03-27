@@ -31,6 +31,51 @@ logger = logging.getLogger(__name__)
 FLOOR_PULL_HIP_FLEX: float = 1.3963  # ~80° hip flexion (radians)
 FLOOR_PULL_KNEE_FLEX: float = -1.0472  # ~60° knee flexion (radians)
 
+# Adjacent body segment pairs to exclude from self-collision.
+# Central pairs (no side suffix needed):
+_CENTRAL_EXCLUSION_PAIRS: list[tuple[str, str]] = [
+    ("pelvis", "torso"),
+    ("torso", "head"),
+]
+
+# Bilateral pairs (will be expanded with _l and _r suffixes):
+_BILATERAL_EXCLUSION_PAIRS: list[tuple[str, str]] = [
+    ("pelvis", "thigh"),
+    ("torso", "upper_arm"),
+    ("upper_arm", "forearm"),
+    ("forearm", "hand"),
+    ("thigh", "shank"),
+    ("shank", "foot"),
+]
+
+
+def _add_contact_exclusions(contact: ET.Element) -> None:
+    """Add <exclude> elements to prevent self-collision between adjacent segments.
+
+    Central body pairs (pelvis-torso, torso-head) are excluded once.
+    Bilateral pairs are excluded for both left and right sides.
+    """
+    for body1, body2 in _CENTRAL_EXCLUSION_PAIRS:
+        ET.SubElement(
+            contact,
+            "exclude",
+            name=f"exclude_{body1}_{body2}",
+            body1=body1,
+            body2=body2,
+        )
+
+    for body1, body2 in _BILATERAL_EXCLUSION_PAIRS:
+        for side in ("l", "r"):
+            b1 = f"{body1}_{side}" if body1 not in ("pelvis", "torso") else body1
+            b2 = f"{body2}_{side}"
+            ET.SubElement(
+                contact,
+                "exclude",
+                name=f"exclude_{b1}_{b2}",
+                body1=b1,
+                body2=b2,
+            )
+
 
 @dataclass(frozen=True)
 class ExerciseConfig:
@@ -117,13 +162,17 @@ class ExerciseModelBuilder(ABC):
 
         root = ET.Element("mujoco", model=self.exercise_name)
 
-        # Option: gravity and timestep
+        # Option: gravity, timestep, and contact solver settings
         g = self.config.gravity
         ET.SubElement(
             root,
             "option",
             gravity=f"{g[0]:.6f} {g[1]:.6f} {g[2]:.6f}",
             timestep="0.001",
+            integrator="implicit",
+            cone="elliptic",
+            solver="Newton",
+            tolerance="1e-8",
         )
 
         # Compiler settings (Z-up). coordinate='local' was removed in MuJoCo 2.1.4.
@@ -137,7 +186,7 @@ class ExerciseModelBuilder(ABC):
         # Worldbody
         worldbody = ET.SubElement(root, "worldbody")
 
-        # Ground plane
+        # Ground plane with contact properties
         ET.SubElement(
             worldbody,
             "geom",
@@ -145,6 +194,10 @@ class ExerciseModelBuilder(ABC):
             type="plane",
             size="5 5 0.1",
             rgba="0.9 0.9 0.9 1",
+            contype="1",
+            conaffinity="1",
+            condim="3",
+            friction="1.0 0.005 0.0001",
         )
 
         # Equality constraints section
@@ -163,6 +216,11 @@ class ExerciseModelBuilder(ABC):
 
         # Subclass hook: inject extra bodies/constraints before actuator generation
         self._post_worldbody_hook(worldbody, equality)
+
+        # Add contact exclusion pairs to prevent unrealistic self-collision
+        # between adjacent body segments.
+        contact = ET.SubElement(root, "contact")
+        _add_contact_exclusions(contact)
 
         # Exercise-specific initial pose
         self.set_initial_pose(worldbody)

@@ -34,7 +34,7 @@ def ensure_mjcf_root(xml_string: str) -> ET.Element:
 def ensure_positive_mass(mass: float, body_name: str) -> None:
     """Assert that a body's mass is positive after computation."""
     if mass <= 0:
-        raise AssertionError(
+        raise ValueError(
             f"Postcondition violated: {body_name} mass={mass} is not positive"
         )
 
@@ -45,12 +45,12 @@ def ensure_positive_definite_inertia(
     """Assert that principal inertias are positive (necessary for PD)."""
     for label, val in [("Ixx", ixx), ("Iyy", iyy), ("Izz", izz)]:
         if val <= 0:
-            raise AssertionError(
+            raise ValueError(
                 f"Postcondition violated: {body_name} {label}={val} not positive"
             )
     # Triangle inequality for principal inertias
     if ixx + iyy < izz or ixx + izz < iyy or iyy + izz < ixx:
-        raise AssertionError(
+        raise ValueError(
             f"Postcondition violated: {body_name} inertias "
             f"({ixx}, {iyy}, {izz}) violate triangle inequality"
         )

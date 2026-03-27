@@ -79,10 +79,12 @@ class TestCreateFullBody:
     def test_torso_has_hinge(self, worldbody: ET.Element) -> None:
         bodies = create_full_body(worldbody)
         torso = bodies["torso"]
-        joint = torso.find("joint")
-        assert joint is not None
-        assert joint.get("type") == "hinge"  # type: ignore
-        assert joint.get("name") == "lumbar_flex"  # type: ignore
+        joints = torso.findall("joint")
+        assert len(joints) == 3  # lumbar: flex, lateral, rotate
+        assert joints[0].get("type") == "hinge"  # type: ignore
+        assert joints[0].get("name") == "lumbar_flex"  # type: ignore
+        assert joints[1].get("name") == "lumbar_lateral"  # type: ignore
+        assert joints[2].get("name") == "lumbar_rotate"  # type: ignore
 
     def test_all_bodies_have_inertial(self, worldbody: ET.Element) -> None:
         bodies = create_full_body(worldbody)

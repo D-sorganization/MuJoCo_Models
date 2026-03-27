@@ -5,16 +5,16 @@ Segments (bilateral where noted):
   upper_arm_{l,r}, forearm_{l,r}, hand_{l,r},
   thigh_{l,r}, shank_{l,r}, foot_{l,r}
 
-Joints:
+Joints (multi-DOF where physiologically appropriate):
   ground_pelvis (freejoint -- 6 DOF),
-  lumbar (hinge -- flexion/extension),
+  lumbar (3-DOF: flex, lateral, rotate),
   neck (hinge),
-  shoulder_{l,r} (hinge -- simplified, flexion only for v0.1),
+  shoulder_{l,r} (3-DOF: flex, adduct, rotate),
   elbow_{l,r} (hinge),
-  wrist_{l,r} (hinge),
-  hip_{l,r} (hinge -- flexion/extension),
+  wrist_{l,r} (2-DOF: flex, deviate),
+  hip_{l,r} (3-DOF: flex, adduct, rotate),
   knee_{l,r} (hinge),
-  ankle_{l,r} (hinge)
+  ankle_{l,r} (2-DOF: flex, invert)
 
 Anthropometric defaults are for a 50th-percentile male (height=1.75 m,
 mass=80 kg) following Winter (2009) segment proportions.
@@ -31,7 +31,35 @@ import logging
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
-from mujoco_models.shared.body.segment_data import segment_properties
+from mujoco_models.shared.body.segment_data import (
+    ANKLE_FLEX_MAX,
+    ANKLE_FLEX_MIN,
+    ANKLE_INVERT_MAX,
+    ANKLE_INVERT_MIN,
+    HIP_ADDUCT_MAX,
+    HIP_ADDUCT_MIN,
+    HIP_FLEX_MAX,
+    HIP_FLEX_MIN,
+    HIP_ROTATE_MAX,
+    HIP_ROTATE_MIN,
+    LUMBAR_FLEX_MAX,
+    LUMBAR_FLEX_MIN,
+    LUMBAR_LATERAL_MAX,
+    LUMBAR_LATERAL_MIN,
+    LUMBAR_ROTATE_MAX,
+    LUMBAR_ROTATE_MIN,
+    SHOULDER_ADDUCT_MAX,
+    SHOULDER_ADDUCT_MIN,
+    SHOULDER_FLEX_MAX,
+    SHOULDER_FLEX_MIN,
+    SHOULDER_ROTATE_MAX,
+    SHOULDER_ROTATE_MIN,
+    WRIST_DEVIATE_MAX,
+    WRIST_DEVIATE_MIN,
+    WRIST_FLEX_MAX,
+    WRIST_FLEX_MIN,
+    segment_properties,
+)
 from mujoco_models.shared.contracts.preconditions import (
     require_positive,
 )
@@ -83,12 +111,21 @@ def _add_bilateral_limb(
     coord_prefix: str,
     range_min: float,
     range_max: float,
+    extra_joints: list[tuple[str, tuple[float, float, float], float, float]]
+    | None = None,
 ) -> dict[str, ET.Element]:
     """Add left and right limb segments with hinge joints.
 
     MuJoCo convention: Z-up, so vertical offsets use Z coordinate.
     Hinge joints rotate about the X-axis (medio-lateral) by default
     for sagittal-plane flexion/extension.
+
+    Parameters
+    ----------
+    extra_joints : list of (suffix, axis, range_min, range_max) or None
+        Additional hinge joints to add after the primary flexion joint.
+        Each entry creates ``{coord_prefix}_{side}_{suffix}`` on the
+        given axis with the given range limits.
     """
     mass, length, radius = _seg(spec, seg_name)
     inertia = capsule_inertia(mass, radius, length)
@@ -123,6 +160,17 @@ def _add_bilateral_limb(
             range_min=range_min,
             range_max=range_max,
         )
+
+        # Add extra DOFs (stacked hinge joints on the same body)
+        if extra_joints:
+            for suffix, axis, ex_min, ex_max in extra_joints:
+                add_hinge_joint(
+                    child_body,
+                    name=f"{coord_prefix}_{side}_{suffix}",
+                    axis=axis,
+                    range_min=ex_min,
+                    range_max=ex_max,
+                )
 
         created[body_name] = child_body
 
@@ -185,8 +233,22 @@ def create_full_body(
         torso_body,
         name="lumbar_flex",
         axis=(1, 0, 0),
-        range_min=-0.5236,
-        range_max=1.0472,
+        range_min=LUMBAR_FLEX_MIN,
+        range_max=LUMBAR_FLEX_MAX,
+    )
+    add_hinge_joint(
+        torso_body,
+        name="lumbar_lateral",
+        axis=(0, 0, 1),
+        range_min=LUMBAR_LATERAL_MIN,
+        range_max=LUMBAR_LATERAL_MAX,
+    )
+    add_hinge_joint(
+        torso_body,
+        name="lumbar_rotate",
+        axis=(0, 1, 0),
+        range_min=LUMBAR_ROTATE_MIN,
+        range_max=LUMBAR_ROTATE_MAX,
     )
     bodies["torso"] = torso_body
 
@@ -224,8 +286,12 @@ def create_full_body(
         parent_offset_z=shoulder_z,
         parent_lateral_x=shoulder_x,
         coord_prefix="shoulder",
-        range_min=-3.1416,
-        range_max=3.1416,
+        range_min=SHOULDER_FLEX_MIN,
+        range_max=SHOULDER_FLEX_MAX,
+        extra_joints=[
+            ("adduct", (0, 0, 1), SHOULDER_ADDUCT_MIN, SHOULDER_ADDUCT_MAX),
+            ("rotate", (0, 1, 0), SHOULDER_ROTATE_MIN, SHOULDER_ROTATE_MAX),
+        ],
     )
     bodies.update(arm_bodies)
 
@@ -252,8 +318,11 @@ def create_full_body(
         parent_offset_z=-fa_len,
         parent_lateral_x=0,
         coord_prefix="wrist",
-        range_min=-1.2217,
-        range_max=1.2217,
+        range_min=WRIST_FLEX_MIN,
+        range_max=WRIST_FLEX_MAX,
+        extra_joints=[
+            ("deviate", (0, 0, 1), WRIST_DEVIATE_MIN, WRIST_DEVIATE_MAX),
+        ],
     )
     bodies.update(hand_bodies)
 
@@ -268,8 +337,12 @@ def create_full_body(
         parent_offset_z=-p_len / 2.0,
         parent_lateral_x=hip_x,
         coord_prefix="hip",
-        range_min=-0.5236,
-        range_max=2.0944,
+        range_min=HIP_FLEX_MIN,
+        range_max=HIP_FLEX_MAX,
+        extra_joints=[
+            ("adduct", (0, 0, 1), HIP_ADDUCT_MIN, HIP_ADDUCT_MAX),
+            ("rotate", (0, 1, 0), HIP_ROTATE_MIN, HIP_ROTATE_MAX),
+        ],
     )
     bodies.update(thigh_bodies)
 
@@ -296,10 +369,58 @@ def create_full_body(
         parent_offset_z=-sh_len,
         parent_lateral_x=0,
         coord_prefix="ankle",
-        range_min=-0.8727,
-        range_max=0.3491,
+        range_min=ANKLE_FLEX_MIN,
+        range_max=ANKLE_FLEX_MAX,
+        extra_joints=[
+            ("invert", (0, 0, 1), ANKLE_INVERT_MIN, ANKLE_INVERT_MAX),
+        ],
     )
     bodies.update(foot_bodies)
 
+    # --- Add contact sole geometry to each foot ---
+    _add_foot_contact_geoms(bodies)
+
     logger.debug("Created %d body segments", len(bodies))
     return bodies
+
+
+def _add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
+    """Add box collision geometry to foot segments for ground contact.
+
+    Each foot gets a box geom representing the sole contact area:
+    ~0.26 m long x 0.10 m wide x 0.02 m thick, positioned at the
+    bottom of the foot segment.
+
+    Contact properties: contype=1, conaffinity=1, condim=3,
+    friction="1.0 0.005 0.0001" (tangent, torsion, rolling).
+    Group=1 separates contact geoms from visual geoms (group=0).
+    """
+    for side in ("l", "r"):
+        foot_body = bodies.get(f"foot_{side}")
+        if foot_body is None:
+            continue
+
+        # Get the visual geom to determine the foot's vertical extent
+        visual_geom = foot_body.find("geom")
+        if visual_geom is not None:
+            visual_geom.set("group", "0")
+
+        contact_geom = ET.SubElement(foot_body, "geom")
+        contact_geom.set("name", f"foot_{side}_contact")
+        contact_geom.set("type", "box")
+        contact_geom.set(
+            "size", "0.13 0.05 0.01"
+        )  # half-sizes: 0.26/2 x 0.10/2 x 0.02/2
+        contact_geom.set(
+            "pos", "0.04 0 -0.02"
+        )  # slightly forward and at bottom of foot
+        contact_geom.set("contype", "1")
+        contact_geom.set("conaffinity", "1")
+        contact_geom.set("condim", "3")
+        contact_geom.set("friction", "1.0 0.005 0.0001")
+        contact_geom.set("group", "1")
+        contact_geom.set(
+            "rgba", "0.8 0.6 0.4 0.3"
+        )  # semi-transparent for visualization
+
+    logger.debug("Added contact sole geometry to foot segments")
