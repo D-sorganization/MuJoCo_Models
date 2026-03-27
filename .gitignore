@@ -20,3 +20,13 @@ venv/
 *.log
 .DS_Store
 Thumbs.db
+# Temp/scratch files
+mypy_out*.txt
+mypy2.txt
+issue-*.txt
+issues.json
+issues.txt
+mj_issues.json
+fix_mypy.py
+output/
+*.tmp
