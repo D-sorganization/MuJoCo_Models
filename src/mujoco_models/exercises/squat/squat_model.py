@@ -60,7 +60,8 @@ class SquatModelBuilder(ExerciseModelBuilder):
         contact_geoms = [
             g
             for g in worldbody.iter("geom")
-            if g.get("name", "").startswith("foot_") and g.get("name", "").endswith("_contact")
+            if g.get("name", "").startswith("foot_")
+            and g.get("name", "").endswith("_contact")
         ]
         if len(contact_geoms) < 2:
             logger.warning(
@@ -68,7 +69,10 @@ class SquatModelBuilder(ExerciseModelBuilder):
                 len(contact_geoms),
             )
         else:
-            logger.debug("Squat contact setup verified: %d foot contact geoms", len(contact_geoms))
+            logger.debug(
+                "Squat contact setup verified: %d foot contact geoms",
+                len(contact_geoms),
+            )
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set standing unrack position: slight hip and knee flexion.

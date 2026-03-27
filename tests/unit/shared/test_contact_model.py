@@ -26,7 +26,9 @@ class TestFootContactGeometry:
         for side in ("l", "r"):
             foot = bodies[f"foot_{side}"]
             contact_geoms = [
-                g for g in foot.findall("geom") if g.get("name") == f"foot_{side}_contact"
+                g
+                for g in foot.findall("geom")
+                if g.get("name") == f"foot_{side}_contact"
             ]
             assert len(contact_geoms) == 1, f"Missing contact geom for foot_{side}"
 
