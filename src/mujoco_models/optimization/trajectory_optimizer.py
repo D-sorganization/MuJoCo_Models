@@ -16,6 +16,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from .exercise_objectives import ExerciseObjective
+from .inverse_kinematics import _interpolate_at_fraction
 
 logger = logging.getLogger(__name__)
 
@@ -143,30 +144,14 @@ def interpolate_phases(
         Array of shape ``(n_frames, n_joints)`` with linearly
         interpolated joint angles.  Joint ordering is alphabetical.
     """
-    all_joints: set[str] = set()
-    for phase in objective.phases:
-        all_joints.update(phase.target_joints.keys())
-    joint_names = sorted(all_joints)
+    joint_names = objective.joint_names
+    n_joints = len(joint_names)
 
     fractions = np.linspace(0.0, 1.0, n_frames)
-    keyframes = np.zeros((n_frames, len(joint_names)))
+    keyframes = np.zeros((n_frames, n_joints))
 
     for i, f in enumerate(fractions):
-        prev_p = objective.phases[0]
-        next_p = objective.phases[-1]
-        for j in range(len(objective.phases) - 1):
-            if objective.phases[j].fraction <= f <= objective.phases[j + 1].fraction:
-                prev_p = objective.phases[j]
-                next_p = objective.phases[j + 1]
-                break
-
-        denom = next_p.fraction - prev_p.fraction
-        alpha = 0.0 if denom == 0 else (f - prev_p.fraction) / denom
-
-        for k, jn in enumerate(joint_names):
-            v0 = prev_p.target_joints.get(jn, 0.0)
-            v1 = next_p.target_joints.get(jn, 0.0)
-            keyframes[i, k] = v0 + alpha * (v1 - v0)
+        keyframes[i] = _interpolate_at_fraction(f, objective.phases, joint_names)
 
     return keyframes
 

@@ -6,6 +6,7 @@ Identical tests exist in Drake, Pinocchio, and OpenSim repos.
 
 import pytest
 
+from mujoco_models.shared.body.segment_data import SEGMENT_TABLE
 from mujoco_models.shared.parity.standard import (
     EXERCISE_PHASE_COUNTS,
     FOOT_CONTACT_DIMS,
@@ -81,6 +82,22 @@ class TestExerciseParity:
     @pytest.mark.parametrize("exercise,count", EXERCISE_PHASE_COUNTS.items())
     def test_phase_counts(self, exercise: str, count: int) -> None:
         assert count >= 5
+
+
+class TestSegmentDataCrossCheck:
+    """Verify parity standard SEGMENT_MASS_FRACTIONS matches segment_data.SEGMENT_TABLE."""
+
+    def test_same_segments(self) -> None:
+        assert set(SEGMENT_MASS_FRACTIONS.keys()) == set(SEGMENT_TABLE.keys())
+
+    @pytest.mark.parametrize("segment", sorted(SEGMENT_MASS_FRACTIONS.keys()))
+    def test_mass_fractions_match(self, segment: str) -> None:
+        parity_val = SEGMENT_MASS_FRACTIONS[segment]
+        table_val = SEGMENT_TABLE[segment]["mass_frac"]
+        assert parity_val == pytest.approx(table_val), (
+            f"Parity standard {segment} mass_frac={parity_val} "
+            f"!= segment_data {segment} mass_frac={table_val}"
+        )
 
 
 class TestGravityParity:
