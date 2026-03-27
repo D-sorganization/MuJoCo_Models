@@ -24,7 +24,10 @@ from mujoco_models.shared.contracts.preconditions import (
     require_non_negative,
     require_positive,
 )
-from mujoco_models.shared.utils.geometry import cylinder_inertia
+from mujoco_models.shared.utils.geometry import (
+    cylinder_inertia,
+    hollow_cylinder_inertia,
+)
 from mujoco_models.shared.utils.mjcf_helpers import (
     add_body,
     add_weld_constraint,
@@ -124,10 +127,27 @@ def create_barbell_bodies(
         spec.shaft_mass, spec.shaft_radius, spec.shaft_length
     )
 
-    sleeve_total_mass = spec.sleeve_mass + spec.plate_mass_per_side
+    # Compute bare sleeve inertia
     sleeve_inertia = cylinder_inertia(
-        sleeve_total_mass, spec.sleeve_radius, spec.sleeve_length
+        spec.sleeve_mass, spec.sleeve_radius, spec.sleeve_length
     )
+
+    # Add plate inertia using correct plate radius (0.225 m), not sleeve radius
+    if spec.plate_mass_per_side > 0:
+        plate_thickness = max(0.01, spec.plate_mass_per_side * 0.002)
+        plate_inertia = hollow_cylinder_inertia(
+            spec.plate_mass_per_side,
+            inner_radius=spec.sleeve_radius,
+            outer_radius=0.225,
+            length=plate_thickness,
+        )
+        sleeve_inertia = (
+            sleeve_inertia[0] + plate_inertia[0],
+            sleeve_inertia[1] + plate_inertia[1],
+            sleeve_inertia[2] + plate_inertia[2],
+        )
+
+    sleeve_total_mass = spec.sleeve_mass + spec.plate_mass_per_side
 
     shaft_name = f"{prefix}_shaft"
     left_name = f"{prefix}_left_sleeve"
