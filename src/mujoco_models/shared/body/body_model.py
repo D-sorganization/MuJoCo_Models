@@ -186,7 +186,7 @@ def create_full_body(
         name="lumbar_flex",
         axis=(1, 0, 0),
         range_min=-0.5236,
-        range_max=0.7854,
+        range_max=1.0472,
     )
     bodies["torso"] = torso_body
 
@@ -296,8 +296,8 @@ def create_full_body(
         parent_offset_z=-sh_len,
         parent_lateral_x=0,
         coord_prefix="ankle",
-        range_min=-0.7854,
-        range_max=0.7854,
+        range_min=-0.8727,
+        range_max=0.3491,
     )
     bodies.update(foot_bodies)
 

@@ -190,6 +190,33 @@ class ExerciseModelBuilder(ABC):
                 s.set("name", f"pos_{name}")
                 s.set("joint", name)
 
+        # Build keyframe from joint ref values set by set_initial_pose().
+        # MuJoCo keyframes allow resetting the model to a named configuration
+        # (e.g. via mj_resetDataKeyframe). The qpos order follows: freejoint
+        # (7 DOF: xyz + quaternion), then hinge joints in tree order.
+        qpos_values: list[str] = []
+        for joint_el in worldbody.iter("joint"):
+            ref_val = joint_el.get("ref", "0")
+            qpos_values.append(ref_val)
+        # Prepend freejoint DOFs (7 values: x y z qw qx qy qz)
+        for fj in worldbody.iter("freejoint"):
+            # Find parent body to get initial position
+            for body_el in worldbody.iter("body"):
+                fj_in_body = body_el.find("freejoint")
+                if fj_in_body is not None and fj_in_body is fj:
+                    pos_str = body_el.get("pos", "0 0 0")
+                    pos_parts = pos_str.split()
+                    # freejoint qpos: x y z qw qx qy qz
+                    fj_qpos = pos_parts + ["1", "0", "0", "0"]
+                    qpos_values = fj_qpos + qpos_values
+                    break
+
+        if qpos_values:
+            keyframe = ET.SubElement(root, "keyframe")
+            key = ET.SubElement(keyframe, "key")
+            key.set("name", f"{self.exercise_name}_start")
+            key.set("qpos", " ".join(qpos_values))
+
         xml_str = serialize_model(root)
 
         # Postcondition: well-formed MJCF XML
