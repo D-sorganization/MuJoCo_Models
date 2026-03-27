@@ -69,11 +69,14 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         bench.set("name", "bench")
         bench.set("pos", f"0 0 {BENCH_HEIGHT - 0.02:.6f}")
         bench_geom = ET.SubElement(bench, "geom")
+        bench_geom.set("name", "bench_contact")
         bench_geom.set("type", "box")
         bench_geom.set("size", "0.30 0.65 0.02")
         bench_geom.set("rgba", "0.5 0.35 0.2 1")
         bench_geom.set("contype", "1")
         bench_geom.set("conaffinity", "1")
+        bench_geom.set("condim", "3")
+        bench_geom.set("friction", "0.8 0.005 0.0001")
 
         add_weld_constraint(
             equality,
