@@ -1,4 +1,4 @@
-"""Integration tests: verify all five exercise models build end-to-end.
+"""Integration tests: verify all exercise models build end-to-end.
 
 Each model must produce well-formed MJCF XML with the correct structure:
 <mujoco> root with option, compiler, default, worldbody, and equality sections.
@@ -16,6 +16,10 @@ from mujoco_models.exercises.clean_and_jerk.clean_and_jerk_model import (
     build_clean_and_jerk_model,
 )
 from mujoco_models.exercises.deadlift.deadlift_model import build_deadlift_model
+from mujoco_models.exercises.gait.gait_model import build_gait_model
+from mujoco_models.exercises.sit_to_stand.sit_to_stand_model import (
+    build_sit_to_stand_model,
+)
 from mujoco_models.exercises.snatch.snatch_model import build_snatch_model
 from mujoco_models.exercises.squat.squat_model import build_squat_model
 
@@ -25,6 +29,8 @@ ALL_BUILDERS = [
     ("deadlift", build_deadlift_model),
     ("snatch", build_snatch_model),
     ("clean_and_jerk", build_clean_and_jerk_model),
+    ("gait", build_gait_model),
+    ("sit_to_stand", build_sit_to_stand_model),
 ]
 
 

@@ -408,13 +408,19 @@ def _add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
         contact_geom = ET.SubElement(foot_body, "geom")
         contact_geom.set("name", f"foot_{side}_contact")
         contact_geom.set("type", "box")
-        contact_geom.set("size", "0.13 0.05 0.01")  # half-sizes: 0.26/2 x 0.10/2 x 0.02/2
-        contact_geom.set("pos", "0.04 0 -0.02")  # slightly forward and at bottom of foot
+        contact_geom.set(
+            "size", "0.13 0.05 0.01"
+        )  # half-sizes: 0.26/2 x 0.10/2 x 0.02/2
+        contact_geom.set(
+            "pos", "0.04 0 -0.02"
+        )  # slightly forward and at bottom of foot
         contact_geom.set("contype", "1")
         contact_geom.set("conaffinity", "1")
         contact_geom.set("condim", "3")
         contact_geom.set("friction", "1.0 0.005 0.0001")
         contact_geom.set("group", "1")
-        contact_geom.set("rgba", "0.8 0.6 0.4 0.3")  # semi-transparent for visualization
+        contact_geom.set(
+            "rgba", "0.8 0.6 0.4 0.3"
+        )  # semi-transparent for visualization
 
     logger.debug("Added contact sole geometry to foot segments")

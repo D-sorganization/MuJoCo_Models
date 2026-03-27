@@ -15,6 +15,10 @@ from mujoco_models.exercises.clean_and_jerk.clean_and_jerk_model import (
     CleanAndJerkModelBuilder,
 )
 from mujoco_models.exercises.deadlift.deadlift_model import DeadliftModelBuilder
+from mujoco_models.exercises.gait.gait_model import GaitModelBuilder
+from mujoco_models.exercises.sit_to_stand.sit_to_stand_model import (
+    SitToStandModelBuilder,
+)
 from mujoco_models.exercises.snatch.snatch_model import SnatchModelBuilder
 from mujoco_models.exercises.squat.squat_model import SquatModelBuilder
 
@@ -28,6 +32,8 @@ EXERCISE_REGISTRY: dict[str, type[ExerciseModelBuilder]] = {
     "deadlift": DeadliftModelBuilder,
     "snatch": SnatchModelBuilder,
     "clean_and_jerk": CleanAndJerkModelBuilder,
+    "gait": GaitModelBuilder,
+    "sit_to_stand": SitToStandModelBuilder,
 }
 
 __all__ = [
@@ -35,6 +41,8 @@ __all__ = [
     "BenchPressModelBuilder",
     "CleanAndJerkModelBuilder",
     "DeadliftModelBuilder",
+    "GaitModelBuilder",
+    "SitToStandModelBuilder",
     "SnatchModelBuilder",
     "SquatModelBuilder",
 ]

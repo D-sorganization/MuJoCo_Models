@@ -21,6 +21,8 @@ EXPECTED_NAMES = {
     "bench_press",
     "snatch",
     "clean_and_jerk",
+    "gait",
+    "sit_to_stand",
 }
 
 
@@ -79,6 +81,8 @@ _INTERP_NAMES = [
     "snatch",
     "clean_and_jerk",
     "squat",
+    "gait",
+    "sit_to_stand",
 ]
 
 
