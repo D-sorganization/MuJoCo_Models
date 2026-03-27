@@ -72,7 +72,7 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
             joint_type = joint.get("type", "hinge")
             if joint_type != "hinge":
                 continue
-            if "hip" in name:
+            if name.endswith("_flex") and "hip" in name:
                 joint.set("ref", str(_INITIAL_HIP_FLEX))
             elif "knee" in name:
                 joint.set("ref", str(_INITIAL_KNEE_FLEX))

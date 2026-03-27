@@ -150,10 +150,15 @@ class TestAllExercisesBuild:
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
     def test_actuator_sensor_count(self, name: str, builder: Callable[[], str]) -> None:
-        """Every exercise should have exactly 14 position actuators and 14 jointpos sensors."""
+        """Every exercise should have exactly 28 position actuators and 28 jointpos sensors.
+
+        Joint breakdown (multi-DOF upgrade):
+          lumbar (3) + neck (1) + 2*shoulder (3) + 2*elbow (1) + 2*wrist (2)
+          + 2*hip (3) + 2*knee (1) + 2*ankle (2) = 28
+        """
         xml_str = builder()
         root = ET.fromstring(xml_str)
         actuators = root.findall(".//actuator/position")
         sensors = root.findall(".//sensor/jointpos")
-        assert len(actuators) == 14
-        assert len(sensors) == 14
+        assert len(actuators) == 28
+        assert len(sensors) == 28

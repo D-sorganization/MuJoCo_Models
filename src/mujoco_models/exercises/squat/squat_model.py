@@ -15,6 +15,7 @@ Biomechanical notes:
 from __future__ import annotations
 
 import logging
+import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 # Slight hip/knee flexion for unrack position (radians)
 _INITIAL_HIP_FLEX = 0.15  # ~8.6 degrees
 _INITIAL_KNEE_FLEX = -0.15  # slight knee bend
+_INITIAL_HIP_ROTATE = math.radians(10)  # ~10° external rotation for squat stance
 
 
 class SquatModelBuilder(ExerciseModelBuilder):
@@ -57,7 +59,8 @@ class SquatModelBuilder(ExerciseModelBuilder):
         """Set standing unrack position: slight hip and knee flexion.
 
         The lifter starts in a comfortable standing position with the
-        barbell on the back, knees slightly unlocked.
+        barbell on the back, knees slightly unlocked.  Hip external
+        rotation (~10 deg) opens the stance for squat mechanics.
 
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
@@ -66,14 +69,18 @@ class SquatModelBuilder(ExerciseModelBuilder):
             joint_type = joint.get("type", "hinge")
             if joint_type != "hinge":
                 continue
-            if "hip" in name:
+            if name.endswith("_flex") and "hip" in name:
                 joint.set("ref", str(_INITIAL_HIP_FLEX))
+            elif "hip" in name and "rotate" in name:
+                joint.set("ref", str(_INITIAL_HIP_ROTATE))
             elif "knee" in name:
                 joint.set("ref", str(_INITIAL_KNEE_FLEX))
         logger.debug(
-            "Setting squat initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad",
+            "Setting squat initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad, "
+            "hip_rotate=%.4f rad",
             _INITIAL_HIP_FLEX,
             _INITIAL_KNEE_FLEX,
+            _INITIAL_HIP_ROTATE,
         )
 
 

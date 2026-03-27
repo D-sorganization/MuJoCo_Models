@@ -51,6 +51,6 @@ class TestMuJoCoLoading:
     def test_model_has_correct_joint_count(self, name: str, builder: Any) -> None:
         xml_str = builder()
         model = mujoco.MjModel.from_xml_string(xml_str)
-        # 14 hinge joints: lumbar, neck, 2 shoulder, 2 elbow, 2 wrist,
-        # 2 hip, 2 knee, 2 ankle
-        assert model.njnt >= 14, f"{name}: expected >= 14 joints, got {model.njnt}"
+        # 28 hinge joints (multi-DOF): lumbar(3), neck(1), 2*shoulder(3),
+        # 2*elbow(1), 2*wrist(2), 2*hip(3), 2*knee(1), 2*ankle(2)
+        assert model.njnt >= 28, f"{name}: expected >= 28 joints, got {model.njnt}"
