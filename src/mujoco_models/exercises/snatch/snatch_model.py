@@ -25,6 +25,7 @@ The barbell is welded to both hands with a wide grip offset.
 from __future__ import annotations
 
 import logging
+import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import (
@@ -39,6 +40,7 @@ logger = logging.getLogger(__name__)
 # Deep hip hinge starting position — same as deadlift (shared constants).
 _INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
 _INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
+_INITIAL_SHOULDER_ADDUCT = math.radians(45)  # ~45° abduction for wide overhead grip
 
 
 class SnatchModelBuilder(ExerciseModelBuilder):
@@ -64,6 +66,8 @@ class SnatchModelBuilder(ExerciseModelBuilder):
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set starting position: bar on floor, wide grip, deep hip hinge.
 
+        Shoulder abduction opens the arms for the wide snatch grip.
+
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
         for joint in worldbody.iter("joint"):
@@ -71,14 +75,18 @@ class SnatchModelBuilder(ExerciseModelBuilder):
             joint_type = joint.get("type", "hinge")
             if joint_type != "hinge":
                 continue
-            if "hip" in name:
+            if name.endswith("_flex") and "hip" in name:
                 joint.set("ref", str(_INITIAL_HIP_FLEX))
+            elif "shoulder" in name and "adduct" in name:
+                joint.set("ref", str(_INITIAL_SHOULDER_ADDUCT))
             elif "knee" in name:
                 joint.set("ref", str(_INITIAL_KNEE_FLEX))
         logger.debug(
-            "Setting snatch initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad",
+            "Setting snatch initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad, "
+            "shoulder_adduct=%.4f rad",
             _INITIAL_HIP_FLEX,
             _INITIAL_KNEE_FLEX,
+            _INITIAL_SHOULDER_ADDUCT,
         )
 
 

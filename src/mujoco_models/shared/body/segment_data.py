@@ -8,6 +8,8 @@ Extracted from body_model.py to keep modules under the 300-line guideline.
 
 from __future__ import annotations
 
+import math
+
 from mujoco_models.shared.contracts.preconditions import require_positive
 
 # Winter (2009) segment mass fractions and length fractions of total height.
@@ -46,6 +48,46 @@ def total_mass_fraction() -> float:
         multiplier = 2.0 if name in _BILATERAL_SEGMENTS else 1.0
         total += props["mass_frac"] * multiplier
     return total
+
+
+# ---------------------------------------------------------------------------
+# Multi-DOF joint limits (radians)
+# ---------------------------------------------------------------------------
+# Hip (3-DOF): flexion/extension, abduction/adduction, internal/external rotation
+HIP_FLEX_MIN = math.radians(-30)
+HIP_FLEX_MAX = math.radians(120)
+HIP_ADDUCT_MIN = math.radians(-45)
+HIP_ADDUCT_MAX = math.radians(30)
+HIP_ROTATE_MIN = math.radians(-45)
+HIP_ROTATE_MAX = math.radians(45)
+
+# Shoulder (3-DOF): flexion/extension, abduction/adduction, internal/external rotation
+SHOULDER_FLEX_MIN = math.radians(-60)
+SHOULDER_FLEX_MAX = math.radians(180)
+SHOULDER_ADDUCT_MIN = math.radians(-30)
+SHOULDER_ADDUCT_MAX = math.radians(180)
+SHOULDER_ROTATE_MIN = math.radians(-90)
+SHOULDER_ROTATE_MAX = math.radians(90)
+
+# Lumbar (3-DOF): flexion/extension, lateral flexion, axial rotation
+LUMBAR_FLEX_MIN = math.radians(-30)
+LUMBAR_FLEX_MAX = math.radians(45)
+LUMBAR_LATERAL_MIN = math.radians(-30)
+LUMBAR_LATERAL_MAX = math.radians(30)
+LUMBAR_ROTATE_MIN = math.radians(-30)
+LUMBAR_ROTATE_MAX = math.radians(30)
+
+# Ankle (2-DOF): dorsiflexion/plantarflexion, inversion/eversion
+ANKLE_FLEX_MIN = math.radians(-20)
+ANKLE_FLEX_MAX = math.radians(50)
+ANKLE_INVERT_MIN = math.radians(-20)
+ANKLE_INVERT_MAX = math.radians(20)
+
+# Wrist (2-DOF): flexion/extension, radial/ulnar deviation
+WRIST_FLEX_MIN = math.radians(-70)
+WRIST_FLEX_MAX = math.radians(70)
+WRIST_DEVIATE_MIN = math.radians(-20)
+WRIST_DEVIATE_MAX = math.radians(30)
 
 
 def segment_properties(

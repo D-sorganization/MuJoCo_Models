@@ -29,6 +29,7 @@ The barbell is welded to both hands at clean grip width.
 from __future__ import annotations
 
 import logging
+import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import (
@@ -43,6 +44,7 @@ logger = logging.getLogger(__name__)
 # Deep hip hinge starting position — same as deadlift (shared constants).
 _INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
 _INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
+_INITIAL_SHOULDER_ROTATE = math.radians(45)  # ~45° external rotation for front rack
 
 
 class CleanAndJerkModelBuilder(ExerciseModelBuilder):
@@ -71,6 +73,8 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set starting position: bar on floor, clean grip, hip hinge.
 
+        Shoulder external rotation prepares the front rack position.
+
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
         for joint in worldbody.iter("joint"):
@@ -78,14 +82,18 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
             joint_type = joint.get("type", "hinge")
             if joint_type != "hinge":
                 continue
-            if "hip" in name:
+            if name.endswith("_flex") and "hip" in name:
                 joint.set("ref", str(_INITIAL_HIP_FLEX))
+            elif "shoulder" in name and "rotate" in name:
+                joint.set("ref", str(_INITIAL_SHOULDER_ROTATE))
             elif "knee" in name:
                 joint.set("ref", str(_INITIAL_KNEE_FLEX))
         logger.debug(
-            "Setting clean & jerk initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad",
+            "Setting clean & jerk initial pose: hip_flex=%.4f rad, "
+            "knee_flex=%.4f rad, shoulder_rotate=%.4f rad",
             _INITIAL_HIP_FLEX,
             _INITIAL_KNEE_FLEX,
+            _INITIAL_SHOULDER_ROTATE,
         )
 
 
