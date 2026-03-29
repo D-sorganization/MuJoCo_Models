@@ -125,3 +125,41 @@ class TestCreateFullBody:
         expected_z = spec.height * _LEG_HEIGHT_FRACTION + p_len / 2.0
         assert parts[2] == pytest.approx(expected_z)
         assert parts[0] == pytest.approx(0.0)
+
+
+class TestPelvisHeightDerivation:
+    """Issue #57: pelvis height derived from anthropometric data, not hardcoded."""
+
+    def test_default_height_approximately_1015(self) -> None:
+        """For 1.75 m person, pelvis height should be ~1.015 m.
+
+        Derived: 1.75 * 0.530 (leg fraction) + 1.75 * 0.100 / 2 (half pelvis).
+        """
+        spec = BodyModelSpec()
+        assert spec.pelvis_height == pytest.approx(1.015, abs=0.01)
+
+    def test_scales_with_height(self) -> None:
+        """Taller person should have higher pelvis."""
+        short = BodyModelSpec(height=1.60)
+        tall = BodyModelSpec(height=1.90)
+        assert tall.pelvis_height > short.pelvis_height
+
+    def test_pelvis_height_formula(self) -> None:
+        """Verify pelvis_height = height * 0.530 + pelvis_len / 2."""
+        spec = BodyModelSpec(total_mass=80.0, height=1.80)
+        p_len = spec.height * 0.100  # pelvis length_frac
+        expected = spec.height * 0.530 + p_len / 2.0
+        assert spec.pelvis_height == pytest.approx(expected)
+
+    def test_matches_create_full_body_position(self, worldbody: ET.Element) -> None:
+        """Pelvis body position in MJCF should match spec.pelvis_height."""
+        spec = BodyModelSpec(total_mass=90.0, height=1.85)
+        bodies = create_full_body(worldbody, spec)
+        pelvis = bodies["pelvis"]
+        pos_str = pelvis.get("pos", "")
+        z = float(pos_str.split()[2])
+        assert z == pytest.approx(spec.pelvis_height)
+
+    @pytest.fixture()
+    def worldbody(self) -> ET.Element:
+        return ET.Element("worldbody")

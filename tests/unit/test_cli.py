@@ -47,3 +47,34 @@ class TestCLI:
     def test_main_verbose(self) -> None:
         result = main(["bench_press", "-v"])
         assert result == 0
+
+
+class TestCLIExceptionHandling:
+    """Issue #49: CLI should handle exceptions gracefully."""
+
+    def test_invalid_body_mass_returns_error(self) -> None:
+        result = main(["squat", "--body-mass", "-10"])
+        assert result == 1
+
+    def test_invalid_height_returns_error(self) -> None:
+        result = main(["squat", "--height", "0"])
+        assert result == 1
+
+    def test_invalid_output_path_returns_error(self, tmp_path: Any) -> None:
+        # Write to a directory that does not exist
+        bad_path = str(tmp_path / "nonexistent_dir" / "model.xml")
+        result = main(["squat", "-o", bad_path])
+        assert result == 1
+
+    def test_valid_exercise_succeeds(self) -> None:
+        for exercise in (
+            "squat",
+            "deadlift",
+            "bench_press",
+            "snatch",
+            "clean_and_jerk",
+            "gait",
+            "sit_to_stand",
+        ):
+            result = main([exercise])
+            assert result == 0, f"{exercise} should succeed"
