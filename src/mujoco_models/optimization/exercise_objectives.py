@@ -14,15 +14,18 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
 # Valid bar path constraint types.
-VALID_BAR_PATH_CONSTRAINTS = frozenset({"vertical", "j_curve", "s_curve", "none"})
+VALID_BAR_PATH_CONSTRAINTS: frozenset[str] = frozenset(
+    {"vertical", "j_curve", "s_curve", "none"}
+)
 
 # Valid balance modes for stance classification.
-VALID_BALANCE_MODES = frozenset(
+VALID_BALANCE_MODES: frozenset[str] = frozenset(
     {"bilateral_stance", "split_stance", "supine", "alternating_stance"}
 )
 
@@ -142,9 +145,14 @@ def _validate_phase_ordering(phases: list[Phase]) -> None:
             raise ValueError(msg)
 
 
+@lru_cache(maxsize=1)
 def _build_registry() -> dict[str, ExerciseObjective]:
-    """Build the objective registry, importing data lazily to avoid cycles."""
-    from mujoco_models.optimization.exercise_objective_data import (
+    """Build the objective registry, importing data lazily to avoid cycles.
+
+    Uses ``@lru_cache`` so the registry is built once and reused without
+    requiring a module-level global with ``global`` statement.
+    """
+    from mujoco_models.optimization.objective_data import (
         BENCH_PRESS_OBJECTIVE,
         CLEAN_AND_JERK_OBJECTIVE,
         DEADLIFT_OBJECTIVE,
@@ -166,18 +174,6 @@ def _build_registry() -> dict[str, ExerciseObjective]:
     }
 
 
-# Lazily-populated registries -- filled on first access.
-_REGISTRY: dict[str, ExerciseObjective] | None = None
-
-
-def _get_registry() -> dict[str, ExerciseObjective]:
-    """Return the objective registry, building it on first call."""
-    global _REGISTRY  # noqa: PLW0603
-    if _REGISTRY is None:
-        _REGISTRY = _build_registry()
-    return _REGISTRY
-
-
 def get_exercise_objective(name: str) -> ExerciseObjective:
     """Return an exercise objective by name.
 
@@ -190,7 +186,7 @@ def get_exercise_objective(name: str) -> ExerciseObjective:
     Raises:
         ValueError: If *name* is not a recognised exercise.
     """
-    registry = _get_registry()
+    registry = _build_registry()
     try:
         return registry[name]
     except KeyError:
@@ -225,7 +221,7 @@ def __getattr__(name: str) -> object:
         "EXERCISE_OBJECTIVES",
     }
     if name in {"OBJECTIVE_REGISTRY", "EXERCISE_OBJECTIVES"}:
-        return _get_registry()
+        return _build_registry()
     if name in _OBJECTIVE_NAMES:
-        return _get_registry()[name.removesuffix("_OBJECTIVE").lower()]
+        return _build_registry()[name.removesuffix("_OBJECTIVE").lower()]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

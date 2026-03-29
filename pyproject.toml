@@ -69,6 +69,8 @@ ignore = [
 "tests/**" = ["T201"]
 "examples/**" = ["T201"]
 "src/mujoco_models/__main__.py" = ["T201"]
+# B027: intentional empty method in ABC (not abstract, subclass hook)
+"src/mujoco_models/exercises/base.py" = ["B027"]
 
 [tool.mypy]
 python_version = "3.10"

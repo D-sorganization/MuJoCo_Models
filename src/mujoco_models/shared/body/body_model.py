@@ -76,8 +76,10 @@ from mujoco_models.shared.utils.mjcf_helpers import (
 
 logger = logging.getLogger(__name__)
 
-# Winter (2009): thigh(0.245) + shank(0.246) + foot(0.039) ≈ 0.530 of height
-_LEG_HEIGHT_FRACTION = 0.530
+# Winter (2009): thigh(0.245) + shank(0.246) + foot(0.039) ≈ 0.530 of height.
+# Used to derive standing pelvis height from anthropometric data rather than
+# a hardcoded constant.  For a 1.75 m person this yields approximately 1.015 m.
+_LEG_HEIGHT_FRACTION: float = 0.530
 
 
 @dataclass(frozen=True)
@@ -93,6 +95,22 @@ class BodyModelSpec:
     def __post_init__(self) -> None:
         require_positive(self.total_mass, "total_mass")
         require_positive(self.height, "height")
+
+    @property
+    def pelvis_height(self) -> float:
+        """Derive standing pelvis (hip-joint) height from anthropometric data.
+
+        Uses Winter (2009) leg-height fraction (thigh + shank + foot = 0.530
+        of total height) plus half the pelvis segment length so the pelvis
+        center sits just above the hip joints.
+
+        For a 1.75 m person this yields approximately 1.015 m, derived
+        from *height* rather than being hard-coded.
+        """
+        _mass, p_len, _radius = segment_properties(
+            self.total_mass, self.height, "pelvis"
+        )
+        return self.height * _LEG_HEIGHT_FRACTION + p_len / 2.0
 
 
 def _seg(spec: BodyModelSpec, name: str) -> tuple[float, float, float]:
@@ -177,36 +195,25 @@ def _add_bilateral_limb(
     return created
 
 
-def create_full_body(
+def _build_axial_skeleton(
     worldbody: ET.Element,
-    spec: BodyModelSpec | None = None,
+    spec: BodyModelSpec,
 ) -> dict[str, ET.Element]:
-    """Build the full-body model and append bodies to worldbody.
+    """Build pelvis, torso, and head -- the axial skeleton.
 
-    Returns dict of body name -> ET.Element for all created bodies.
-
-    MuJoCo convention: Z-up. The pelvis starts at approximately
-    standing hip height (0.93 m for a 1.75 m person).
+    Returns a dict of body-name to ET.Element for the three central
+    segments.  The pelvis height is derived from anthropometric data
+    via ``spec.pelvis_height``.
     """
-    if spec is None:
-        spec = BodyModelSpec()
-
-    logger.info(
-        "Building full-body model: mass=%.1f kg, height=%.2f m",
-        spec.total_mass,
-        spec.height,
-    )
-
     bodies: dict[str, ET.Element] = {}
 
     # --- Pelvis (connected to ground via freejoint) ---
     p_mass, p_len, p_rad = _seg(spec, "pelvis")
     p_inertia = rectangular_prism_inertia(p_mass, p_rad * 2, p_len, p_rad * 2)
-    pelvis_z = spec.height * _LEG_HEIGHT_FRACTION + p_len / 2.0
     pelvis_body = add_body(
         worldbody,
         name="pelvis",
-        pos=(0, 0, pelvis_z),
+        pos=(0, 0, spec.pelvis_height),
         mass=p_mass,
         inertia_diag=p_inertia,
         geom_type="box",
@@ -274,7 +281,15 @@ def create_full_body(
     )
     bodies["head"] = head_body
 
-    # --- Arms (children of torso) ---
+    return bodies
+
+
+def _build_upper_limbs(
+    bodies: dict[str, ET.Element],
+    spec: BodyModelSpec,
+) -> None:
+    """Attach bilateral upper-limb chains (arms + hands) to the torso."""
+    _t_mass, t_len, t_rad = _seg(spec, "torso")
     shoulder_z = t_len * 0.95
     shoulder_x = t_rad * 1.2
 
@@ -326,7 +341,13 @@ def create_full_body(
     )
     bodies.update(hand_bodies)
 
-    # --- Legs (children of pelvis) ---
+
+def _build_lower_limbs(
+    bodies: dict[str, ET.Element],
+    spec: BodyModelSpec,
+) -> None:
+    """Attach bilateral lower-limb chains (legs + feet) to the pelvis."""
+    _p_mass, p_len, p_rad = _seg(spec, "pelvis")
     hip_x = p_rad * 0.6
 
     thigh_bodies = _add_bilateral_limb(
@@ -377,7 +398,38 @@ def create_full_body(
     )
     bodies.update(foot_bodies)
 
-    # --- Add contact sole geometry to each foot ---
+
+def create_full_body(
+    worldbody: ET.Element,
+    spec: BodyModelSpec | None = None,
+) -> dict[str, ET.Element]:
+    """Build the full-body model and append bodies to worldbody.
+
+    Returns dict of body name -> ET.Element for all created bodies.
+
+    The pelvis height is derived from Winter (2009) anthropometric
+    proportions: ``height * 0.530 + pelvis_length / 2``.  For a
+    1.75 m person this evaluates to approximately 1.015 m.
+    """
+    if spec is None:
+        spec = BodyModelSpec()
+
+    logger.info(
+        "Building full-body model: mass=%.1f kg, height=%.2f m",
+        spec.total_mass,
+        spec.height,
+    )
+
+    # Stage 1: axial skeleton (pelvis, torso, head)
+    bodies = _build_axial_skeleton(worldbody, spec)
+
+    # Stage 2: upper limbs (shoulders -> hands)
+    _build_upper_limbs(bodies, spec)
+
+    # Stage 3: lower limbs (hips -> feet)
+    _build_lower_limbs(bodies, spec)
+
+    # Stage 4: foot contact geometry
     _add_foot_contact_geoms(bodies)
 
     logger.debug("Created %d body segments", len(bodies))

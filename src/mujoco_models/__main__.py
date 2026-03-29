@@ -11,6 +11,8 @@ from mujoco_models.exercises.base import ExerciseConfig
 from mujoco_models.shared.barbell import BarbellSpec
 from mujoco_models.shared.body import BodyModelSpec
 
+logger = logging.getLogger(__name__)
+
 
 def _build_parser() -> argparse.ArgumentParser:
     """Create the argument parser for the CLI."""
@@ -67,17 +69,33 @@ def main(argv: list[str] | None = None) -> int:
         format="%(name)s %(levelname)s: %(message)s",
     )
 
-    config = ExerciseConfig(
-        body_spec=BodyModelSpec(total_mass=args.body_mass, height=args.height),
-        barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=args.plate_mass),
-    )
+    try:
+        config = ExerciseConfig(
+            body_spec=BodyModelSpec(total_mass=args.body_mass, height=args.height),
+            barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=args.plate_mass),
+        )
+    except ValueError as exc:
+        logger.error("Invalid configuration: %s", exc)
+        print(f"Error: invalid configuration -- {exc}")
+        return 1
 
     builder_cls = EXERCISE_REGISTRY[args.exercise]
-    xml_str = builder_cls(config).build()
+
+    try:
+        xml_str = builder_cls(config).build()
+    except (ValueError, RuntimeError) as exc:
+        logger.error("Model build failed for '%s': %s", args.exercise, exc)
+        print(f"Error: model build failed -- {exc}")
+        return 1
 
     if args.output:
-        with open(args.output, "w") as fh:
-            fh.write(xml_str)
+        try:
+            with open(args.output, "w", encoding="utf-8") as fh:
+                fh.write(xml_str)
+        except OSError as exc:
+            logger.error("Failed to write output file '%s': %s", args.output, exc)
+            print(f"Error: cannot write to '{args.output}' -- {exc}")
+            return 1
         print(f"Wrote {args.output}")
     else:
         print(xml_str)

@@ -116,15 +116,16 @@ class ExerciseModelBuilder(ABC):
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set default coordinate values for the starting position."""
 
-    def _post_worldbody_hook(  # noqa: B027
-        self, worldbody: ET.Element, equality: ET.Element
-    ) -> None:
+    def _post_worldbody_hook(self, worldbody: ET.Element, equality: ET.Element) -> None:
         """No-op hook called after worldbody is built, before actuator generation.
 
         Subclasses may override to inject additional bodies or constraints
         (e.g. BenchPressModelBuilder adds the bench body here).
-        This is an intentional empty method — not abstract — so the base class
+        This is an intentional empty method -- not abstract -- so the base class
         remains instantiable and subclasses are not required to override it.
+
+        B027 is suppressed at the ruff config level for this pattern (intentional
+        empty method in an ABC that is not itself abstract).
         """
 
     def _attach_barbell_to_hands(
@@ -158,17 +159,14 @@ class ExerciseModelBuilder(ABC):
                 relpose=relpose,
             )
 
-    def build(self) -> str:
-        """Build the complete MuJoCo MJCF model XML and return as string.
+    # ------------------------------------------------------------------
+    # Build pipeline -- decomposed from the original monolithic build()
+    # ------------------------------------------------------------------
 
-        Postcondition: returned string is well-formed MJCF XML with
-        ``<mujoco>`` as the root element.
-        """
-        logger.info("Building %s model", self.exercise_name)
-
+    def _create_root_element(self) -> ET.Element:
+        """Create the ``<mujoco>`` root with option, compiler, and defaults."""
         root = ET.Element("mujoco", model=self.exercise_name)
 
-        # Option: gravity, timestep, and contact solver settings
         g = self.config.gravity
         ET.SubElement(
             root,
@@ -181,18 +179,17 @@ class ExerciseModelBuilder(ABC):
             tolerance="1e-8",
         )
 
-        # Compiler settings (Z-up). coordinate='local' was removed in MuJoCo 2.1.4.
         ET.SubElement(root, "compiler", angle="radian")
 
-        # Default joint damping
         default = ET.SubElement(root, "default")
         ET.SubElement(default, "joint", damping="5.0", armature="0.1")
         ET.SubElement(default, "geom", contype="1", conaffinity="1", condim="3")
 
-        # Worldbody
-        worldbody = ET.SubElement(root, "worldbody")
+        return root
 
-        # Ground plane with contact properties
+    def _create_worldbody(self, root: ET.Element) -> ET.Element:
+        """Create worldbody with ground plane."""
+        worldbody = ET.SubElement(root, "worldbody")
         ET.SubElement(
             worldbody,
             "geom",
@@ -205,35 +202,12 @@ class ExerciseModelBuilder(ABC):
             condim="3",
             friction="1.0 0.005 0.0001",
         )
+        return worldbody
 
-        # Equality constraints section
-        equality = ET.SubElement(root, "equality")
-
-        # Build body
-        body_bodies = create_full_body(worldbody, self.config.body_spec)
-
-        # Build barbell
-        barbell_bodies = create_barbell_bodies(
-            worldbody, equality, self.config.barbell_spec
-        )
-
-        # Exercise-specific attachment
-        self.attach_barbell(equality, body_bodies, barbell_bodies)
-
-        # Subclass hook: inject extra bodies/constraints before actuator generation
-        self._post_worldbody_hook(worldbody, equality)
-
-        # Add contact exclusion pairs to prevent unrealistic self-collision
-        # between adjacent body segments.
-        contact = ET.SubElement(root, "contact")
-        _add_contact_exclusions(contact)
-
-        # Exercise-specific initial pose
-        self.set_initial_pose(worldbody)
-
-        # Add position actuators for all hinge joints.
-        # Note: worldbody.iter("joint") only finds <joint> elements, never
-        # <freejoint> elements, so no freejoint guard is needed here.
+    def _add_actuators_and_sensors(
+        self, root: ET.Element, worldbody: ET.Element
+    ) -> None:
+        """Add position actuators and joint-position sensors for all hinge joints."""
         actuator = ET.SubElement(root, "actuator")
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
@@ -243,9 +217,6 @@ class ExerciseModelBuilder(ABC):
                 act.set("joint", name)
                 act.set("kp", "100")
 
-        # Add joint position sensors.
-        # Note: worldbody.iter("joint") only finds <joint> elements, never
-        # <freejoint> elements, so no freejoint guard is needed here.
         sensor = ET.SubElement(root, "sensor")
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
@@ -254,23 +225,19 @@ class ExerciseModelBuilder(ABC):
                 s.set("name", f"pos_{name}")
                 s.set("joint", name)
 
-        # Build keyframe from joint ref values set by set_initial_pose().
-        # MuJoCo keyframes allow resetting the model to a named configuration
-        # (e.g. via mj_resetDataKeyframe). The qpos order follows: freejoint
-        # (7 DOF: xyz + quaternion), then hinge joints in tree order.
+    def _build_keyframe(self, root: ET.Element, worldbody: ET.Element) -> None:
+        """Build a named keyframe from joint ref values set by set_initial_pose()."""
         qpos_values: list[str] = []
         for joint_el in worldbody.iter("joint"):
             ref_val = joint_el.get("ref", "0")
             qpos_values.append(ref_val)
-        # Prepend freejoint DOFs (7 values: x y z qw qx qy qz)
+
         for fj in worldbody.iter("freejoint"):
-            # Find parent body to get initial position
             for body_el in worldbody.iter("body"):
                 fj_in_body = body_el.find("freejoint")
                 if fj_in_body is not None and fj_in_body is fj:
                     pos_str = body_el.get("pos", "0 0 0")
                     pos_parts = pos_str.split()
-                    # freejoint qpos: x y z qw qx qy qz
                     fj_qpos = pos_parts + ["1", "0", "0", "0"]
                     qpos_values = fj_qpos + qpos_values
                     break
@@ -281,9 +248,48 @@ class ExerciseModelBuilder(ABC):
             key.set("name", f"{self.exercise_name}_start")
             key.set("qpos", " ".join(qpos_values))
 
-        xml_str = serialize_model(root)
+    def build(self) -> str:
+        """Build the complete MuJoCo MJCF model XML and return as string.
 
-        # Postcondition: well-formed MJCF XML
+        Postcondition: returned string is well-formed MJCF XML with
+        ``<mujoco>`` as the root element.
+        """
+        logger.info("Building %s model", self.exercise_name)
+
+        # Step 1: root element with options / compiler / defaults
+        root = self._create_root_element()
+
+        # Step 2: worldbody with ground plane
+        worldbody = self._create_worldbody(root)
+
+        # Step 3: equality constraints section
+        equality = ET.SubElement(root, "equality")
+
+        # Step 4: body and barbell
+        body_bodies = create_full_body(worldbody, self.config.body_spec)
+        barbell_bodies = create_barbell_bodies(
+            worldbody, equality, self.config.barbell_spec
+        )
+
+        # Step 5: exercise-specific attachment and hook
+        self.attach_barbell(equality, body_bodies, barbell_bodies)
+        self._post_worldbody_hook(worldbody, equality)
+
+        # Step 6: contact exclusions
+        contact = ET.SubElement(root, "contact")
+        _add_contact_exclusions(contact)
+
+        # Step 7: initial pose
+        self.set_initial_pose(worldbody)
+
+        # Step 8: actuators and sensors
+        self._add_actuators_and_sensors(root, worldbody)
+
+        # Step 9: keyframe
+        self._build_keyframe(root, worldbody)
+
+        # Serialize and validate
+        xml_str = serialize_model(root)
         ensure_mjcf_root(xml_str)
 
         logger.debug("Successfully built %s model", self.exercise_name)
