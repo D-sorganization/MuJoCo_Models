@@ -33,6 +33,34 @@ mypy src --config-file pyproject.toml           # type check
 python3 -m pytest -m "not slow and not requires_mujoco" --cov=src --cov-fail-under=80
 ```
 
+### Pre-commit Hooks
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Hooks run automatically on every commit: ruff lint+fix, ruff format,
+no-wildcard-imports, no-debug-statements, no-print-in-src, prettier (YAML/JSON/MD).
+
+### Test Markers
+
+- `@pytest.mark.slow` -- long-running tests (excluded from default CI run)
+- `@pytest.mark.requires_mujoco` -- needs MuJoCo installed (excluded from default CI run)
+- `@pytest.mark.integration` -- integration tests
+- `@pytest.mark.unit` -- unit tests
+- `@pytest.mark.benchmark` -- performance benchmarks
+
+Tests run in parallel by default (`-n auto --dist loadscope`).
+
+### Docker
+
+```bash
+docker build -t mujoco-models .                 # build runtime image
+docker build --target training -t mujoco-train . # build training image (adds gymnasium, stable-baselines3)
+docker run -it mujoco-models bash                # interactive shell
+```
+
 ## CI Requirements (All Must Pass)
 
 1. `ruff check` -- zero violations
