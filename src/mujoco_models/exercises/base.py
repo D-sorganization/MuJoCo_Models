@@ -149,7 +149,7 @@ class ExerciseModelBuilder(ABC):
                 # Left hand (side="l", sign=-1) is at -X relative to barbell center.
                 # relpose defines barbell center relative to hand, so it's at +X.
                 relpose = (-sign * grip_width, 0, 0, 1, 0, 0, 0)
-                
+
             add_weld_constraint(
                 equality,
                 name=f"barbell_to_hand_{side}",
