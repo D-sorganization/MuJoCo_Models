@@ -131,7 +131,7 @@ class ExerciseModelBuilder(ABC):
         self,
         equality: ET.Element,
         *,
-        grip_offset: tuple[float, ...] | None = None,
+        grip_width: float | None = None,
     ) -> None:
         """Weld barbell shaft to both hands (DRY helper for subclasses).
 
@@ -139,17 +139,23 @@ class ExerciseModelBuilder(ABC):
         ----------
         equality : ET.Element
             The ``<equality>`` section of the MJCF model.
-        grip_offset : tuple or None
-            Optional 7-element relative pose (x y z qw qx qy qz) for
-            the grip offset from the hand to the barbell shaft.
+        grip_width : float or None
+            Distance from the barbell shaft center to each hand along the X-axis.
+            If None, the initial pose determines the grip width.
         """
-        for side in ("l", "r"):
+        for side, sign in [("l", -1.0), ("r", 1.0)]:
+            relpose: tuple[float, ...] | None = None
+            if grip_width is not None:
+                # Left hand (side="l", sign=-1) is at -X relative to barbell center.
+                # relpose defines barbell center relative to hand, so it's at +X.
+                relpose = (-sign * grip_width, 0, 0, 1, 0, 0, 0)
+                
             add_weld_constraint(
                 equality,
                 name=f"barbell_to_hand_{side}",
                 body1=f"hand_{side}",
                 body2="barbell_shaft",
-                relpose=grip_offset,
+                relpose=relpose,
             )
 
     def build(self) -> str:

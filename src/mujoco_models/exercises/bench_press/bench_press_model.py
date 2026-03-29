@@ -57,7 +57,7 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         The grip is approximately shoulder-width (~0.40 m from center
         on each side for a standard grip).
         """
-        self._attach_barbell_to_hands(equality)
+        self._attach_barbell_to_hands(equality, grip_width=0.40)
 
     def _post_worldbody_hook(self, worldbody: ET.Element, equality: ET.Element) -> None:
         """Add bench body and weld pelvis to it."""
