@@ -49,9 +49,9 @@ jobs:
         run: |
           violations=$(
             find . \( -path "./.git" -o -path "./.mypy_cache" -o -path "./.ruff_cache" -o -path "./__pycache__" -o -path "./scripts" \) -prune -o -type f -name "*.py" -print0 \
-              | xargs -0 grep -nE "TODO|FIXME" || true
+              | xargs -0 grep -nE "TODO|FIXME" | grep -v "^$" || true
           )
-          if [ -n "$violations" ]; then
+          if [ ! -z "$(echo "$violations" | tr -d '[:space:]')" ] && [ "$violations" != "true" ]; then
             echo "$violations"
             echo "::error::Placeholders found. Remove TODOs/FIXMEs or create tracked GitHub issues."
             exit 1
@@ -60,12 +60,12 @@ jobs:
       - name: Security Audit
         run: |
           pip install pip-audit
-          pip install --upgrade pygments
-          pip-audit --skip-editable --ignore-vuln CVE-2026-4539
+          pip install --upgrade pygments requests urllib3
+          pip-audit --skip-editable
 
       - name: Bandit Security Scan
         run: |
-          bandit -r src/ -ll -ii --format txt
+          bandit -r src/ --format txt
 
   tests:
     needs: quality-gate
