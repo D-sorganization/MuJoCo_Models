@@ -11,6 +11,7 @@ import math
 
 
 def _rad(deg: float) -> float:
+    """Convert degrees to radians."""
     return math.radians(deg)
 
 

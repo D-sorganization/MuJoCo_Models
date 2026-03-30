@@ -45,6 +45,7 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
 
     @property
     def exercise_name(self) -> str:
+        """Return the canonical exercise name for the deadlift model."""
         return "deadlift"
 
     def attach_barbell(

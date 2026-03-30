@@ -18,6 +18,11 @@ from mujoco_models.shared.body import BodyModelSpec
 
 
 def main() -> None:
+    """Generate MJCF XML files for all registered exercise models.
+
+    Parses command-line arguments and writes one XML file per exercise
+    to the configured output directory.
+    """
     parser = argparse.ArgumentParser(description="Generate all exercise models.")
     parser.add_argument(
         "--output-dir",

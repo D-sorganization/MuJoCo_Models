@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-03-30
+
+### Fixed (A-N Assessment Remediation — issue #90)
+
+- **DbC**: Added precondition guards (`n_frames >= 2`, non-empty phases) to `interpolate_phases()` in `trajectory_optimizer.py`.
+- **DbC**: Added shape and size validation to `point_in_polygon()` in `polygon_geometry.py`.
+- **LoD**: Broke `Path(__file__).resolve().parent.parent` chain in `setup_dev.py` into named `_SCRIPT_DIR` and `PROJECT_ROOT` intermediates.
+- **Documentation**: Added missing docstrings to `main()` in `setup_dev.py` and `generate_all_models.py`.
+- **Documentation**: Added docstrings to `ExerciseModelBuilder.__init__()`, `BarbellSpec.__post_init__()`, and `BodyModelSpec.__post_init__()`.
+- **Documentation**: Added docstrings to `shaft_radius` and `sleeve_radius` properties in `BarbellSpec`.
+- **Documentation**: Added docstrings to `exercise_name` property in all 7 exercise model builders.
+- **Documentation**: Added docstring to `_rad()` helper in `shared/parity/standard.py`.
+
 ## [0.1.0] - 2026-03-22
 
 ### Added

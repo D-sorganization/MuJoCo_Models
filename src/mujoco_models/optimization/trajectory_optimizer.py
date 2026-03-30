@@ -143,7 +143,13 @@ def interpolate_phases(
     Returns:
         Array of shape ``(n_frames, n_joints)`` with linearly
         interpolated joint angles.  Joint ordering is alphabetical.
+    Raises:
+        ValueError: If n_frames < 2 or objective has no phases.
     """
+    if n_frames < 2:
+        raise ValueError(f"n_frames must be >= 2, got {n_frames}")
+    if not objective.phases:
+        raise ValueError("objective must have at least one phase")
     joint_names = objective.joint_names
     n_joints = len(joint_names)
 
