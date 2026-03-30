@@ -53,6 +53,7 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
 
     @property
     def exercise_name(self) -> str:
+        """Return the canonical exercise name for the sit-to-stand model."""
         return "sit_to_stand"
 
     def attach_barbell(

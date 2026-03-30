@@ -44,6 +44,7 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
 
     @property
     def exercise_name(self) -> str:
+        """Return the canonical exercise name for the bench press model."""
         return "bench_press"
 
     def attach_barbell(
