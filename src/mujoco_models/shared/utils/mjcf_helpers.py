@@ -24,6 +24,26 @@ def diag_inertia_str(ixx: float, iyy: float, izz: float) -> str:
     return f"{ixx:.6f} {iyy:.6f} {izz:.6f}"
 
 
+def _build_geom_attrs(
+    name: str,
+    geom_type: str,
+    geom_rgba: str,
+    geom_size: tuple[float, ...] | None,
+    geom_euler: tuple[float, float, float] | None,
+) -> dict[str, str]:
+    """Build the attribute dict for an MJCF ``<geom>`` element."""
+    attrs: dict[str, str] = {
+        "name": f"{name}_geom",
+        "type": geom_type,
+        "rgba": geom_rgba,
+    }
+    if geom_size is not None:
+        attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
+    if geom_euler is not None:
+        attrs["euler"] = " ".join(f"{s:.6f}" for s in geom_euler)
+    return attrs
+
+
 def add_body(
     parent: ET.Element,
     *,
@@ -38,35 +58,14 @@ def add_body(
 ) -> ET.Element:
     """Create an MJCF ``<body>`` with ``<inertial>`` and ``<geom>`` children.
 
-    Parameters
-    ----------
-    parent : ET.Element
-        Parent element to append the body to (typically ``<worldbody>``
-        or another ``<body>``).
-    name : str
-        Body name attribute.
-    pos : tuple
-        Position (x, y, z) relative to parent.
-    mass : float
-        Body mass in kg.
-    inertia_diag : tuple
-        Diagonal inertia (Ixx, Iyy, Izz).
-    geom_type : str
-        MuJoCo geom type (cylinder, box, capsule, sphere).
-    geom_size : tuple or None
-        Geom size parameters (type-dependent). If None, a default is used.
-    geom_rgba : str
-        RGBA color string for visualization.
-    geom_euler : tuple or None
-        Euler angles (x, y, z) in degrees for geom rotation.
-
-    Returns
-    -------
-    ET.Element
-        The created ``<body>`` element.
+    Appends the body to *parent* (typically ``<worldbody>`` or another body).
+    *pos* is the (x, y, z) offset from the parent origin.
+    *inertia_diag* is (Ixx, Iyy, Izz) in kg·m².
+    *geom_type* is a MuJoCo type string (cylinder, box, capsule, sphere).
+    *geom_size* and *geom_euler* are forwarded verbatim to the ``<geom>``.
+    Returns the created ``<body>`` element.
     """
     body = ET.SubElement(parent, "body", name=name, pos=vec3_str(*pos))
-
     ET.SubElement(
         body,
         "inertial",
@@ -74,19 +73,11 @@ def add_body(
         mass=f"{mass:.6f}",
         diaginertia=diag_inertia_str(*inertia_diag),
     )
-
-    geom_attrs: dict[str, str] = {
-        "name": f"{name}_geom",
-        "type": geom_type,
-        "rgba": geom_rgba,
-    }
-    if geom_size is not None:
-        geom_attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
-    if geom_euler is not None:
-        geom_attrs["euler"] = " ".join(f"{s:.6f}" for s in geom_euler)
-
-    ET.SubElement(body, "geom", attrib=geom_attrs)
-
+    ET.SubElement(
+        body,
+        "geom",
+        attrib=_build_geom_attrs(name, geom_type, geom_rgba, geom_size, geom_euler),
+    )
     return body
 
 

@@ -76,6 +76,9 @@ from mujoco_models.shared.utils.mjcf_helpers import (
 
 logger = logging.getLogger(__name__)
 
+# Type alias for extra hinge-joint specs: (suffix, axis, range_min, range_max)
+_ExtraJoints = list[tuple[str, tuple[float, float, float], float, float]]
+
 # Winter (2009): thigh(0.245) + shank(0.246) + foot(0.039) ≈ 0.530 of height.
 # Used to derive standing pelvis height from anthropometric data rather than
 # a hardcoded constant.  For a 1.75 m person this yields approximately 1.015 m.
@@ -119,6 +122,51 @@ def _seg(spec: BodyModelSpec, name: str) -> tuple[float, float, float]:
     return segment_properties(spec.total_mass, spec.height, name)
 
 
+def _add_limb_side(
+    parent_el: ET.Element,
+    *,
+    body_name: str,
+    pos: tuple[float, float, float],
+    mass: float,
+    inertia: tuple[float, float, float],
+    radius: float,
+    length: float,
+    coord_prefix: str,
+    side: str,
+    range_min: float,
+    range_max: float,
+    extra_joints: _ExtraJoints | None = None,
+) -> ET.Element:
+    """Create one side of a bilateral limb segment with its hinge joints."""
+    child_body = add_body(
+        parent_el,
+        name=body_name,
+        pos=pos,
+        mass=mass,
+        inertia_diag=inertia,
+        geom_type="capsule",
+        geom_size=(radius, length / 2.0),
+        geom_rgba="0.8 0.6 0.4 1",
+    )
+    add_hinge_joint(
+        child_body,
+        name=f"{coord_prefix}_{side}_flex",
+        axis=(1, 0, 0),
+        range_min=range_min,
+        range_max=range_max,
+    )
+    if extra_joints:
+        for suffix, axis, ex_min, ex_max in extra_joints:
+            add_hinge_joint(
+                child_body,
+                name=f"{coord_prefix}_{side}_{suffix}",
+                axis=axis,
+                range_min=ex_min,
+                range_max=ex_max,
+            )
+    return child_body
+
+
 def _add_bilateral_limb(
     parent_bodies: dict[str, ET.Element],
     spec: BodyModelSpec,
@@ -130,8 +178,7 @@ def _add_bilateral_limb(
     coord_prefix: str,
     range_min: float,
     range_max: float,
-    extra_joints: list[tuple[str, tuple[float, float, float], float, float]]
-    | None = None,
+    extra_joints: _ExtraJoints | None = None,
 ) -> dict[str, ET.Element]:
     """Add left and right limb segments with hinge joints.
 
@@ -148,67 +195,36 @@ def _add_bilateral_limb(
     """
     mass, length, radius = _seg(spec, seg_name)
     inertia = capsule_inertia(mass, radius, length)
-
-    created: dict[str, ET.Element] = {}
-
-    # Determine if parent is bilateral (has _l/_r variants) or central
     parent_is_bilateral = f"{parent_name}_l" in parent_bodies
-
+    created: dict[str, ET.Element] = {}
     for side, sign in [("l", -1.0), ("r", 1.0)]:
         body_name = f"{seg_name}_{side}"
-        resolved_parent = (
-            f"{parent_name}_{side}" if parent_is_bilateral else parent_name
-        )
-        parent_el = parent_bodies[resolved_parent]
-
-        child_body = add_body(
-            parent_el,
-            name=body_name,
+        key = f"{parent_name}_{side}" if parent_is_bilateral else parent_name
+        created[body_name] = _add_limb_side(
+            parent_bodies[key],
+            body_name=body_name,
             pos=(sign * parent_lateral_x, 0, parent_offset_z),
             mass=mass,
-            inertia_diag=inertia,
-            geom_type="capsule",
-            geom_size=(radius, length / 2.0),
-            geom_rgba="0.8 0.6 0.4 1",
-        )
-
-        add_hinge_joint(
-            child_body,
-            name=f"{coord_prefix}_{side}_flex",
-            axis=(1, 0, 0),
+            inertia=inertia,
+            radius=radius,
+            length=length,
+            coord_prefix=coord_prefix,
+            side=side,
             range_min=range_min,
             range_max=range_max,
+            extra_joints=extra_joints,
         )
-
-        # Add extra DOFs (stacked hinge joints on the same body)
-        if extra_joints:
-            for suffix, axis, ex_min, ex_max in extra_joints:
-                add_hinge_joint(
-                    child_body,
-                    name=f"{coord_prefix}_{side}_{suffix}",
-                    axis=axis,
-                    range_min=ex_min,
-                    range_max=ex_max,
-                )
-
-        created[body_name] = child_body
-
     return created
 
 
-def _build_axial_skeleton(
+def _build_pelvis(
     worldbody: ET.Element,
     spec: BodyModelSpec,
-) -> dict[str, ET.Element]:
-    """Build pelvis, torso, and head -- the axial skeleton.
+) -> tuple[ET.Element, float, float]:
+    """Add the pelvis body (with freejoint) to worldbody.
 
-    Returns a dict of body-name to ET.Element for the three central
-    segments.  The pelvis height is derived from anthropometric data
-    via ``spec.pelvis_height``.
+    Returns (pelvis_body, p_len, p_rad) so callers can derive child offsets.
     """
-    bodies: dict[str, ET.Element] = {}
-
-    # --- Pelvis (connected to ground via freejoint) ---
     p_mass, p_len, p_rad = _seg(spec, "pelvis")
     p_inertia = rectangular_prism_inertia(p_mass, p_rad * 2, p_len, p_rad * 2)
     pelvis_body = add_body(
@@ -222,9 +238,18 @@ def _build_axial_skeleton(
         geom_rgba="0.8 0.6 0.4 1",
     )
     add_free_joint(pelvis_body, name="ground_pelvis")
-    bodies["pelvis"] = pelvis_body
+    return pelvis_body, p_len, p_rad
 
-    # --- Torso (child of pelvis) ---
+
+def _build_torso(
+    pelvis_body: ET.Element,
+    spec: BodyModelSpec,
+    p_len: float,
+) -> tuple[ET.Element, float, float]:
+    """Add torso (with lumbar joints) as child of pelvis.
+
+    Returns (torso_body, t_len, t_rad) so callers can derive child offsets.
+    """
     t_mass, t_len, t_rad = _seg(spec, "torso")
     t_inertia = rectangular_prism_inertia(t_mass, t_rad * 2, t_len, t_rad * 2)
     torso_body = add_body(
@@ -258,10 +283,16 @@ def _build_axial_skeleton(
         range_min=LUMBAR_ROTATE_MIN,
         range_max=LUMBAR_ROTATE_MAX,
     )
-    bodies["torso"] = torso_body
+    return torso_body, t_len, t_rad
 
-    # --- Head (child of torso) ---
-    h_mass, h_len, h_rad = _seg(spec, "head")
+
+def _build_head(
+    torso_body: ET.Element,
+    spec: BodyModelSpec,
+    t_len: float,
+) -> ET.Element:
+    """Add head (with neck hinge) as child of torso."""
+    h_mass, _h_len, h_rad = _seg(spec, "head")
     h_inertia = sphere_inertia(h_mass, h_rad)
     head_body = add_body(
         torso_body,
@@ -274,15 +305,84 @@ def _build_axial_skeleton(
         geom_rgba="0.9 0.75 0.6 1",
     )
     add_hinge_joint(
-        head_body,
-        name="neck_flex",
-        axis=(1, 0, 0),
-        range_min=-0.5236,
-        range_max=0.5236,
+        head_body, name="neck_flex", axis=(1, 0, 0), range_min=-0.5236, range_max=0.5236
     )
-    bodies["head"] = head_body
+    return head_body
 
-    return bodies
+
+def _build_axial_skeleton(
+    worldbody: ET.Element,
+    spec: BodyModelSpec,
+) -> dict[str, ET.Element]:
+    """Build pelvis, torso, and head -- the axial skeleton.
+
+    Returns a dict of body-name to ET.Element for the three central
+    segments.  The pelvis height is derived from anthropometric data
+    via ``spec.pelvis_height``.
+    """
+    pelvis_body, p_len, _p_rad = _build_pelvis(worldbody, spec)
+    torso_body, t_len, _t_rad = _build_torso(pelvis_body, spec, p_len)
+    head_body = _build_head(torso_body, spec, t_len)
+    return {"pelvis": pelvis_body, "torso": torso_body, "head": head_body}
+
+
+def _attach_upper_arms(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
+    """Attach bilateral upper-arm segments (shoulder joints) to torso."""
+    _t_mass, t_len, t_rad = _seg(spec, "torso")
+    bodies.update(
+        _add_bilateral_limb(
+            bodies,
+            spec,
+            seg_name="upper_arm",
+            parent_name="torso",
+            parent_offset_z=t_len * 0.95,
+            parent_lateral_x=t_rad * 1.2,
+            coord_prefix="shoulder",
+            range_min=SHOULDER_FLEX_MIN,
+            range_max=SHOULDER_FLEX_MAX,
+            extra_joints=[
+                ("adduct", (0, 0, 1), SHOULDER_ADDUCT_MIN, SHOULDER_ADDUCT_MAX),
+                ("rotate", (0, 1, 0), SHOULDER_ROTATE_MIN, SHOULDER_ROTATE_MAX),
+            ],
+        )
+    )
+
+
+def _attach_forearms(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
+    """Attach bilateral forearm segments (elbow hinges) to upper arms."""
+    _ua_mass, ua_len, _ua_rad = _seg(spec, "upper_arm")
+    bodies.update(
+        _add_bilateral_limb(
+            bodies,
+            spec,
+            seg_name="forearm",
+            parent_name="upper_arm",
+            parent_offset_z=-ua_len,
+            parent_lateral_x=0,
+            coord_prefix="elbow",
+            range_min=0,
+            range_max=2.618,
+        )
+    )
+
+
+def _attach_hands(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
+    """Attach bilateral hand segments (wrist joints) to forearms."""
+    _fa_mass, fa_len, _fa_rad = _seg(spec, "forearm")
+    bodies.update(
+        _add_bilateral_limb(
+            bodies,
+            spec,
+            seg_name="hand",
+            parent_name="forearm",
+            parent_offset_z=-fa_len,
+            parent_lateral_x=0,
+            coord_prefix="wrist",
+            range_min=WRIST_FLEX_MIN,
+            range_max=WRIST_FLEX_MAX,
+            extra_joints=[("deviate", (0, 0, 1), WRIST_DEVIATE_MIN, WRIST_DEVIATE_MAX)],
+        )
+    )
 
 
 def _build_upper_limbs(
@@ -290,57 +390,68 @@ def _build_upper_limbs(
     spec: BodyModelSpec,
 ) -> None:
     """Attach bilateral upper-limb chains (arms + hands) to the torso."""
-    _t_mass, t_len, t_rad = _seg(spec, "torso")
-    shoulder_z = t_len * 0.95
-    shoulder_x = t_rad * 1.2
+    _attach_upper_arms(bodies, spec)
+    _attach_forearms(bodies, spec)
+    _attach_hands(bodies, spec)
 
-    arm_bodies = _add_bilateral_limb(
-        bodies,
-        spec,
-        seg_name="upper_arm",
-        parent_name="torso",
-        parent_offset_z=shoulder_z,
-        parent_lateral_x=shoulder_x,
-        coord_prefix="shoulder",
-        range_min=SHOULDER_FLEX_MIN,
-        range_max=SHOULDER_FLEX_MAX,
-        extra_joints=[
-            ("adduct", (0, 0, 1), SHOULDER_ADDUCT_MIN, SHOULDER_ADDUCT_MAX),
-            ("rotate", (0, 1, 0), SHOULDER_ROTATE_MIN, SHOULDER_ROTATE_MAX),
-        ],
-    )
-    bodies.update(arm_bodies)
 
-    _ua_mass, ua_len, _ua_rad = _seg(spec, "upper_arm")
-    forearm_bodies = _add_bilateral_limb(
-        bodies,
-        spec,
-        seg_name="forearm",
-        parent_name="upper_arm",
-        parent_offset_z=-ua_len,
-        parent_lateral_x=0,
-        coord_prefix="elbow",
-        range_min=0,
-        range_max=2.618,
+def _attach_thighs(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
+    """Attach bilateral thigh segments (hip joints) to pelvis."""
+    _p_mass, p_len, p_rad = _seg(spec, "pelvis")
+    bodies.update(
+        _add_bilateral_limb(
+            bodies,
+            spec,
+            seg_name="thigh",
+            parent_name="pelvis",
+            parent_offset_z=-p_len / 2.0,
+            parent_lateral_x=p_rad * 0.6,
+            coord_prefix="hip",
+            range_min=HIP_FLEX_MIN,
+            range_max=HIP_FLEX_MAX,
+            extra_joints=[
+                ("adduct", (0, 0, 1), HIP_ADDUCT_MIN, HIP_ADDUCT_MAX),
+                ("rotate", (0, 1, 0), HIP_ROTATE_MIN, HIP_ROTATE_MAX),
+            ],
+        )
     )
-    bodies.update(forearm_bodies)
 
-    _fa_mass, fa_len, _fa_rad = _seg(spec, "forearm")
-    hand_bodies = _add_bilateral_limb(
-        bodies,
-        spec,
-        seg_name="hand",
-        parent_name="forearm",
-        parent_offset_z=-fa_len,
-        parent_lateral_x=0,
-        coord_prefix="wrist",
-        range_min=WRIST_FLEX_MIN,
-        range_max=WRIST_FLEX_MAX,
-        extra_joints=[
-            ("deviate", (0, 0, 1), WRIST_DEVIATE_MIN, WRIST_DEVIATE_MAX),
-        ],
+
+def _attach_shanks(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
+    """Attach bilateral shank segments (knee hinges) to thighs."""
+    _th_mass, th_len, _th_rad = _seg(spec, "thigh")
+    bodies.update(
+        _add_bilateral_limb(
+            bodies,
+            spec,
+            seg_name="shank",
+            parent_name="thigh",
+            parent_offset_z=-th_len,
+            parent_lateral_x=0,
+            coord_prefix="knee",
+            range_min=-2.618,
+            range_max=0,
+        )
     )
-    bodies.update(hand_bodies)
+
+
+def _attach_feet(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
+    """Attach bilateral foot segments (ankle joints) to shanks."""
+    _sh_mass, sh_len, _sh_rad = _seg(spec, "shank")
+    bodies.update(
+        _add_bilateral_limb(
+            bodies,
+            spec,
+            seg_name="foot",
+            parent_name="shank",
+            parent_offset_z=-sh_len,
+            parent_lateral_x=0,
+            coord_prefix="ankle",
+            range_min=ANKLE_FLEX_MIN,
+            range_max=ANKLE_FLEX_MAX,
+            extra_joints=[("invert", (0, 0, 1), ANKLE_INVERT_MIN, ANKLE_INVERT_MAX)],
+        )
+    )
 
 
 def _build_lower_limbs(
@@ -348,56 +459,9 @@ def _build_lower_limbs(
     spec: BodyModelSpec,
 ) -> None:
     """Attach bilateral lower-limb chains (legs + feet) to the pelvis."""
-    _p_mass, p_len, p_rad = _seg(spec, "pelvis")
-    hip_x = p_rad * 0.6
-
-    thigh_bodies = _add_bilateral_limb(
-        bodies,
-        spec,
-        seg_name="thigh",
-        parent_name="pelvis",
-        parent_offset_z=-p_len / 2.0,
-        parent_lateral_x=hip_x,
-        coord_prefix="hip",
-        range_min=HIP_FLEX_MIN,
-        range_max=HIP_FLEX_MAX,
-        extra_joints=[
-            ("adduct", (0, 0, 1), HIP_ADDUCT_MIN, HIP_ADDUCT_MAX),
-            ("rotate", (0, 1, 0), HIP_ROTATE_MIN, HIP_ROTATE_MAX),
-        ],
-    )
-    bodies.update(thigh_bodies)
-
-    _th_mass, th_len, _th_rad = _seg(spec, "thigh")
-    shank_bodies = _add_bilateral_limb(
-        bodies,
-        spec,
-        seg_name="shank",
-        parent_name="thigh",
-        parent_offset_z=-th_len,
-        parent_lateral_x=0,
-        coord_prefix="knee",
-        range_min=-2.618,
-        range_max=0,
-    )
-    bodies.update(shank_bodies)
-
-    _sh_mass, sh_len, _sh_rad = _seg(spec, "shank")
-    foot_bodies = _add_bilateral_limb(
-        bodies,
-        spec,
-        seg_name="foot",
-        parent_name="shank",
-        parent_offset_z=-sh_len,
-        parent_lateral_x=0,
-        coord_prefix="ankle",
-        range_min=ANKLE_FLEX_MIN,
-        range_max=ANKLE_FLEX_MAX,
-        extra_joints=[
-            ("invert", (0, 0, 1), ANKLE_INVERT_MIN, ANKLE_INVERT_MAX),
-        ],
-    )
-    bodies.update(foot_bodies)
+    _attach_thighs(bodies, spec)
+    _attach_shanks(bodies, spec)
+    _attach_feet(bodies, spec)
 
 
 def create_full_body(

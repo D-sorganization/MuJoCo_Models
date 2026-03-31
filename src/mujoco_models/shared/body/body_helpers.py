@@ -13,6 +13,9 @@ from mujoco_models.shared.utils.mjcf_helpers import add_body, add_hinge_joint
 
 logger = logging.getLogger(__name__)
 
+# Type alias for extra hinge-joint specs: (suffix, axis, range_min, range_max)
+_ExtraJoints = list[tuple[str, tuple[float, float, float], float, float]]
+
 
 def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     """Add box collision geometry to foot segments for ground contact.
@@ -56,6 +59,51 @@ def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     logger.debug("Added contact sole geometry to foot segments")
 
 
+def _create_limb_side_body(
+    parent_el: ET.Element,
+    *,
+    body_name: str,
+    pos: tuple[float, float, float],
+    mass: float,
+    inertia: tuple[float, float, float],
+    radius: float,
+    length: float,
+    coord_prefix: str,
+    side: str,
+    range_min: float,
+    range_max: float,
+    extra_joints: _ExtraJoints | None = None,
+) -> ET.Element:
+    """Create body and hinge joints for one side of a bilateral limb."""
+    child_body = add_body(
+        parent_el,
+        name=body_name,
+        pos=pos,
+        mass=mass,
+        inertia_diag=inertia,
+        geom_type="capsule",
+        geom_size=(radius, length / 2.0),
+        geom_rgba="0.8 0.6 0.4 1",
+    )
+    add_hinge_joint(
+        child_body,
+        name=f"{coord_prefix}_{side}_flex",
+        axis=(1, 0, 0),
+        range_min=range_min,
+        range_max=range_max,
+    )
+    if extra_joints:
+        for suffix, axis, ex_min, ex_max in extra_joints:
+            add_hinge_joint(
+                child_body,
+                name=f"{coord_prefix}_{side}_{suffix}",
+                axis=axis,
+                range_min=ex_min,
+                range_max=ex_max,
+            )
+    return child_body
+
+
 def add_bilateral_limb(
     parent_bodies: dict[str, ET.Element],
     mass: float,
@@ -69,8 +117,7 @@ def add_bilateral_limb(
     coord_prefix: str,
     range_min: float,
     range_max: float,
-    extra_joints: list[tuple[str, tuple[float, float, float], float, float]]
-    | None = None,
+    extra_joints: _ExtraJoints | None = None,
 ) -> dict[str, ET.Element]:
     """Add left and right limb segments with hinge joints.
 
@@ -86,49 +133,23 @@ def add_bilateral_limb(
         given axis with the given range limits.
     """
     inertia = capsule_inertia(mass, radius, length)
-
-    created: dict[str, ET.Element] = {}
-
-    # Determine if parent is bilateral (has _l/_r variants) or central
     parent_is_bilateral = f"{parent_name}_l" in parent_bodies
-
+    created: dict[str, ET.Element] = {}
     for side, sign in [("l", -1.0), ("r", 1.0)]:
         body_name = f"{seg_name}_{side}"
-        resolved_parent = (
-            f"{parent_name}_{side}" if parent_is_bilateral else parent_name
-        )
-        parent_el = parent_bodies[resolved_parent]
-
-        child_body = add_body(
-            parent_el,
-            name=body_name,
+        key = f"{parent_name}_{side}" if parent_is_bilateral else parent_name
+        created[body_name] = _create_limb_side_body(
+            parent_bodies[key],
+            body_name=body_name,
             pos=(sign * parent_lateral_x, 0, parent_offset_z),
             mass=mass,
-            inertia_diag=inertia,
-            geom_type="capsule",
-            geom_size=(radius, length / 2.0),
-            geom_rgba="0.8 0.6 0.4 1",
-        )
-
-        add_hinge_joint(
-            child_body,
-            name=f"{coord_prefix}_{side}_flex",
-            axis=(1, 0, 0),
+            inertia=inertia,
+            radius=radius,
+            length=length,
+            coord_prefix=coord_prefix,
+            side=side,
             range_min=range_min,
             range_max=range_max,
+            extra_joints=extra_joints,
         )
-
-        # Add extra DOFs (stacked hinge joints on the same body)
-        if extra_joints:
-            for suffix, axis, ex_min, ex_max in extra_joints:
-                add_hinge_joint(
-                    child_body,
-                    name=f"{coord_prefix}_{side}_{suffix}",
-                    axis=axis,
-                    range_min=ex_min,
-                    range_max=ex_max,
-                )
-
-        created[body_name] = child_body
-
     return created
