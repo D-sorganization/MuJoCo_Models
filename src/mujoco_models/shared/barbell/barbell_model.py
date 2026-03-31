@@ -112,6 +112,88 @@ class BarbellSpec:
         )
 
 
+def _compute_sleeve_inertia(
+    spec: BarbellSpec,
+) -> tuple[float, float, float]:
+    """Compute combined sleeve+plate inertia for one sleeve.
+
+    Starts with bare sleeve inertia and adds plate contribution when
+    plates are loaded.  Plate outer radius follows IWF standard (0.225 m).
+    """
+    sleeve_inertia = cylinder_inertia(
+        spec.sleeve_mass, spec.sleeve_radius, spec.sleeve_length
+    )
+    if spec.plate_mass_per_side <= 0:
+        return sleeve_inertia
+
+    plate_thickness = max(0.01, spec.plate_mass_per_side * 0.002)
+    plate_inertia = hollow_cylinder_inertia(
+        spec.plate_mass_per_side,
+        inner_radius=spec.sleeve_radius,
+        outer_radius=0.225,
+        length=plate_thickness,
+    )
+    return (
+        sleeve_inertia[0] + plate_inertia[0],
+        sleeve_inertia[1] + plate_inertia[1],
+        sleeve_inertia[2] + plate_inertia[2],
+    )
+
+
+def _add_barbell_shaft(
+    worldbody: ET.Element,
+    spec: BarbellSpec,
+    shaft_name: str,
+    shaft_inertia: tuple[float, float, float],
+) -> ET.Element:
+    """Add the central shaft body to worldbody at the origin."""
+    return add_body(
+        worldbody,
+        name=shaft_name,
+        pos=(0, 0, 0),
+        mass=spec.shaft_mass,
+        inertia_diag=shaft_inertia,
+        geom_type="cylinder",
+        geom_size=(spec.shaft_radius, spec.shaft_length / 2.0),
+        geom_rgba="0.7 0.7 0.7 1",
+        geom_euler=(0, 90, 0),
+    )
+
+
+def _add_barbell_sleeve(
+    worldbody: ET.Element,
+    spec: BarbellSpec,
+    sleeve_name: str,
+    sleeve_total_mass: float,
+    sleeve_inertia: tuple[float, float, float],
+    x_offset: float,
+) -> ET.Element:
+    """Add one sleeve body at the given X offset from the shaft centre."""
+    return add_body(
+        worldbody,
+        name=sleeve_name,
+        pos=(x_offset, 0, 0),
+        mass=sleeve_total_mass,
+        inertia_diag=sleeve_inertia,
+        geom_type="cylinder",
+        geom_size=(spec.sleeve_radius, spec.sleeve_length / 2.0),
+        geom_rgba="0.5 0.5 0.5 1",
+        geom_euler=(0, 90, 0),
+    )
+
+
+def _weld_sleeves_to_shaft(
+    equality: ET.Element, shaft_name: str, left_name: str, right_name: str, prefix: str
+) -> None:
+    """Add weld constraints connecting both sleeves to the shaft."""
+    add_weld_constraint(
+        equality, name=f"{prefix}_left_weld", body1=shaft_name, body2=left_name
+    )
+    add_weld_constraint(
+        equality, name=f"{prefix}_right_weld", body1=shaft_name, body2=right_name
+    )
+
+
 def create_barbell_bodies(
     worldbody: ET.Element,
     equality: ET.Element,
@@ -129,92 +211,21 @@ def create_barbell_bodies(
     shaft_inertia = cylinder_inertia(
         spec.shaft_mass, spec.shaft_radius, spec.shaft_length
     )
-
-    # Compute bare sleeve inertia
-    sleeve_inertia = cylinder_inertia(
-        spec.sleeve_mass, spec.sleeve_radius, spec.sleeve_length
-    )
-
-    # Add plate inertia using correct plate radius (0.225 m), not sleeve radius
-    if spec.plate_mass_per_side > 0:
-        plate_thickness = max(0.01, spec.plate_mass_per_side * 0.002)
-        plate_inertia = hollow_cylinder_inertia(
-            spec.plate_mass_per_side,
-            inner_radius=spec.sleeve_radius,
-            outer_radius=0.225,
-            length=plate_thickness,
-        )
-        sleeve_inertia = (
-            sleeve_inertia[0] + plate_inertia[0],
-            sleeve_inertia[1] + plate_inertia[1],
-            sleeve_inertia[2] + plate_inertia[2],
-        )
-
+    sleeve_inertia = _compute_sleeve_inertia(spec)
     sleeve_total_mass = spec.sleeve_mass + spec.plate_mass_per_side
+    sleeve_offset = spec.shaft_length / 2.0 + spec.sleeve_length / 2.0
 
     shaft_name = f"{prefix}_shaft"
     left_name = f"{prefix}_left_sleeve"
     right_name = f"{prefix}_right_sleeve"
 
-    half_shaft = spec.shaft_length / 2.0
-    half_sleeve = spec.sleeve_length / 2.0
-
-    # Shaft at origin
-    shaft_body = add_body(
-        worldbody,
-        name=shaft_name,
-        pos=(0, 0, 0),
-        mass=spec.shaft_mass,
-        inertia_diag=shaft_inertia,
-        geom_type="cylinder",
-        geom_size=(spec.shaft_radius, spec.shaft_length / 2.0),
-        geom_rgba="0.7 0.7 0.7 1",
-        geom_euler=(0, 90, 0),
+    shaft_body = _add_barbell_shaft(worldbody, spec, shaft_name, shaft_inertia)
+    left_body = _add_barbell_sleeve(
+        worldbody, spec, left_name, sleeve_total_mass, sleeve_inertia, -sleeve_offset
     )
-
-    # Left sleeve offset along -X
-    left_body = add_body(
-        worldbody,
-        name=left_name,
-        pos=(-(half_shaft + half_sleeve), 0, 0),
-        mass=sleeve_total_mass,
-        inertia_diag=sleeve_inertia,
-        geom_type="cylinder",
-        geom_size=(spec.sleeve_radius, spec.sleeve_length / 2.0),
-        geom_rgba="0.5 0.5 0.5 1",
-        geom_euler=(0, 90, 0),
+    right_body = _add_barbell_sleeve(
+        worldbody, spec, right_name, sleeve_total_mass, sleeve_inertia, sleeve_offset
     )
+    _weld_sleeves_to_shaft(equality, shaft_name, left_name, right_name, prefix)
 
-    # Right sleeve offset along +X
-    right_body = add_body(
-        worldbody,
-        name=right_name,
-        pos=(half_shaft + half_sleeve, 0, 0),
-        mass=sleeve_total_mass,
-        inertia_diag=sleeve_inertia,
-        geom_type="cylinder",
-        geom_size=(spec.sleeve_radius, spec.sleeve_length / 2.0),
-        geom_rgba="0.5 0.5 0.5 1",
-        geom_euler=(0, 90, 0),
-    )
-
-    # Weld sleeves to shaft
-    add_weld_constraint(
-        equality,
-        name=f"{prefix}_left_weld",
-        body1=shaft_name,
-        body2=left_name,
-    )
-
-    add_weld_constraint(
-        equality,
-        name=f"{prefix}_right_weld",
-        body1=shaft_name,
-        body2=right_name,
-    )
-
-    return {
-        shaft_name: shaft_body,
-        left_name: left_body,
-        right_name: right_body,
-    }
+    return {shaft_name: shaft_body, left_name: left_body, right_name: right_body}
