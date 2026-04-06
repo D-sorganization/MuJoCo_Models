@@ -4,8 +4,10 @@ Provides a simplified but anatomically grounded full-body model with
 major body segments and joints suitable for barbell exercise simulation.
 """
 
-from mujoco_models.shared.body.body_model import (
+from mujoco_models.shared.body.body_anthropometrics import (
     BodyModelSpec,
+)
+from mujoco_models.shared.body.body_model import (
     create_full_body,
 )
 from mujoco_models.shared.body.segment_data import (
