@@ -1,4 +1,4 @@
-"""Simplified full-body musculoskeletal model for MuJoCo MJCF.
+"""MJCF body assembly and orchestration for the full-body musculoskeletal model.
 
 Segments (bilateral where noted):
   pelvis, torso, head,
@@ -29,8 +29,12 @@ from __future__ import annotations
 
 import logging
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
 
+from mujoco_models.shared.body.body_anthropometrics import (
+    _LEG_HEIGHT_FRACTION,
+    BodyModelSpec,
+    _seg,
+)
 from mujoco_models.shared.body.segment_data import (
     ANKLE_FLEX_MAX,
     ANKLE_FLEX_MIN,
@@ -58,10 +62,6 @@ from mujoco_models.shared.body.segment_data import (
     WRIST_DEVIATE_MIN,
     WRIST_FLEX_MAX,
     WRIST_FLEX_MIN,
-    segment_properties,
-)
-from mujoco_models.shared.contracts.preconditions import (
-    require_positive,
 )
 from mujoco_models.shared.utils.geometry import (
     capsule_inertia,
@@ -79,47 +79,13 @@ logger = logging.getLogger(__name__)
 # Type alias for extra hinge-joint specs: (suffix, axis, range_min, range_max)
 _ExtraJoints = list[tuple[str, tuple[float, float, float], float, float]]
 
-# Winter (2009): thigh(0.245) + shank(0.246) + foot(0.039) ≈ 0.530 of height.
-# Used to derive standing pelvis height from anthropometric data rather than
-# a hardcoded constant.  For a 1.75 m person this yields approximately 1.015 m.
-_LEG_HEIGHT_FRACTION: float = 0.530
-
-
-@dataclass(frozen=True)
-class BodyModelSpec:
-    """Anthropometric specification for the full-body model.
-
-    All lengths in meters, mass in kg.
-    """
-
-    total_mass: float = 80.0
-    height: float = 1.75
-
-    def __post_init__(self) -> None:
-        """Validate that total_mass and height are strictly positive."""
-        require_positive(self.total_mass, "total_mass")
-        require_positive(self.height, "height")
-
-    @property
-    def pelvis_height(self) -> float:
-        """Derive standing pelvis (hip-joint) height from anthropometric data.
-
-        Uses Winter (2009) leg-height fraction (thigh + shank + foot = 0.530
-        of total height) plus half the pelvis segment length so the pelvis
-        center sits just above the hip joints.
-
-        For a 1.75 m person this yields approximately 1.015 m, derived
-        from *height* rather than being hard-coded.
-        """
-        _mass, p_len, _radius = segment_properties(
-            self.total_mass, self.height, "pelvis"
-        )
-        return self.height * _LEG_HEIGHT_FRACTION + p_len / 2.0
-
-
-def _seg(spec: BodyModelSpec, name: str) -> tuple[float, float, float]:
-    """Return (mass, length, radius) for a named segment."""
-    return segment_properties(spec.total_mass, spec.height, name)
+# Re-exported so existing ``from mujoco_models.shared.body.body_model import
+# _LEG_HEIGHT_FRACTION`` imports (including tests) continue to work.
+__all__ = [
+    "BodyModelSpec",
+    "_LEG_HEIGHT_FRACTION",
+    "create_full_body",
+]
 
 
 def _add_limb_side(
