@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from mujoco_models.__main__ import _build_parser, main
 
 
@@ -35,6 +37,14 @@ class TestCLI:
     def test_main_returns_zero(self) -> None:
         result = main(["squat"])
         assert result == 0
+
+    def test_main_writes_xml_to_stdout(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        result = main(["squat"])
+        assert result == 0
+        stdout = capsys.readouterr().out
+        assert "<mujoco" in stdout
 
     def test_main_with_output(self, tmp_path: Any) -> None:
         out_file = str(tmp_path / "test_model.xml")

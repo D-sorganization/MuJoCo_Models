@@ -76,7 +76,6 @@ def main(argv: list[str] | None = None) -> int:
         )
     except ValueError as exc:
         logger.error("Invalid configuration: %s", exc)
-        print(f"Error: invalid configuration -- {exc}")
         return 1
 
     builder_cls = EXERCISE_REGISTRY[args.exercise]
@@ -85,7 +84,6 @@ def main(argv: list[str] | None = None) -> int:
         xml_str = builder_cls(config).build()
     except (ValueError, RuntimeError) as exc:
         logger.error("Model build failed for '%s': %s", args.exercise, exc)
-        print(f"Error: model build failed -- {exc}")
         return 1
 
     if args.output:
@@ -94,11 +92,10 @@ def main(argv: list[str] | None = None) -> int:
                 fh.write(xml_str)
         except OSError as exc:
             logger.error("Failed to write output file '%s': %s", args.output, exc)
-            print(f"Error: cannot write to '{args.output}' -- {exc}")
             return 1
-        print(f"Wrote {args.output}")
+        logger.info("Wrote %s", args.output)
     else:
-        print(xml_str)
+        sys.stdout.write(xml_str)
 
     return 0
 

@@ -105,25 +105,25 @@ class ExerciseModelBuilder(ABC):
         """
         self.config = config or ExerciseConfig()
 
-    # ------------------------------------------------------------------
-    # LoD accessor properties (issue #119)
-    # Expose config fields directly so subclasses avoid 2-level chains.
-    # ------------------------------------------------------------------
-
     @property
     def body_spec(self) -> BodyModelSpec:
-        """Accessor for the body anthropometric spec."""
+        """Forward to the configured body specification."""
         return self.config.body_spec
 
     @property
     def barbell_spec(self) -> BarbellSpec:
-        """Accessor for the barbell specification."""
+        """Forward to the configured barbell specification."""
         return self.config.barbell_spec
 
     @property
     def gravity(self) -> tuple[float, float, float]:
-        """Accessor for the gravity vector."""
+        """Forward to the configured gravity vector."""
         return self.config.gravity
+
+    @property
+    def grip_offset(self) -> tuple[float, ...] | None:
+        """Optional grip offset for subclasses that need a custom weld pose."""
+        return None
 
     @property
     @abstractmethod
@@ -160,6 +160,7 @@ class ExerciseModelBuilder(ABC):
         equality: ET.Element,
         *,
         grip_width: float | None = None,
+        grip_offset: tuple[float, ...] | None = None,
     ) -> None:
         """Weld barbell shaft to both hands (DRY helper for subclasses).
 
@@ -170,10 +171,13 @@ class ExerciseModelBuilder(ABC):
         grip_width : float or None
             Distance from the barbell shaft center to each hand along the X-axis.
             If None, the initial pose determines the grip width.
+        grip_offset : tuple or None
+            Optional 7-element relative pose (x y z qw qx qy qz) for the grip
+            offset from the hand to the barbell shaft.
         """
         for side, sign in [("l", -1.0), ("r", 1.0)]:
-            relpose: tuple[float, ...] | None = None
-            if grip_width is not None:
+            relpose = grip_offset
+            if relpose is None and grip_width is not None:
                 # Left hand (side="l", sign=-1) is at -X relative to barbell center.
                 # relpose defines barbell center relative to hand, so it's at +X.
                 relpose = (-sign * grip_width, 0, 0, 1, 0, 0, 0)

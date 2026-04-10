@@ -55,7 +55,7 @@ class TestSnatchModelBuilder:
 
     def test_default_config_z_up_gravity(self) -> None:
         builder = SnatchModelBuilder()
-        gx, gy, gz = builder.config.gravity
+        gx, gy, gz = builder.gravity
         assert gx == 0.0
         assert gy == 0.0
         assert gz < 0
