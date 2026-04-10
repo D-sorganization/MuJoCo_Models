@@ -107,4 +107,4 @@ class TestBenchPressModelBuilder:
 
     def test_default_config_gravity(self) -> None:
         builder = BenchPressModelBuilder()
-        assert builder.config.gravity[2] < 0
+        assert builder.gravity[2] < 0

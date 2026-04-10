@@ -54,6 +54,26 @@ class ExerciseModelBuilder(ABC):
         self.config = config or ExerciseConfig()
 
     @property
+    def body_spec(self) -> BodyModelSpec:
+        """Forward to the configured body specification."""
+        return self.config.body_spec
+
+    @property
+    def barbell_spec(self) -> BarbellSpec:
+        """Forward to the configured barbell specification."""
+        return self.config.barbell_spec
+
+    @property
+    def gravity(self) -> tuple[float, float, float]:
+        """Forward to the configured gravity vector."""
+        return self.config.gravity
+
+    @property
+    def grip_offset(self) -> tuple[float, ...] | None:
+        """Optional grip offset for subclasses that need a custom weld pose."""
+        return None
+
+    @property
     @abstractmethod
     def exercise_name(self) -> str:
         """Human-readable exercise name used in the model XML."""
@@ -118,7 +138,7 @@ class ExerciseModelBuilder(ABC):
         root = ET.Element("mujoco", model=self.exercise_name)
 
         # Option: gravity and timestep
-        g = self.config.gravity
+        g = self.gravity
         ET.SubElement(
             root,
             "option",
@@ -151,11 +171,11 @@ class ExerciseModelBuilder(ABC):
         equality = ET.SubElement(root, "equality")
 
         # Build body
-        body_bodies = create_full_body(worldbody, self.config.body_spec)
+        body_bodies = create_full_body(worldbody, self.body_spec)
 
         # Build barbell
         barbell_bodies = create_barbell_bodies(
-            worldbody, equality, self.config.barbell_spec
+            worldbody, equality, self.barbell_spec
         )
 
         # Exercise-specific attachment

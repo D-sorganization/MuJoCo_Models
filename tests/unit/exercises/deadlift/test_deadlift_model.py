@@ -87,4 +87,4 @@ class TestDeadliftModelBuilder:
 
     def test_default_plate_mass(self) -> None:
         builder = DeadliftModelBuilder()
-        assert builder.config.barbell_spec.plate_mass_per_side == 0.0
+        assert builder.barbell_spec.plate_mass_per_side == 0.0

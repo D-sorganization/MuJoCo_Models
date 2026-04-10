@@ -57,7 +57,7 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
 
         Grip is slightly outside the knees (~0.22 m from center).
         """
-        self._attach_barbell_to_hands(equality)
+        self._attach_barbell_to_hands(equality, grip_offset=self.grip_offset)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set the starting position: deep hip hinge, knees flexed.
