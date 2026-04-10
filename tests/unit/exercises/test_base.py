@@ -91,4 +91,7 @@ class TestExerciseModelBuilderAccessors:
 
         weld = root.find(".//weld[@name='barbell_to_hand_l']")
         assert weld is not None
-        assert weld.get("relpose") == "0.010000 0.020000 0.030000 1.000000 0.000000 0.000000 0.000000"
+        assert (
+            weld.get("relpose")
+            == "0.010000 0.020000 0.030000 1.000000 0.000000 0.000000 0.000000"
+        )

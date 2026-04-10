@@ -38,7 +38,9 @@ class TestCLI:
         result = main(["squat"])
         assert result == 0
 
-    def test_main_writes_xml_to_stdout(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_main_writes_xml_to_stdout(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         result = main(["squat"])
         assert result == 0
         stdout = capsys.readouterr().out
