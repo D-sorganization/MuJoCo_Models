@@ -105,25 +105,25 @@ class ExerciseModelBuilder(ABC):
         """
         self.config = config or ExerciseConfig()
 
-    # ------------------------------------------------------------------
-    # LoD accessor properties (issue #119)
-    # Expose config fields directly so subclasses avoid 2-level chains.
-    # ------------------------------------------------------------------
-
     @property
     def body_spec(self) -> BodyModelSpec:
-        """Accessor for the body anthropometric spec."""
+        """Forward to the configured body specification."""
         return self.config.body_spec
 
     @property
     def barbell_spec(self) -> BarbellSpec:
-        """Accessor for the barbell specification."""
+        """Forward to the configured barbell specification."""
         return self.config.barbell_spec
 
     @property
     def gravity(self) -> tuple[float, float, float]:
-        """Accessor for the gravity vector."""
+        """Forward to the configured gravity vector."""
         return self.config.gravity
+
+    @property
+    def grip_offset(self) -> tuple[float, ...] | None:
+        """Optional grip offset for subclasses that need a custom weld pose."""
+        return None
 
     @property
     @abstractmethod

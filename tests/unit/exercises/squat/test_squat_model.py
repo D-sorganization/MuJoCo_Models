@@ -51,7 +51,7 @@ class TestSquatModelBuilder:
 
     def test_default_config(self) -> None:
         builder = SquatModelBuilder()
-        assert builder.config.gravity == (0.0, 0.0, -9.80665)
+        assert builder.gravity == (0.0, 0.0, -9.80665)
 
     def test_attach_barbell_adds_weld(self) -> None:
         builder = SquatModelBuilder()

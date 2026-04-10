@@ -55,4 +55,4 @@ class TestCleanAndJerkModelBuilder:
 
     def test_default_gravity_z_up(self) -> None:
         builder = CleanAndJerkModelBuilder()
-        assert builder.config.gravity == (0.0, 0.0, -9.80665)
+        assert builder.gravity == (0.0, 0.0, -9.80665)
