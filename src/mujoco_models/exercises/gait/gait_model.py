@@ -67,13 +67,7 @@ class GaitModelBuilder(ExerciseModelBuilder):
         The right leg is in early stance (extended hip, flexed knee)
         while the left leg is in late swing (flexed hip, nearly straight knee).
         """
-        for joint in worldbody.iter("joint"):
-            name = joint.get("name", "")
-            joint_type = joint.get("type", "hinge")
-            if joint_type != "hinge":
-                continue
-            if name in _GAIT_INITIAL_REFS:
-                joint.set("ref", str(_GAIT_INITIAL_REFS[name]))
+        self.set_ref_by_name_map(worldbody, _GAIT_INITIAL_REFS)
         logger.debug(
             "Setting gait initial pose: hip_l=%.4f, hip_r=%.4f, "
             "knee_l=%.4f, knee_r=%.4f rad",

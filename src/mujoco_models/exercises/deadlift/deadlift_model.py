@@ -68,15 +68,14 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
 
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
-        for joint in worldbody.iter("joint"):
-            name = joint.get("name", "")
-            joint_type = joint.get("type", "hinge")
-            if joint_type != "hinge":
-                continue
-            if name.endswith("_flex") and "hip" in name:
-                joint.set("ref", str(_INITIAL_HIP_FLEX))
-            elif "knee" in name:
-                joint.set("ref", str(_INITIAL_KNEE_FLEX))
+        self.set_ref_by_name_map(
+            worldbody,
+            {
+                "hip_l_flex": _INITIAL_HIP_FLEX,
+                "hip_r_flex": _INITIAL_HIP_FLEX,
+                "knee": _INITIAL_KNEE_FLEX,
+            },
+        )
         logger.debug(
             "Setting deadlift initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad",
             _INITIAL_HIP_FLEX,

@@ -94,17 +94,16 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
 
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
-        for joint in worldbody.iter("joint"):
-            name = joint.get("name", "")
-            joint_type = joint.get("type", "hinge")
-            if joint_type != "hinge":
-                continue
-            if name.endswith("_flex") and "shoulder" in name:
-                joint.set("ref", str(_INITIAL_SHOULDER_FLEX))
-            elif "shoulder" in name and "adduct" in name:
-                joint.set("ref", str(_INITIAL_SHOULDER_ADDUCT))
-            elif "elbow" in name:
-                joint.set("ref", str(_INITIAL_ELBOW_FLEX))
+        self.set_ref_by_name_map(
+            worldbody,
+            {
+                "shoulder_l_flex": _INITIAL_SHOULDER_FLEX,
+                "shoulder_r_flex": _INITIAL_SHOULDER_FLEX,
+                "shoulder_l_adduct": _INITIAL_SHOULDER_ADDUCT,
+                "shoulder_r_adduct": _INITIAL_SHOULDER_ADDUCT,
+                "elbow": _INITIAL_ELBOW_FLEX,
+            },
+        )
         logger.debug(
             "Setting bench press initial pose: shoulder_flex=%.4f rad, "
             "shoulder_adduct=%.4f rad, elbow=%.4f rad",
