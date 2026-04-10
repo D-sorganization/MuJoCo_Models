@@ -105,6 +105,26 @@ class ExerciseModelBuilder(ABC):
         """
         self.config = config or ExerciseConfig()
 
+    # ------------------------------------------------------------------
+    # LoD accessor properties (issue #119)
+    # Expose config fields directly so subclasses avoid 2-level chains.
+    # ------------------------------------------------------------------
+
+    @property
+    def body_spec(self) -> BodyModelSpec:
+        """Accessor for the body anthropometric spec."""
+        return self.config.body_spec
+
+    @property
+    def barbell_spec(self) -> BarbellSpec:
+        """Accessor for the barbell specification."""
+        return self.config.barbell_spec
+
+    @property
+    def gravity(self) -> tuple[float, float, float]:
+        """Accessor for the gravity vector."""
+        return self.config.gravity
+
     @property
     @abstractmethod
     def exercise_name(self) -> str:
@@ -167,6 +187,35 @@ class ExerciseModelBuilder(ABC):
             )
 
     # ------------------------------------------------------------------
+    # Shared pose helper (issue #116)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def set_ref_by_name_map(
+        worldbody: ET.Element,
+        refs_by_name_fragment: dict[str, float],
+    ) -> None:
+        """Set joint ``ref`` attributes by matching name fragments.
+
+        Iterates all hinge joints in *worldbody*.  For each joint whose
+        name contains a key from *refs_by_name_fragment*, sets ``ref`` to
+        the corresponding value.  The first matching fragment wins.
+
+        Args:
+            worldbody: The ``<worldbody>`` element of the MJCF model.
+            refs_by_name_fragment: Mapping from name substring to ref angle
+                (radians).  E.g. ``{"hip_flex": 1.396, "knee": -1.047}``.
+        """
+        for joint in worldbody.iter("joint"):
+            if joint.get("type", "hinge") != "hinge":
+                continue
+            name = joint.get("name", "")
+            for fragment, ref in refs_by_name_fragment.items():
+                if fragment in name:
+                    joint.set("ref", str(ref))
+                    break
+
+    # ------------------------------------------------------------------
     # Build pipeline -- decomposed from the original monolithic build()
     # ------------------------------------------------------------------
 
@@ -174,7 +223,7 @@ class ExerciseModelBuilder(ABC):
         """Create the ``<mujoco>`` root with option, compiler, and defaults."""
         root = ET.Element("mujoco", model=self.exercise_name)
 
-        g = self.config.gravity
+        g = self.gravity
         ET.SubElement(
             root,
             "option",
@@ -273,10 +322,8 @@ class ExerciseModelBuilder(ABC):
         equality = ET.SubElement(root, "equality")
 
         # Step 4: body and barbell
-        body_bodies = create_full_body(worldbody, self.config.body_spec)
-        barbell_bodies = create_barbell_bodies(
-            worldbody, equality, self.config.barbell_spec
-        )
+        body_bodies = create_full_body(worldbody, self.body_spec)
+        barbell_bodies = create_barbell_bodies(worldbody, equality, self.barbell_spec)
 
         # Step 5: exercise-specific attachment and hook
         self.attach_barbell(equality, body_bodies, barbell_bodies)

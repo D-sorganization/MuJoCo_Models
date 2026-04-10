@@ -71,17 +71,16 @@ class SnatchModelBuilder(ExerciseModelBuilder):
 
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
-        for joint in worldbody.iter("joint"):
-            name = joint.get("name", "")
-            joint_type = joint.get("type", "hinge")
-            if joint_type != "hinge":
-                continue
-            if name.endswith("_flex") and "hip" in name:
-                joint.set("ref", str(_INITIAL_HIP_FLEX))
-            elif "shoulder" in name and "adduct" in name:
-                joint.set("ref", str(_INITIAL_SHOULDER_ADDUCT))
-            elif "knee" in name:
-                joint.set("ref", str(_INITIAL_KNEE_FLEX))
+        self.set_ref_by_name_map(
+            worldbody,
+            {
+                "hip_l_flex": _INITIAL_HIP_FLEX,
+                "hip_r_flex": _INITIAL_HIP_FLEX,
+                "shoulder_l_adduct": _INITIAL_SHOULDER_ADDUCT,
+                "shoulder_r_adduct": _INITIAL_SHOULDER_ADDUCT,
+                "knee": _INITIAL_KNEE_FLEX,
+            },
+        )
         logger.debug(
             "Setting snatch initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad, "
             "shoulder_adduct=%.4f rad",

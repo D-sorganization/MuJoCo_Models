@@ -84,17 +84,16 @@ class SquatModelBuilder(ExerciseModelBuilder):
 
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
-        for joint in worldbody.iter("joint"):
-            name = joint.get("name", "")
-            joint_type = joint.get("type", "hinge")
-            if joint_type != "hinge":
-                continue
-            if name.endswith("_flex") and "hip" in name:
-                joint.set("ref", str(_INITIAL_HIP_FLEX))
-            elif "hip" in name and "rotate" in name:
-                joint.set("ref", str(_INITIAL_HIP_ROTATE))
-            elif "knee" in name:
-                joint.set("ref", str(_INITIAL_KNEE_FLEX))
+        self.set_ref_by_name_map(
+            worldbody,
+            {
+                "hip_l_flex": _INITIAL_HIP_FLEX,
+                "hip_r_flex": _INITIAL_HIP_FLEX,
+                "hip_l_rotate": _INITIAL_HIP_ROTATE,
+                "hip_r_rotate": _INITIAL_HIP_ROTATE,
+                "knee": _INITIAL_KNEE_FLEX,
+            },
+        )
         logger.debug(
             "Setting squat initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad, "
             "hip_rotate=%.4f rad",
