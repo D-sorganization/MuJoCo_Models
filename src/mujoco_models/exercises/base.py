@@ -130,6 +130,16 @@ class ExerciseModelBuilder(ABC):
     def exercise_name(self) -> str:
         """Human-readable exercise name used in the model XML."""
 
+    @property
+    def uses_barbell(self) -> bool:
+        """Return True if this exercise builds and attaches a barbell.
+
+        Override in subclasses (e.g. gait, sit-to-stand) that do not
+        use a barbell so that barbell bodies, welds, and attachment
+        logic are skipped entirely rather than created with zero mass.
+        """
+        return True
+
     @abstractmethod
     def attach_barbell(
         self,
@@ -325,12 +335,17 @@ class ExerciseModelBuilder(ABC):
         # Step 3: equality constraints section
         equality = ET.SubElement(root, "equality")
 
-        # Step 4: body and barbell
+        # Step 4: body and (optionally) barbell
         body_bodies = create_full_body(worldbody, self.body_spec)
-        barbell_bodies = create_barbell_bodies(worldbody, equality, self.barbell_spec)
+        barbell_bodies: dict[str, ET.Element] = {}
+        if self.uses_barbell:
+            barbell_bodies = create_barbell_bodies(
+                worldbody, equality, self.barbell_spec
+            )
 
         # Step 5: exercise-specific attachment and hook
-        self.attach_barbell(equality, body_bodies, barbell_bodies)
+        if self.uses_barbell:
+            self.attach_barbell(equality, body_bodies, barbell_bodies)
         self._post_worldbody_hook(worldbody, equality)
 
         # Step 6: contact exclusions

@@ -64,7 +64,7 @@ Model generation follows the same pipeline across exercises:
 3. Create the `<mujoco>` root with options, compiler settings, and defaults.
 4. Build the `worldbody` and `equality` sections.
 5. Assemble the full body through `create_full_body()`.
-6. Assemble the barbell through `create_barbell_bodies()`.
+6. Assemble the barbell through `create_barbell_bodies()` when the exercise builder's `uses_barbell` property is `True` (gait and sit-to-stand opt out).
 7. Apply the exercise-specific barbell attachment and pose hooks.
 8. Add contact exclusions, actuators, sensors, and keyframes.
 9. Serialize and validate the MJCF XML.

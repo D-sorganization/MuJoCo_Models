@@ -28,6 +28,24 @@ class ForwardingBuilder(ExerciseModelBuilder):
         return None
 
 
+class NoBarbellBuilder(ForwardingBuilder):
+    """Builder that opts out of barbell construction via uses_barbell=False."""
+
+    @property
+    def uses_barbell(self) -> bool:
+        return False
+
+    def attach_barbell(
+        self,
+        equality: ET.Element,
+        body_bodies: dict[str, ET.Element],
+        barbell_bodies: dict[str, ET.Element],
+    ) -> None:
+        raise AssertionError(
+            "attach_barbell must not be called when uses_barbell is False"
+        )
+
+
 class OverriddenAccessorBuilder(ForwardingBuilder):
     def __init__(self) -> None:
         super().__init__(
@@ -66,6 +84,38 @@ class TestExerciseModelBuilderAccessors:
         assert builder.barbell_spec == builder.config.barbell_spec
         assert builder.gravity == builder.config.gravity
         assert builder.grip_offset is None
+
+    def test_uses_barbell_default_true(self) -> None:
+        """Default ExerciseModelBuilder.uses_barbell is True (backward compat)."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        assert builder.uses_barbell is True
+
+    def test_build_with_uses_barbell_true_has_real_mass_shaft(self) -> None:
+        """With uses_barbell=True, the barbell shaft is built with real mass."""
+        config = ExerciseConfig(
+            barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=20.0)
+        )
+        xml_str = ForwardingBuilder(config).build()
+        root = ET.fromstring(xml_str)
+        shaft_inertial = root.find(".//body[@name='barbell_shaft']/inertial")
+        assert shaft_inertial is not None
+        shaft_mass = float(shaft_inertial.get("mass"))  # type: ignore[arg-type]
+        assert shaft_mass > 0.0
+        assert shaft_mass == pytest.approx(config.barbell_spec.shaft_mass)
+
+    def test_build_with_uses_barbell_false_omits_barbell(self) -> None:
+        """With uses_barbell=False, no barbell bodies or welds are emitted."""
+        xml_str = NoBarbellBuilder(ExerciseConfig()).build()
+        root = ET.fromstring(xml_str)
+
+        body_names = {b.get("name") for b in root.findall(".//body")}
+        assert "barbell_shaft" not in body_names
+        assert "barbell_left_sleeve" not in body_names
+        assert "barbell_right_sleeve" not in body_names
+
+        weld_names = {w.get("name") for w in root.findall(".//weld")}
+        assert "barbell_left_weld" not in weld_names
+        assert "barbell_right_weld" not in weld_names
 
     def test_build_uses_accessor_overrides(self) -> None:
         builder = OverriddenAccessorBuilder()
