@@ -53,13 +53,22 @@ class GaitModelBuilder(ExerciseModelBuilder):
         """Return the canonical exercise name for the gait model."""
         return "gait"
 
+    @property
+    def uses_barbell(self) -> bool:
+        """Gait is a bodyweight movement -- no barbell is built."""
+        return False
+
     def attach_barbell(
         self,
         equality: ET.Element,
         body_bodies: dict[str, ET.Element],
         barbell_bodies: dict[str, ET.Element],
     ) -> None:
-        """No barbell for gait analysis -- intentional no-op."""
+        """No barbell for gait analysis -- intentional no-op.
+
+        Kept to satisfy the abstract contract; never invoked because
+        ``uses_barbell`` is ``False``.
+        """
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set right heel strike pose with asymmetric limb angles.
@@ -83,10 +92,7 @@ def build_gait_model(body_mass: float = 80.0, height: float = 1.75) -> str:
 
     Default: 80 kg person, 1.75 m tall, no barbell.
     """
-    from mujoco_models.shared.barbell import BarbellSpec
-
     config = ExerciseConfig(
         body_spec=BodyModelSpec(total_mass=body_mass, height=height),
-        barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=0.0),
     )
     return GaitModelBuilder(config).build()

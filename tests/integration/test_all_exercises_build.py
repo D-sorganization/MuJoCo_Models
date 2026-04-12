@@ -33,6 +33,14 @@ ALL_BUILDERS = [
     ("sit_to_stand", build_sit_to_stand_model),
 ]
 
+# Exercises that build a barbell (uses_barbell=True). Gait and sit-to-stand
+# are bodyweight movements and intentionally omit the barbell entirely.
+BARBELL_BUILDERS = [
+    (name, builder)
+    for name, builder in ALL_BUILDERS
+    if name not in {"gait", "sit_to_stand"}
+]
+
 
 class TestAllExercisesBuild:
     @pytest.mark.parametrize(
@@ -98,11 +106,16 @@ class TestAllExercisesBuild:
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
     )
     def test_minimum_body_count(self, name: str, builder: Callable[[], str]) -> None:
-        """Every exercise should have at least 18 bodies (15 body + 3 barbell)."""
+        """Every exercise should have at least 15 body segments.
+
+        Barbell exercises add 3 more bodies (shaft + 2 sleeves); bodyweight
+        exercises (gait, sit-to-stand) only need the 15 body segments.
+        """
         xml_str = builder()
         root = ET.fromstring(xml_str)
         bodies = root.findall(".//body")
-        assert len(bodies) >= 18
+        expected_min = 18 if name not in {"gait", "sit_to_stand"} else 15
+        assert len(bodies) >= expected_min
 
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
@@ -117,15 +130,30 @@ class TestAllExercisesBuild:
                 assert mass > 0, f"{body.get('name')} mass={mass}"  # type: ignore
 
     @pytest.mark.parametrize(
-        "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]
+        "name,builder", BARBELL_BUILDERS, ids=[n for n, _ in BARBELL_BUILDERS]
     )
     def test_barbell_present(self, name: str, builder: Callable[[], str]) -> None:
+        """Barbell exercises must materialise a shaft and both sleeves."""
         xml_str = builder()
         root = ET.fromstring(xml_str)
         body_names = {b.get("name") for b in root.findall(".//body")}  # type: ignore
         assert "barbell_shaft" in body_names
         assert "barbell_left_sleeve" in body_names
         assert "barbell_right_sleeve" in body_names
+
+    @pytest.mark.parametrize(
+        "name",
+        ["gait", "sit_to_stand"],
+    )
+    def test_bodyweight_exercises_omit_barbell(self, name: str) -> None:
+        """Gait and sit-to-stand must not emit any barbell bodies."""
+        builder = dict(ALL_BUILDERS)[name]
+        xml_str = builder()
+        root = ET.fromstring(xml_str)
+        body_names = {b.get("name") for b in root.findall(".//body")}  # type: ignore
+        assert "barbell_shaft" not in body_names
+        assert "barbell_left_sleeve" not in body_names
+        assert "barbell_right_sleeve" not in body_names
 
     @pytest.mark.parametrize(
         "name,builder", ALL_BUILDERS, ids=[n for n, _ in ALL_BUILDERS]

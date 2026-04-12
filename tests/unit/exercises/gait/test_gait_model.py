@@ -83,3 +83,24 @@ class TestGaitModelBuilder:
         sensor = root.find("sensor")
         assert sensor is not None
         assert len(sensor.findall("jointpos")) > 0
+
+    def test_uses_barbell_flag_is_false(self) -> None:
+        """GaitModelBuilder should opt out of barbell construction."""
+        assert GaitModelBuilder().uses_barbell is False
+
+    def test_build_omits_barbell_bodies(self) -> None:
+        """With uses_barbell=False, no barbell bodies should appear."""
+        xml_str = build_gait_model()
+        root = ET.fromstring(xml_str)
+        body_names = {b.get("name") for b in root.findall(".//body")}
+        assert "barbell_shaft" not in body_names
+        assert "barbell_left_sleeve" not in body_names
+        assert "barbell_right_sleeve" not in body_names
+
+    def test_build_omits_barbell_welds(self) -> None:
+        """With uses_barbell=False, no barbell welds should be emitted."""
+        xml_str = build_gait_model()
+        root = ET.fromstring(xml_str)
+        weld_names = {w.get("name") for w in root.findall(".//weld")}
+        assert "barbell_left_weld" not in weld_names
+        assert "barbell_right_weld" not in weld_names

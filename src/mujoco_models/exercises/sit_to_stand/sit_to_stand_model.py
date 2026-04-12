@@ -56,13 +56,22 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
         """Return the canonical exercise name for the sit-to-stand model."""
         return "sit_to_stand"
 
+    @property
+    def uses_barbell(self) -> bool:
+        """Sit-to-stand is a bodyweight movement -- no barbell is built."""
+        return False
+
     def attach_barbell(
         self,
         equality: ET.Element,
         body_bodies: dict[str, ET.Element],
         barbell_bodies: dict[str, ET.Element],
     ) -> None:
-        """No barbell for sit-to-stand -- intentional no-op."""
+        """No barbell for sit-to-stand -- intentional no-op.
+
+        Kept to satisfy the abstract contract; never invoked because
+        ``uses_barbell`` is ``False``.
+        """
 
     def _post_worldbody_hook(self, worldbody: ET.Element, equality: ET.Element) -> None:
         """Add a chair body welded to the ground plane."""
@@ -132,10 +141,7 @@ def build_sit_to_stand_model(body_mass: float = 80.0, height: float = 1.75) -> s
 
     Default: 80 kg person, 1.75 m tall, standard chair height.
     """
-    from mujoco_models.shared.barbell import BarbellSpec
-
     config = ExerciseConfig(
         body_spec=BodyModelSpec(total_mass=body_mass, height=height),
-        barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=0.0),
     )
     return SitToStandModelBuilder(config).build()
