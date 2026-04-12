@@ -22,10 +22,13 @@ The maintained source lives under `src/mujoco_models/` and is organized around t
 - `src/mujoco_models/shared/` contains reusable body, barbell, contract, geometry, parity, and MJCF helper code.
 - `src/mujoco_models/optimization/` contains objective data and optimization helpers used by model-generation and validation workflows.
 
-The shared body layer is already split into focused modules:
+The shared body layer is split into focused modules:
 
-- `shared/body/body_model.py` holds the `BodyModelSpec` dataclass, the main `create_full_body()` orchestration, and the axial/limb assembly pipeline.
-- `shared/body/body_helpers.py` contains extracted limb assembly and foot-contact helpers.
+- `shared/body/body_model.py` is a thin facade that re-exports `BodyModelSpec`, `_LEG_HEIGHT_FRACTION`, and `create_full_body()`, delegating to the sub-modules below.
+- `shared/body/axial_skeleton.py` builds the pelvis, torso, and head (the axial skeleton).
+- `shared/body/upper_limbs.py` attaches bilateral upper-arm, forearm, and hand segments.
+- `shared/body/lower_limbs.py` attaches bilateral thigh, shank, and foot segments with contact geometry.
+- `shared/body/body_helpers.py` contains shared limb assembly and foot-contact helpers.
 - `shared/body/segment_data.py` contains anthropometric tables, segment property helpers, and shared joint limits.
 
 The shared barbell layer lives in `shared/barbell/barbell_model.py` and builds the three-body barbell assembly plus weld constraints.
