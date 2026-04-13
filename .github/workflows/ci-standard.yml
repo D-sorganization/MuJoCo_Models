@@ -44,6 +44,7 @@ jobs:
             if command -v "$PYTHON" &>/dev/null; then
               echo "Using $PYTHON ($($PYTHON --version))"
               "$PYTHON" -m venv "$RUNNER_TEMP/ci-venv"
+              "$RUNNER_TEMP/ci-venv/bin/pip" install --upgrade pip setuptools wheel --quiet
               echo "$RUNNER_TEMP/ci-venv/bin" >> $GITHUB_PATH
               exit 0
             fi
@@ -110,6 +111,7 @@ jobs:
           fi
           echo "Using $PYTHON ($($PYTHON --version))"
           "$PYTHON" -m venv "$RUNNER_TEMP/ci-venv"
+          "$RUNNER_TEMP/ci-venv/bin/pip" install --upgrade pip setuptools wheel --quiet
           echo "$RUNNER_TEMP/ci-venv/bin" >> $GITHUB_PATH
 
       - name: Install Dependencies
