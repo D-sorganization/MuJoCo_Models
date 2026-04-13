@@ -39,7 +39,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python venv
-        run: python3.11 -m venv .venv && echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        run: python3.11 -m venv "$RUNNER_TEMP/ci-venv" && echo "$RUNNER_TEMP/ci-venv/bin" >> $GITHUB_PATH
       - run: pip install ruff==0.14.10 mypy==1.13.0 bandit==1.7.7
 
       - name: Lint
@@ -93,7 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python venv
-        run: python${{ matrix.python }} -m venv .venv && echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        run: python${{ matrix.python }} -m venv "$RUNNER_TEMP/ci-venv" && echo "$RUNNER_TEMP/ci-venv/bin" >> $GITHUB_PATH
 
       - name: Install Dependencies
         run: pip install -e ".[dev]"
