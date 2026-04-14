@@ -14,17 +14,17 @@ from mujoco_models.shared.body import BodyModelSpec
 logger = logging.getLogger(__name__)
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    """Create the argument parser for the CLI."""
-    parser = argparse.ArgumentParser(
-        prog="python -m mujoco_models",
-        description="Generate MuJoCo MJCF models for barbell exercises.",
-    )
+def _add_exercise_argument(parser: argparse.ArgumentParser) -> None:
+    """Add the positional ``exercise`` argument."""
     parser.add_argument(
         "exercise",
         choices=sorted(set(EXERCISE_REGISTRY.keys())),
         help="Exercise to generate a model for.",
     )
+
+
+def _add_anthropometry_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add ``--body-mass``, ``--height`` and ``--plate-mass`` options."""
     parser.add_argument(
         "--body-mass",
         type=float,
@@ -43,6 +43,10 @@ def _build_parser() -> argparse.ArgumentParser:
         default=0.0,
         help="Plate mass per side in kg (default: 0.0).",
     )
+
+
+def _add_output_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add output-file and verbosity options."""
     parser.add_argument(
         "-o",
         "--output",
@@ -56,6 +60,17 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable verbose logging.",
     )
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Create the argument parser for the CLI."""
+    parser = argparse.ArgumentParser(
+        prog="python -m mujoco_models",
+        description="Generate MuJoCo MJCF models for barbell exercises.",
+    )
+    _add_exercise_argument(parser)
+    _add_anthropometry_arguments(parser)
+    _add_output_arguments(parser)
     return parser
 
 

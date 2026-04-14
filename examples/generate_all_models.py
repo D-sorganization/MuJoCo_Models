@@ -17,12 +17,8 @@ from mujoco_models.shared.barbell import BarbellSpec
 from mujoco_models.shared.body import BodyModelSpec
 
 
-def main() -> None:
-    """Generate MJCF XML files for all registered exercise models.
-
-    Parses command-line arguments and writes one XML file per exercise
-    to the configured output directory.
-    """
+def _build_parser() -> argparse.ArgumentParser:
+    """Create the argument parser for ``generate_all_models``."""
     parser = argparse.ArgumentParser(description="Generate all exercise models.")
     parser.add_argument(
         "--output-dir",
@@ -42,30 +38,69 @@ def main() -> None:
         default=1.75,
         help="Body height in meters (default: 1.75).",
     )
-    args = parser.parse_args()
+    return parser
 
-    os.makedirs(args.output_dir, exist_ok=True)
 
-    config = ExerciseConfig(
-        body_spec=BodyModelSpec(total_mass=args.body_mass, height=args.height),
+def _build_config(body_mass: float, height: float) -> ExerciseConfig:
+    """Build an :class:`ExerciseConfig` with validated anthropometry.
+
+    Preconditions:
+        ``body_mass > 0`` and ``height > 0``.  :class:`BodyModelSpec`
+        enforces the contract and raises :class:`ValueError` otherwise.
+    """
+    return ExerciseConfig(
+        body_spec=BodyModelSpec(total_mass=body_mass, height=height),
         barbell_spec=BarbellSpec.mens_olympic(),
     )
 
-    # Deduplicate builders (some exercises share a builder, e.g. squat/back_squat)
+
+def _write_model(
+    name: str, builder_cls: type, config: ExerciseConfig, output_dir: str
+) -> str:
+    """Build one exercise model and write it to ``<output_dir>/<name>.xml``.
+
+    Returns the output path so the caller can report progress.
+    """
+    xml_str = builder_cls(config).build()
+    out_path = os.path.join(output_dir, f"{name}.xml")
+    with open(out_path, "w", encoding="utf-8") as fh:
+        fh.write(xml_str)
+    return out_path
+
+
+def _iter_unique_builders() -> list[tuple[str, type]]:
+    """Yield ``(name, builder_cls)`` pairs with duplicate classes removed.
+
+    Some exercises share a builder (e.g. squat/back_squat).  We emit each
+    unique class once using the alphabetically-first alias.
+    """
     seen: set[str] = set()
+    unique: list[tuple[str, type]] = []
     for name, builder_cls in sorted(EXERCISE_REGISTRY.items()):
         cls_name = builder_cls.__name__
         if cls_name in seen:
             continue
         seen.add(cls_name)
+        unique.append((name, builder_cls))
+    return unique
 
-        xml_str = builder_cls(config).build()
-        out_path = os.path.join(args.output_dir, f"{name}.xml")
-        with open(out_path, "w") as fh:
-            fh.write(xml_str)
+
+def main() -> None:
+    """Generate MJCF XML files for all registered exercise models.
+
+    Parses command-line arguments and writes one XML file per exercise
+    to the configured output directory.
+    """
+    args = _build_parser().parse_args()
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    config = _build_config(args.body_mass, args.height)
+    unique = _iter_unique_builders()
+    for name, builder_cls in unique:
+        out_path = _write_model(name, builder_cls, config, args.output_dir)
         print(f"Wrote {out_path}")
 
-    print(f"Generated {len(seen)} models in {args.output_dir}/")
+    print(f"Generated {len(unique)} models in {args.output_dir}/")
 
 
 if __name__ == "__main__":

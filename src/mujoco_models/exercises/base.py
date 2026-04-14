@@ -318,6 +318,33 @@ class ExerciseModelBuilder(ABC):
             key.set("name", f"{self.exercise_name}_start")
             key.set("qpos", " ".join(qpos_values))
 
+    def _build_bodies_and_barbell(
+        self, worldbody: ET.Element, equality: ET.Element
+    ) -> tuple[dict[str, ET.Element], dict[str, ET.Element]]:
+        """Build body segments and (optionally) barbell inside the worldbody.
+
+        Returns ``(body_bodies, barbell_bodies)`` where ``barbell_bodies`` is
+        empty when :attr:`uses_barbell` is ``False``.
+        """
+        body_bodies = create_full_body(worldbody, self.body_spec)
+        barbell_bodies: dict[str, ET.Element] = {}
+        if self.uses_barbell:
+            barbell_bodies = create_barbell_bodies(
+                worldbody, equality, self.barbell_spec
+            )
+            self.attach_barbell(equality, body_bodies, barbell_bodies)
+        return body_bodies, barbell_bodies
+
+    def _finalize_model(self, root: ET.Element) -> str:
+        """Serialize *root* and verify MJCF postconditions.
+
+        Postcondition: returned string is well-formed MJCF XML whose root
+        element is ``<mujoco>``.
+        """
+        xml_str = serialize_model(root)
+        ensure_mjcf_root(xml_str)
+        return xml_str
+
     def build(self) -> str:
         """Build the complete MuJoCo MJCF model XML and return as string.
 
@@ -326,44 +353,20 @@ class ExerciseModelBuilder(ABC):
         """
         logger.info("Building %s model", self.exercise_name)
 
-        # Step 1: root element with options / compiler / defaults
         root = self._create_root_element()
-
-        # Step 2: worldbody with ground plane
         worldbody = self._create_worldbody(root)
-
-        # Step 3: equality constraints section
         equality = ET.SubElement(root, "equality")
 
-        # Step 4: body and (optionally) barbell
-        body_bodies = create_full_body(worldbody, self.body_spec)
-        barbell_bodies: dict[str, ET.Element] = {}
-        if self.uses_barbell:
-            barbell_bodies = create_barbell_bodies(
-                worldbody, equality, self.barbell_spec
-            )
-
-        # Step 5: exercise-specific attachment and hook
-        if self.uses_barbell:
-            self.attach_barbell(equality, body_bodies, barbell_bodies)
+        self._build_bodies_and_barbell(worldbody, equality)
         self._post_worldbody_hook(worldbody, equality)
 
-        # Step 6: contact exclusions
         contact = ET.SubElement(root, "contact")
         _add_contact_exclusions(contact)
 
-        # Step 7: initial pose
         self.set_initial_pose(worldbody)
-
-        # Step 8: actuators and sensors
         self._add_actuators_and_sensors(root, worldbody)
-
-        # Step 9: keyframe
         self._build_keyframe(root, worldbody)
 
-        # Serialize and validate
-        xml_str = serialize_model(root)
-        ensure_mjcf_root(xml_str)
-
+        xml_str = self._finalize_model(root)
         logger.debug("Successfully built %s model", self.exercise_name)
         return xml_str

@@ -17,6 +17,46 @@ logger = logging.getLogger(__name__)
 _ExtraJoints = list[tuple[str, tuple[float, float, float], float, float]]
 
 
+# Foot contact-geometry constants.  Centralizing here removes magic numbers
+# from the sub-element calls and keeps the geometry documented in one place.
+# Half-sizes correspond to a 0.26 m x 0.10 m x 0.02 m contact box.
+_FOOT_CONTACT_SIZE = "0.13 0.05 0.01"
+_FOOT_CONTACT_POS = "0.04 0 -0.02"  # slightly forward and at bottom of foot
+_FOOT_CONTACT_FRICTION = "1.0 0.005 0.0001"  # tangent, torsion, rolling
+_FOOT_CONTACT_RGBA = "0.8 0.6 0.4 0.3"  # semi-transparent for visualization
+
+
+def _demote_visual_geom_group(foot_body: ET.Element) -> None:
+    """Move the existing (visual) foot geom into group 0 if present.
+
+    Separating visual and contact geoms by ``group`` lets MuJoCo render
+    without the contact box drawn on top of the visual capsule.
+    """
+    visual_geom = foot_body.find("geom")
+    if visual_geom is not None:
+        visual_geom.set("group", "0")
+
+
+def _add_single_foot_contact_geom(foot_body: ET.Element, side: str) -> None:
+    """Attach the standard sole-contact box geom to a single foot body.
+
+    Args:
+        foot_body: The ``<body name="foot_{side}">`` element.
+        side: One of ``"l"`` or ``"r"``.
+    """
+    contact_geom = ET.SubElement(foot_body, "geom")
+    contact_geom.set("name", f"foot_{side}_contact")
+    contact_geom.set("type", "box")
+    contact_geom.set("size", _FOOT_CONTACT_SIZE)
+    contact_geom.set("pos", _FOOT_CONTACT_POS)
+    contact_geom.set("contype", "1")
+    contact_geom.set("conaffinity", "1")
+    contact_geom.set("condim", "3")
+    contact_geom.set("friction", _FOOT_CONTACT_FRICTION)
+    contact_geom.set("group", "1")
+    contact_geom.set("rgba", _FOOT_CONTACT_RGBA)
+
+
 def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     """Add box collision geometry to foot segments for ground contact.
 
@@ -27,34 +67,16 @@ def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     Contact properties: contype=1, conaffinity=1, condim=3,
     friction="1.0 0.005 0.0001" (tangent, torsion, rolling).
     Group=1 separates contact geoms from visual geoms (group=0).
+
+    Missing sides (e.g. unilateral rigs) are silently skipped; callers
+    that require a specific side should check ``bodies`` themselves.
     """
     for side in ("l", "r"):
         foot_body = bodies.get(f"foot_{side}")
         if foot_body is None:
             continue
-
-        # Get the visual geom to determine the foot's vertical extent
-        visual_geom = foot_body.find("geom")
-        if visual_geom is not None:
-            visual_geom.set("group", "0")
-
-        contact_geom = ET.SubElement(foot_body, "geom")
-        contact_geom.set("name", f"foot_{side}_contact")
-        contact_geom.set("type", "box")
-        contact_geom.set(
-            "size", "0.13 0.05 0.01"
-        )  # half-sizes: 0.26/2 x 0.10/2 x 0.02/2
-        contact_geom.set(
-            "pos", "0.04 0 -0.02"
-        )  # slightly forward and at bottom of foot
-        contact_geom.set("contype", "1")
-        contact_geom.set("conaffinity", "1")
-        contact_geom.set("condim", "3")
-        contact_geom.set("friction", "1.0 0.005 0.0001")
-        contact_geom.set("group", "1")
-        contact_geom.set(
-            "rgba", "0.8 0.6 0.4 0.3"
-        )  # semi-transparent for visualization
+        _demote_visual_geom_group(foot_body)
+        _add_single_foot_contact_geom(foot_body, side)
 
     logger.debug("Added contact sole geometry to foot segments")
 

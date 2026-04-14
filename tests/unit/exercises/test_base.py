@@ -145,3 +145,52 @@ class TestExerciseModelBuilderAccessors:
             weld.get("relpose")
             == "0.010000 0.020000 0.030000 1.000000 0.000000 0.000000 0.000000"
         )
+
+
+class TestBuildDecomposition:
+    """Tests for helpers extracted from ``build()`` in A-N Refresh 2026-04-14."""
+
+    def test_build_bodies_and_barbell_with_barbell(self) -> None:
+        """Both body and barbell bodies are populated when barbell is enabled."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        worldbody = ET.Element("worldbody")
+        equality = ET.Element("equality")
+
+        body_bodies, barbell_bodies = builder._build_bodies_and_barbell(
+            worldbody, equality
+        )
+        assert "pelvis" in body_bodies
+        assert "barbell_shaft" in barbell_bodies
+        # attach_barbell produced weld constraints
+        weld_names = {w.get("name") for w in equality.findall("weld")}
+        assert "barbell_to_hand_l" in weld_names
+        assert "barbell_to_hand_r" in weld_names
+
+    def test_build_bodies_and_barbell_without_barbell(self) -> None:
+        """When ``uses_barbell`` is False, barbell_bodies is empty and no weld is added."""
+        builder = NoBarbellBuilder(ExerciseConfig())
+        worldbody = ET.Element("worldbody")
+        equality = ET.Element("equality")
+
+        body_bodies, barbell_bodies = builder._build_bodies_and_barbell(
+            worldbody, equality
+        )
+        assert body_bodies  # body still built
+        assert barbell_bodies == {}
+        assert equality.findall("weld") == []
+
+    def test_finalize_model_validates_mjcf_root(self) -> None:
+        """``_finalize_model`` returns serialized XML whose root is ``<mujoco>``."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        root = ET.Element("mujoco", model="dummy")
+        ET.SubElement(root, "worldbody")
+        xml_str = builder._finalize_model(root)
+        assert "<mujoco" in xml_str
+        assert ET.fromstring(xml_str).tag == "mujoco"
+
+    def test_finalize_model_rejects_non_mujoco_root(self) -> None:
+        """A non-``<mujoco>`` root violates the MJCF postcondition."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        bad_root = ET.Element("notmujoco")
+        with pytest.raises(ValueError, match="MJCF root"):
+            builder._finalize_model(bad_root)
