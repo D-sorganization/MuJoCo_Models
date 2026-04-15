@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 
 from mujoco_models.shared.utils.geometry import capsule_inertia
 from mujoco_models.shared.utils.mjcf_helpers import add_body, add_hinge_joint
@@ -24,6 +25,24 @@ _FOOT_CONTACT_SIZE = "0.13 0.05 0.01"
 _FOOT_CONTACT_POS = "0.04 0 -0.02"  # slightly forward and at bottom of foot
 _FOOT_CONTACT_FRICTION = "1.0 0.005 0.0001"  # tangent, torsion, rolling
 _FOOT_CONTACT_RGBA = "0.8 0.6 0.4 0.3"  # semi-transparent for visualization
+
+
+@dataclass(frozen=True)
+class _LimbSideSpec:
+    """Inputs needed to build one side of a bilateral limb."""
+
+    parent_el: ET.Element
+    body_name: str
+    pos: tuple[float, float, float]
+    mass: float
+    inertia: tuple[float, float, float]
+    radius: float
+    length: float
+    coord_prefix: str
+    side: str
+    range_min: float
+    range_max: float
+    extra_joints: _ExtraJoints | None = None
 
 
 def _demote_visual_geom_group(foot_body: ET.Element) -> None:
@@ -81,7 +100,29 @@ def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     logger.debug("Added contact sole geometry to foot segments")
 
 
-def _create_limb_side_body(
+def _create_limb_side_body(spec: _LimbSideSpec) -> ET.Element:
+    """Create body and hinge joints for one side of a bilateral limb."""
+    child_body = _build_limb_body(
+        spec.parent_el,
+        body_name=spec.body_name,
+        pos=spec.pos,
+        mass=spec.mass,
+        inertia=spec.inertia,
+        radius=spec.radius,
+        length=spec.length,
+    )
+    _add_limb_joints(
+        child_body,
+        coord_prefix=spec.coord_prefix,
+        side=spec.side,
+        range_min=spec.range_min,
+        range_max=spec.range_max,
+        extra_joints=spec.extra_joints,
+    )
+    return child_body
+
+
+def _build_limb_body(
     parent_el: ET.Element,
     *,
     body_name: str,
@@ -90,14 +131,9 @@ def _create_limb_side_body(
     inertia: tuple[float, float, float],
     radius: float,
     length: float,
-    coord_prefix: str,
-    side: str,
-    range_min: float,
-    range_max: float,
-    extra_joints: _ExtraJoints | None = None,
 ) -> ET.Element:
-    """Create body and hinge joints for one side of a bilateral limb."""
-    child_body = add_body(
+    """Create the capsule body for one side of a bilateral limb."""
+    return add_body(
         parent_el,
         name=body_name,
         pos=pos,
@@ -107,6 +143,18 @@ def _create_limb_side_body(
         geom_size=(radius, length / 2.0),
         geom_rgba="0.8 0.6 0.4 1",
     )
+
+
+def _add_limb_joints(
+    child_body: ET.Element,
+    *,
+    coord_prefix: str,
+    side: str,
+    range_min: float,
+    range_max: float,
+    extra_joints: _ExtraJoints | None = None,
+) -> None:
+    """Attach the flexion joint and any optional side-specific joints."""
     add_hinge_joint(
         child_body,
         name=f"{coord_prefix}_{side}_flex",
@@ -123,7 +171,6 @@ def _create_limb_side_body(
                 range_min=ex_min,
                 range_max=ex_max,
             )
-    return child_body
 
 
 def add_bilateral_limb(
@@ -158,11 +205,10 @@ def add_bilateral_limb(
     parent_is_bilateral = f"{parent_name}_l" in parent_bodies
     created: dict[str, ET.Element] = {}
     for side, sign in [("l", -1.0), ("r", 1.0)]:
-        body_name = f"{seg_name}_{side}"
         key = f"{parent_name}_{side}" if parent_is_bilateral else parent_name
-        created[body_name] = _create_limb_side_body(
-            parent_bodies[key],
-            body_name=body_name,
+        side_spec = _LimbSideSpec(
+            parent_el=parent_bodies[key],
+            body_name=f"{seg_name}_{side}",
             pos=(sign * parent_lateral_x, 0, parent_offset_z),
             mass=mass,
             inertia=inertia,
@@ -174,4 +220,5 @@ def add_bilateral_limb(
             range_max=range_max,
             extra_joints=extra_joints,
         )
+        created[side_spec.body_name] = _create_limb_side_body(side_spec)
     return created
