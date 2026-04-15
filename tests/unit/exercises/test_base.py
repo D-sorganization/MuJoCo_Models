@@ -12,6 +12,10 @@ from mujoco_models.shared.body import BodyModelSpec, segment_properties
 
 
 class ForwardingBuilder(ExerciseModelBuilder):
+    def __init__(self, config: ExerciseConfig | None = None) -> None:
+        super().__init__(config)
+        self.set_initial_pose_calls = 0
+
     @property
     def exercise_name(self) -> str:
         return "forwarding_builder"
@@ -25,7 +29,7 @@ class ForwardingBuilder(ExerciseModelBuilder):
         self._attach_barbell_to_hands(equality, grip_offset=self.grip_offset)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
-        return None
+        self.set_initial_pose_calls += 1
 
 
 class NoBarbellBuilder(ForwardingBuilder):
@@ -194,6 +198,46 @@ class TestBuildDecomposition:
         bad_root = ET.Element("notmujoco")
         with pytest.raises(ValueError, match="MJCF root"):
             builder._finalize_model(bad_root)
+
+    def test_create_equality_adds_named_section(self) -> None:
+        """The equality helper isolates constraint-section creation."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        root = ET.Element("mujoco", model="dummy")
+        equality = builder._create_equality(root)
+        assert equality.tag == "equality"
+        assert root.find("equality") is equality
+
+    def test_add_contact_section_populates_exclusions(self) -> None:
+        """The contact helper preserves adjacent-segment collision exclusions."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        root = ET.Element("mujoco", model="dummy")
+        contact = builder._add_contact_section(root)
+        exclusion_names = {
+            exclude.get("name") for exclude in contact.findall("exclude")
+        }
+        assert "exclude_pelvis_torso" in exclusion_names
+        assert "exclude_thigh_l_shank_l" in exclusion_names
+        assert "exclude_shank_r_foot_r" in exclusion_names
+
+    def test_add_state_sections_runs_pose_actuator_sensor_and_keyframe_steps(
+        self,
+    ) -> None:
+        """The state helper owns build steps that depend on final worldbody joints."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        root = builder._create_root_element()
+        worldbody = builder._create_worldbody(root)
+        body = ET.SubElement(worldbody, "body", name="test_body", pos="1 2 3")
+        ET.SubElement(body, "freejoint", name="test_free")
+        ET.SubElement(body, "joint", name="test_hinge", type="hinge", ref="0.25")
+
+        builder._add_state_sections(root, worldbody)
+
+        assert builder.set_initial_pose_calls == 1
+        assert root.find(".//position[@joint='test_hinge']") is not None
+        assert root.find(".//jointpos[@joint='test_hinge']") is not None
+        key = root.find(".//key")
+        assert key is not None
+        assert key.get("qpos") == "1 2 3 1 0 0 0 0.25"
 
 
 class TestBarbellAttachmentHelpers:
