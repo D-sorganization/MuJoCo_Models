@@ -74,14 +74,30 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
         """
 
     def _post_worldbody_hook(self, worldbody: ET.Element, equality: ET.Element) -> None:
-        """Add a chair body welded to the ground plane."""
-        chair = ET.SubElement(
+        """Add a chair body welded to the ground plane.
+
+        Decomposed into helpers per the single-responsibility rule:
+        one function per geometric piece plus one for the weld.
+        """
+        chair = self._create_chair_body(worldbody)
+        self._add_chair_seat_geom(chair)
+        self._add_chair_back_geom(chair)
+        self._weld_chair_to_world(equality)
+        logger.debug("Added chair at seat height %.3f m", _CHAIR_SEAT_HEIGHT)
+
+    @staticmethod
+    def _create_chair_body(worldbody: ET.Element) -> ET.Element:
+        """Create the parent ``<body name="chair">`` element."""
+        return ET.SubElement(
             worldbody,
             "body",
             name="chair",
             pos=f"0 0 {_CHAIR_SEAT_HEIGHT / 2:.4f}",
         )
-        # Chair seat
+
+    @staticmethod
+    def _add_chair_seat_geom(chair: ET.Element) -> None:
+        """Add the horizontal seat box geom."""
         ET.SubElement(
             chair,
             "geom",
@@ -93,7 +109,10 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             contype="1",
             conaffinity="1",
         )
-        # Chair back
+
+    @staticmethod
+    def _add_chair_back_geom(chair: ET.Element) -> None:
+        """Add the vertical chair-back box geom."""
         ET.SubElement(
             chair,
             "geom",
@@ -107,7 +126,10 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             ),
             rgba="0.6 0.4 0.2 1",
         )
-        # Weld chair to world (immovable)
+
+    @staticmethod
+    def _weld_chair_to_world(equality: ET.Element) -> None:
+        """Weld the chair body to the world so it is immovable."""
         ET.SubElement(
             equality,
             "weld",
@@ -115,7 +137,6 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             body1="chair",
             relpose="0 0 0 1 0 0 0",
         )
-        logger.debug("Added chair at seat height %.3f m", _CHAIR_SEAT_HEIGHT)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set seated position: ~90 deg hip and knee flexion.
