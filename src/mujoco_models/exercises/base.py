@@ -358,6 +358,22 @@ class ExerciseModelBuilder(ABC):
             self.attach_barbell(equality, body_bodies, barbell_bodies)
         return body_bodies, barbell_bodies
 
+    def _create_equality(self, root: ET.Element) -> ET.Element:
+        """Create the equality section that stores exercise constraints."""
+        return ET.SubElement(root, "equality")
+
+    def _add_contact_section(self, root: ET.Element) -> ET.Element:
+        """Create the contact section and populate adjacent-segment exclusions."""
+        contact = ET.SubElement(root, "contact")
+        _add_contact_exclusions(contact)
+        return contact
+
+    def _add_state_sections(self, root: ET.Element, worldbody: ET.Element) -> None:
+        """Apply initial pose metadata, actuators, sensors, and keyframe data."""
+        self.set_initial_pose(worldbody)
+        self._add_actuators_and_sensors(root, worldbody)
+        self._build_keyframe(root, worldbody)
+
     def _finalize_model(self, root: ET.Element) -> str:
         """Serialize *root* and verify MJCF postconditions.
 
@@ -378,17 +394,12 @@ class ExerciseModelBuilder(ABC):
 
         root = self._create_root_element()
         worldbody = self._create_worldbody(root)
-        equality = ET.SubElement(root, "equality")
+        equality = self._create_equality(root)
 
         self._build_bodies_and_barbell(worldbody, equality)
         self._post_worldbody_hook(worldbody, equality)
-
-        contact = ET.SubElement(root, "contact")
-        _add_contact_exclusions(contact)
-
-        self.set_initial_pose(worldbody)
-        self._add_actuators_and_sensors(root, worldbody)
-        self._build_keyframe(root, worldbody)
+        self._add_contact_section(root)
+        self._add_state_sections(root, worldbody)
 
         xml_str = self._finalize_model(root)
         logger.debug("Successfully built %s model", self.exercise_name)
