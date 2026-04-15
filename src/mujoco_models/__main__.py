@@ -74,45 +74,76 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None) -> int:
-    """CLI main function. Returns 0 on success, 1 on error."""
-    parser = _build_parser()
-    args = parser.parse_args(argv)
+def _configure_logging(verbose: bool) -> None:
+    """Initialise the root logger for the CLI run.
 
+    Precondition: called exactly once per CLI invocation.
+    """
     logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.WARNING,
+        level=logging.DEBUG if verbose else logging.WARNING,
         format="%(name)s %(levelname)s: %(message)s",
     )
 
+
+def _build_config_from_args(args: argparse.Namespace) -> ExerciseConfig | None:
+    """Build an :class:`ExerciseConfig` from parsed CLI args.
+
+    Returns ``None`` and logs an error on invalid anthropometry, so the
+    caller can exit with a non-zero status without catching exceptions.
+    """
     try:
-        config = ExerciseConfig(
+        return ExerciseConfig(
             body_spec=BodyModelSpec(total_mass=args.body_mass, height=args.height),
             barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=args.plate_mass),
         )
     except ValueError as exc:
         logger.error("Invalid configuration: %s", exc)
-        return 1
+        return None
 
-    builder_cls = EXERCISE_REGISTRY[args.exercise]
 
+def _build_model_xml(exercise: str, config: ExerciseConfig) -> str | None:
+    """Instantiate the registered builder for *exercise* and call ``build()``.
+
+    Returns the MJCF XML string, or ``None`` when the builder raises a
+    known error (``ValueError`` or ``RuntimeError``).
+    """
+    builder_cls = EXERCISE_REGISTRY[exercise]
     try:
-        xml_str = builder_cls(config).build()
+        return builder_cls(config).build()
     except (ValueError, RuntimeError) as exc:
-        logger.error("Model build failed for '%s': %s", args.exercise, exc)
+        logger.error("Model build failed for '%s': %s", exercise, exc)
+        return None
+
+
+def _emit_xml(xml_str: str, output: str | None) -> int:
+    """Write *xml_str* to *output* (or stdout) and return an exit code."""
+    if output is None:
+        sys.stdout.write(xml_str)
+        return 0
+    try:
+        with open(output, "w", encoding="utf-8") as fh:
+            fh.write(xml_str)
+    except OSError as exc:
+        logger.error("Failed to write output file '%s': %s", output, exc)
+        return 1
+    logger.info("Wrote %s", output)
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI main function. Returns 0 on success, 1 on error."""
+    args = _build_parser().parse_args(argv)
+    _configure_logging(args.verbose)
+
+    config = _build_config_from_args(args)
+    if config is None:
         return 1
 
-    if args.output:
-        try:
-            with open(args.output, "w", encoding="utf-8") as fh:
-                fh.write(xml_str)
-        except OSError as exc:
-            logger.error("Failed to write output file '%s': %s", args.output, exc)
-            return 1
-        logger.info("Wrote %s", args.output)
-    else:
-        sys.stdout.write(xml_str)
+    xml_str = _build_model_xml(args.exercise, config)
+    if xml_str is None:
+        return 1
 
-    return 0
+    return _emit_xml(xml_str, args.output)
 
 
 if __name__ == "__main__":
