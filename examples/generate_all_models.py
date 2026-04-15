@@ -95,9 +95,16 @@ def _generate_models(config: ExerciseConfig, output_dir: str) -> list[str]:
 
 def _report_generation(paths: list[str], output_dir: str) -> None:
     """Print generation progress for CLI users."""
-    for out_path in paths:
-        print(f"Wrote {out_path}")
-    print(f"Generated {len(paths)} models in {output_dir}/")
+    for line in _format_generation_report(paths, output_dir):
+        print(line)
+
+
+def _format_generation_report(paths: list[str], output_dir: str) -> list[str]:
+    """Return user-facing generation report lines for written model paths."""
+    return [
+        *(f"Wrote {out_path}" for out_path in paths),
+        f"Generated {len(paths)} models in {output_dir}/",
+    ]
 
 
 def main(argv: list[str] | None = None) -> None:
