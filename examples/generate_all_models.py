@@ -85,22 +85,33 @@ def _iter_unique_builders() -> list[tuple[str, type]]:
     return unique
 
 
-def main() -> None:
+def _generate_models(config: ExerciseConfig, output_dir: str) -> list[str]:
+    """Generate each unique exercise model and return written file paths."""
+    return [
+        _write_model(name, builder_cls, config, output_dir)
+        for name, builder_cls in _iter_unique_builders()
+    ]
+
+
+def _report_generation(paths: list[str], output_dir: str) -> None:
+    """Print generation progress for CLI users."""
+    for out_path in paths:
+        print(f"Wrote {out_path}")
+    print(f"Generated {len(paths)} models in {output_dir}/")
+
+
+def main(argv: list[str] | None = None) -> None:
     """Generate MJCF XML files for all registered exercise models.
 
     Parses command-line arguments and writes one XML file per exercise
     to the configured output directory.
     """
-    args = _build_parser().parse_args()
+    args = _build_parser().parse_args(argv)
     os.makedirs(args.output_dir, exist_ok=True)
 
     config = _build_config(args.body_mass, args.height)
-    unique = _iter_unique_builders()
-    for name, builder_cls in unique:
-        out_path = _write_model(name, builder_cls, config, args.output_dir)
-        print(f"Wrote {out_path}")
-
-    print(f"Generated {len(unique)} models in {args.output_dir}/")
+    paths = _generate_models(config, args.output_dir)
+    _report_generation(paths, args.output_dir)
 
 
 if __name__ == "__main__":
