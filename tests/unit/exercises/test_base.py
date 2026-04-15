@@ -194,3 +194,38 @@ class TestBuildDecomposition:
         bad_root = ET.Element("notmujoco")
         with pytest.raises(ValueError, match="MJCF root"):
             builder._finalize_model(bad_root)
+
+
+class TestBarbellAttachmentHelpers:
+    """Tests for the barbell-to-hands helpers extracted in A-N Refresh 2026-04-14."""
+
+    def test_barbell_relpose_for_hand_uses_grip_offset(self) -> None:
+        """An explicit grip offset should win over any grip width."""
+        offset = (0.010, 0.020, 0.030, 1.0, 0.0, 0.0, 0.0)
+        relpose = ForwardingBuilder._barbell_relpose_for_hand(
+            "l", grip_width=0.4, grip_offset=offset
+        )
+        assert relpose == offset
+
+    def test_barbell_relpose_for_hand_uses_width_per_side(self) -> None:
+        """Grip width is converted into mirrored left/right weld offsets."""
+        left = ForwardingBuilder._barbell_relpose_for_hand("l", grip_width=0.4)
+        right = ForwardingBuilder._barbell_relpose_for_hand("r", grip_width=0.4)
+        assert left == (0.4, 0, 0, 1, 0, 0, 0)
+        assert right == (-0.4, 0, 0, 1, 0, 0, 0)
+
+    def test_attach_barbell_to_hands_writes_welds_for_each_side(self) -> None:
+        """The helper should still emit one weld per hand with the derived pose."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        equality = ET.Element("equality")
+
+        builder._attach_barbell_to_hands(equality, grip_width=0.4)
+
+        welds = {w.get("name"): w for w in equality.findall("weld")}
+        assert set(welds) == {"barbell_to_hand_l", "barbell_to_hand_r"}
+        assert welds["barbell_to_hand_l"].get("relpose") == (
+            "0.400000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000"
+        )
+        assert welds["barbell_to_hand_r"].get("relpose") == (
+            "-0.400000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000"
+        )
