@@ -165,6 +165,38 @@ class ExerciseModelBuilder(ABC):
         empty method in an ABC that is not itself abstract).
         """
 
+    @staticmethod
+    def _barbell_relpose_for_hand(
+        side: str,
+        grip_width: float | None = None,
+        grip_offset: tuple[float, ...] | None = None,
+    ) -> tuple[float, ...] | None:
+        """Return the weld relpose for one hand.
+
+        ``grip_offset`` wins when provided. Otherwise, ``grip_width`` is
+        converted into a left/right X offset anchored at the hand.
+        """
+        if grip_offset is not None:
+            return grip_offset
+        if grip_width is None:
+            return None
+
+        sign = -1.0 if side == "l" else 1.0
+        return (-sign * grip_width, 0, 0, 1, 0, 0, 0)
+
+    @staticmethod
+    def _attach_barbell_to_hand(
+        equality: ET.Element, *, side: str, relpose: tuple[float, ...] | None
+    ) -> None:
+        """Write one hand weld to the shared equality section."""
+        add_weld_constraint(
+            equality,
+            name=f"barbell_to_hand_{side}",
+            body1=f"hand_{side}",
+            body2="barbell_shaft",
+            relpose=relpose,
+        )
+
     def _attach_barbell_to_hands(
         self,
         equality: ET.Element,
@@ -185,20 +217,11 @@ class ExerciseModelBuilder(ABC):
             Optional 7-element relative pose (x y z qw qx qy qz) for the grip
             offset from the hand to the barbell shaft.
         """
-        for side, sign in [("l", -1.0), ("r", 1.0)]:
-            relpose = grip_offset
-            if relpose is None and grip_width is not None:
-                # Left hand (side="l", sign=-1) is at -X relative to barbell center.
-                # relpose defines barbell center relative to hand, so it's at +X.
-                relpose = (-sign * grip_width, 0, 0, 1, 0, 0, 0)
-
-            add_weld_constraint(
-                equality,
-                name=f"barbell_to_hand_{side}",
-                body1=f"hand_{side}",
-                body2="barbell_shaft",
-                relpose=relpose,
+        for side in ("l", "r"):
+            relpose = self._barbell_relpose_for_hand(
+                side, grip_width=grip_width, grip_offset=grip_offset
             )
+            self._attach_barbell_to_hand(equality, side=side, relpose=relpose)
 
     # ------------------------------------------------------------------
     # Shared pose helper (issue #116)
