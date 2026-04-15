@@ -87,6 +87,19 @@ def test_generate_models_writes_one_file_per_unique_builder(tmp_path) -> None:
     assert all(Path(path).exists() for path in paths)
 
 
+def test_format_generation_report_lists_paths_and_summary() -> None:
+    """``_format_generation_report`` is pure formatting for CLI output."""
+    mod = _load_module()
+
+    lines = mod._format_generation_report(["out/a.xml", "out/b.xml"], "out")  # type: ignore[attr-defined]
+
+    assert lines == [
+        "Wrote out/a.xml",
+        "Wrote out/b.xml",
+        "Generated 2 models in out/",
+    ]
+
+
 def test_main_accepts_explicit_argv(tmp_path, capsys) -> None:
     """``main`` can be tested without mutating process-level ``sys.argv``."""
     mod = _load_module()
