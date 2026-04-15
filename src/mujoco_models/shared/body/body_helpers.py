@@ -76,6 +76,17 @@ def _add_single_foot_contact_geom(foot_body: ET.Element, side: str) -> None:
     contact_geom.set("rgba", _FOOT_CONTACT_RGBA)
 
 
+def _iter_foot_bodies(
+    bodies: dict[str, ET.Element],
+) -> tuple[tuple[str, ET.Element], ...]:
+    """Return present foot bodies keyed by side, skipping missing unilateral feet."""
+    return tuple(
+        (side, foot_body)
+        for side in ("l", "r")
+        if (foot_body := bodies.get(f"foot_{side}")) is not None
+    )
+
+
 def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     """Add box collision geometry to foot segments for ground contact.
 
@@ -90,10 +101,7 @@ def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     Missing sides (e.g. unilateral rigs) are silently skipped; callers
     that require a specific side should check ``bodies`` themselves.
     """
-    for side in ("l", "r"):
-        foot_body = bodies.get(f"foot_{side}")
-        if foot_body is None:
-            continue
+    for side, foot_body in _iter_foot_bodies(bodies):
         _demote_visual_geom_group(foot_body)
         _add_single_foot_contact_geom(foot_body, side)
 

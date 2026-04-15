@@ -9,6 +9,7 @@ from mujoco_models.exercises.bench_press.bench_press_model import (
 )
 from mujoco_models.exercises.squat.squat_model import build_squat_model
 from mujoco_models.shared.body import create_full_body
+from mujoco_models.shared.body.body_helpers import _iter_foot_bodies
 
 
 class TestFootContactGeometry:
@@ -81,6 +82,10 @@ class TestFootContactGeometry:
             assert size_parts[0] == pytest.approx(0.13)
             assert size_parts[1] == pytest.approx(0.05)
             assert size_parts[2] == pytest.approx(0.01)
+
+    def test_iter_foot_bodies_skips_missing_unilateral_feet(self) -> None:
+        left = ET.Element("body", name="foot_l")
+        assert _iter_foot_bodies({"foot_l": left}) == (("l", left),)
 
 
 class TestContactExclusions:
