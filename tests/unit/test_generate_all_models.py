@@ -74,3 +74,25 @@ def test_write_model_writes_xml_file(tmp_path) -> None:
     with open(out_path, encoding="utf-8") as fh:
         head = fh.read(200)
     assert "<mujoco" in head
+
+
+def test_generate_models_writes_one_file_per_unique_builder(tmp_path) -> None:
+    """``_generate_models`` keeps generation separate from CLI reporting."""
+    mod = _load_module()
+    cfg = ExerciseConfig()
+
+    paths = mod._generate_models(cfg, str(tmp_path))  # type: ignore[attr-defined]
+
+    assert len(paths) == len(mod._iter_unique_builders())  # type: ignore[attr-defined]
+    assert all(Path(path).exists() for path in paths)
+
+
+def test_main_accepts_explicit_argv(tmp_path, capsys) -> None:
+    """``main`` can be tested without mutating process-level ``sys.argv``."""
+    mod = _load_module()
+
+    mod.main(["--output-dir", str(tmp_path), "--body-mass", "72"])  # type: ignore[attr-defined]
+
+    captured = capsys.readouterr()
+    assert "Generated" in captured.out
+    assert list(tmp_path.glob("*.xml"))
