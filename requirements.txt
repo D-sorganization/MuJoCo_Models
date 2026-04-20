@@ -1,0 +1,6 @@
+# Core dependencies for MuJoCo Models
+# Generated from pyproject.toml dependencies
+
+numpy>=1.26.4,<3.0.0
+matplotlib>=3.7.0
+mujoco>=3.3.0
