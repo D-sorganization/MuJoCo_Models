@@ -13,22 +13,29 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 
+def _require_scalar_finite(value: float, name: str) -> None:
+    try:
+        is_finite = math.isfinite(value)
+    except TypeError as exc:
+        raise ValueError(f"{name} must be a finite scalar") from exc
+    if not is_finite:
+        raise ValueError(f"{name} contains non-finite values")
+
+
 def require_positive(value: float, name: str) -> None:
     """Require *value* to be strictly positive."""
     # ⚡ Bolt Optimization:
     # Use math.isfinite for scalars instead of np.isfinite.
     # Avoids ~400ns overhead per call from np.asarray allocation.
     # ~25% overall speedup in model building.
-    if not math.isfinite(value):
-        raise ValueError(f"{name} contains non-finite values")
+    _require_scalar_finite(value, name)
     if value <= 0:
         raise ValueError(f"{name} must be positive, got {value}")
 
 
 def require_non_negative(value: float, name: str) -> None:
     """Require *value* >= 0."""
-    if not math.isfinite(value):
-        raise ValueError(f"{name} contains non-finite values")
+    _require_scalar_finite(value, name)
     if value < 0:
         raise ValueError(f"{name} must be non-negative, got {value}")
 
