@@ -65,8 +65,9 @@ def require_finite(arr: ArrayLike, name: str) -> None:
 
 def require_in_range(value: float, low: float, high: float, name: str) -> None:
     """Require *low* <= *value* <= *high*."""
-    if not (math.isfinite(value) and math.isfinite(low) and math.isfinite(high)):
-        raise ValueError(f"{name} contains non-finite values")
+    require_finite(value, name)
+    require_finite(low, name)
+    require_finite(high, name)
     if not (low <= value <= high):
         raise ValueError(f"{name} must be in [{low}, {high}], got {value}")
 
