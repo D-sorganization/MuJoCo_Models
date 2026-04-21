@@ -30,6 +30,10 @@ class TestRequirePositive:
         with pytest.raises(ValueError, match="non-finite"):
             require_positive(value, "x")
 
+    def test_rejects_non_scalar_as_value_error(self) -> None:
+        with pytest.raises(ValueError, match="finite scalar"):
+            require_positive([float("nan")], "x")
+
     def test_includes_name_in_message(self) -> None:
         with pytest.raises(ValueError, match="mass"):
             require_positive(-5.0, "mass")
@@ -50,6 +54,10 @@ class TestRequireNonNegative:
     def test_rejects_non_finite(self, value: float) -> None:
         with pytest.raises(ValueError, match="non-finite"):
             require_non_negative(value, "x")
+
+    def test_rejects_non_scalar_as_value_error(self) -> None:
+        with pytest.raises(ValueError, match="finite scalar"):
+            require_non_negative([float("nan")], "x")
 
 
 class TestRequireUnitVector:
