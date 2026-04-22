@@ -104,7 +104,9 @@ class TestAddBody:
         geom = body.find("geom")
         assert geom.get("euler") == "0.100000 0.200000 0.300000"  # type: ignore
 
-    def test_geom_euler_preserves_additional_values(self, worldbody: ET.Element) -> None:
+    def test_geom_euler_preserves_additional_values(
+        self, worldbody: ET.Element
+    ) -> None:
         body = add_body(
             worldbody,
             name="test",
