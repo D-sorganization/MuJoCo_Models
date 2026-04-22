@@ -37,10 +37,26 @@ def _build_geom_attrs(
         "type": geom_type,
         "rgba": geom_rgba,
     }
+
+    # ⚡ Bolt Optimization:
+    # Hardcode string formatting for common tuple lengths (1, 2, 3)
+    # instead of using generator expressions and string joins.
+    # This avoids generator allocation and reduces execution time.
     if geom_size is not None:
-        attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
+        l_size = len(geom_size)
+        if l_size == 2:
+            attrs["size"] = f"{geom_size[0]:.6f} {geom_size[1]:.6f}"
+        elif l_size == 1:
+            attrs["size"] = f"{geom_size[0]:.6f}"
+        elif l_size == 3:
+            attrs["size"] = f"{geom_size[0]:.6f} {geom_size[1]:.6f} {geom_size[2]:.6f}"
+        else:
+            attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
+
     if geom_euler is not None:
-        attrs["euler"] = " ".join(f"{s:.6f}" for s in geom_euler)
+        # geom_euler is always a 3-tuple when not None based on type hint
+        attrs["euler"] = f"{geom_euler[0]:.6f} {geom_euler[1]:.6f} {geom_euler[2]:.6f}"
+
     return attrs
 
 
