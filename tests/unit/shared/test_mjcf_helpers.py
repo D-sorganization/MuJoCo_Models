@@ -92,6 +92,30 @@ class TestAddBody:
         geom = body.find("geom")
         assert geom.get("rgba") == "1 0 0 1"  # type: ignore
 
+    def test_geom_euler_preserves_three_values(self, worldbody: ET.Element) -> None:
+        body = add_body(
+            worldbody,
+            name="test",
+            pos=(0, 0, 0),
+            mass=1.0,
+            inertia_diag=(0.1, 0.1, 0.1),
+            geom_euler=(0.1, 0.2, 0.3),
+        )
+        geom = body.find("geom")
+        assert geom.get("euler") == "0.100000 0.200000 0.300000"  # type: ignore
+
+    def test_geom_euler_preserves_additional_values(self, worldbody: ET.Element) -> None:
+        body = add_body(
+            worldbody,
+            name="test",
+            pos=(0, 0, 0),
+            mass=1.0,
+            inertia_diag=(0.1, 0.1, 0.1),
+            geom_euler=(0.1, 0.2, 0.3, 0.4),
+        )
+        geom = body.find("geom")
+        assert geom.get("euler") == "0.100000 0.200000 0.300000 0.400000"  # type: ignore
+
     def test_geom_size_none(self, worldbody: ET.Element) -> None:
         body = add_body(
             worldbody,
