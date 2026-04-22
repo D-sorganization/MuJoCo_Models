@@ -29,7 +29,7 @@ def _build_geom_attrs(
     geom_type: str,
     geom_rgba: str,
     geom_size: tuple[float, ...] | None,
-    geom_euler: tuple[float, float, float] | None,
+    geom_euler: tuple[float, ...] | None,
 ) -> dict[str, str]:
     """Build the attribute dict for an MJCF ``<geom>`` element."""
     attrs: dict[str, str] = {
@@ -54,8 +54,7 @@ def _build_geom_attrs(
             attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
 
     if geom_euler is not None:
-        # geom_euler is always a 3-tuple when not None based on type hint
-        attrs["euler"] = f"{geom_euler[0]:.6f} {geom_euler[1]:.6f} {geom_euler[2]:.6f}"
+        attrs["euler"] = " ".join(f"{e:.6f}" for e in geom_euler)
 
     return attrs
 
@@ -70,7 +69,7 @@ def add_body(
     geom_type: str = "cylinder",
     geom_size: tuple[float, ...] | None = None,
     geom_rgba: str = "0.8 0.6 0.4 1",
-    geom_euler: tuple[float, float, float] | None = None,
+    geom_euler: tuple[float, ...] | None = None,
 ) -> ET.Element:
     """Create an MJCF ``<body>`` with ``<inertial>`` and ``<geom>`` children.
 
