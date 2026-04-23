@@ -54,8 +54,10 @@ def _build_geom_attrs(
             attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
 
     if geom_euler is not None:
-        # geom_euler is always a 3-tuple when not None based on type hint
-        attrs["euler"] = f"{geom_euler[0]:.6f} {geom_euler[1]:.6f} {geom_euler[2]:.6f}"
+        if len(geom_euler) == 3:
+            attrs["euler"] = f"{geom_euler[0]:.6f} {geom_euler[1]:.6f} {geom_euler[2]:.6f}"
+        else:
+            attrs["euler"] = " ".join(f"{s:.6f}" for s in geom_euler)
 
     return attrs
 
