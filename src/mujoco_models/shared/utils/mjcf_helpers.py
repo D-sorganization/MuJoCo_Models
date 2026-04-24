@@ -54,7 +54,13 @@ def _build_geom_attrs(
             attrs["size"] = " ".join(f"{s:.6f}" for s in geom_size)
 
     if geom_euler is not None:
-        attrs["euler"] = " ".join(f"{e:.6f}" for e in geom_euler)
+        l_euler = len(geom_euler)
+        if l_euler == 3:
+            attrs["euler"] = (
+                f"{geom_euler[0]:.6f} {geom_euler[1]:.6f} {geom_euler[2]:.6f}"
+            )
+        else:
+            attrs["euler"] = " ".join(f"{e:.6f}" for e in geom_euler)
 
     return attrs
 
