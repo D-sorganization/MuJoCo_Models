@@ -84,7 +84,6 @@ jobs:
             --ignore-vuln CVE-2026-21883 \
             --ignore-vuln CVE-2026-27205 \
             --ignore-vuln CVE-2024-47081 \
-            --ignore-vuln CVE-2026-3219 \
             --ignore-vuln CVE-2026-25645
 
       - name: Bandit Security Scan

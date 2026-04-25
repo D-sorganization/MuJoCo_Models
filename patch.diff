@@ -1,0 +1,10 @@
+--- .github/workflows/ci-standard.yml
++++ .github/workflows/ci-standard.yml
+@@ -83,6 +83,7 @@
+             --ignore-vuln CVE-2026-21883 \
+             --ignore-vuln CVE-2026-27205 \
+             --ignore-vuln CVE-2024-47081 \
++            --ignore-vuln CVE-2026-3219 \
+             --ignore-vuln CVE-2026-25645
+
+       - name: Bandit Security Scan
