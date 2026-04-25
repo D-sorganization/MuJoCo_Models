@@ -380,8 +380,8 @@ class ExerciseModelBuilder(ABC):
         Postcondition: returned string is well-formed MJCF XML whose root
         element is ``<mujoco>``.
         """
+        ensure_mjcf_root(root)
         xml_str = serialize_model(root)
-        ensure_mjcf_root(xml_str)
         return xml_str
 
     def build(self) -> str:

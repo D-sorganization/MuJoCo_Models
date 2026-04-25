@@ -20,12 +20,15 @@ def ensure_valid_xml(xml_string: str) -> ET.Element:
         raise ValueError(f"Generated XML is not well-formed: {exc}") from exc
 
 
-def ensure_mjcf_root(xml_string: str) -> ET.Element:
-    """Parse *xml_string* and verify the root element is ``<mujoco>``.
+def ensure_mjcf_root(root_or_xml: str | ET.Element) -> ET.Element:
+    """Verify the root element is ``<mujoco>``.
 
     Raises ValueError if the XML is malformed or the root tag is wrong.
     """
-    root = ensure_valid_xml(xml_string)
+    if isinstance(root_or_xml, str):
+        root = ensure_valid_xml(root_or_xml)
+    else:
+        root = root_or_xml
     if root.tag != "mujoco":
         raise ValueError(f"MJCF root must be <mujoco>, got <{root.tag}>")
     return root
