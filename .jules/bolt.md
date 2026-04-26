@@ -17,3 +17,7 @@
 ## 2026-04-25 - MJCF ElementTree Serialization Overhead
 **Learning:** Checking the generated XML using `ET.fromstring` AFTER serialization (`serialize_model(root)`) and parsing it again via `ensure_mjcf_root(xml_string)` caused significant overhead (over 30% of total build time, ~0.6-0.8 ms per call on average based on cProfile output).
 **Action:** Validate the `ET.Element` tree directly (checking `root.tag == "mujoco"`) BEFORE converting to a string. This completely eliminates the need to parse the generated XML back into an ElementTree, bypassing the overhead of `ElementTree.XML` and improving performance by ~30% in `build()`.
+
+## 2024-04-26 - Unrolled Scalar Arithmetic for Tiny Vectors
+**Learning:** In tight computational loops involving tiny 2D vectors (e.g., ray-casting algorithms and distance to line segment calculations in `polygon_geometry.py` and `trajectory_optimizer.py`), using NumPy array operations (like `np.dot` and vector subtraction) introduces significant array creation, slicing, and Python-C API dispatch overhead. Converting these operations into raw Python float/scalar operations significantly speeds up execution without sacrificing readability.
+**Action:** When performing geometry math on 2D or 3D vectors within tight loops, unroll the math manually to scalar arithmetic to avoid NumPy allocation overheads.

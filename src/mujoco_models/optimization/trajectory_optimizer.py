@@ -266,16 +266,20 @@ def _point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
     """
     n = len(polygon)
     inside = False
-    px, py = point[0], point[1]
-    j = n - 1
+    px, py = float(point[0]), float(point[1])
+
+    xj, yj = float(polygon[-1, 0]), float(polygon[-1, 1])
+
     for i in range(n):
-        xi, yi = polygon[i]
-        xj, yj = polygon[j]
+        xi, yi = float(polygon[i, 0]), float(polygon[i, 1])
+
         if (yi > py) != (yj > py):
             x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
             if px < x_intersect:
                 inside = not inside
-        j = i
+
+        xj, yj = xi, yi
+
     return inside
 
 
@@ -291,27 +295,44 @@ def _squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> floa
     """
     min_dist_sq = float("inf")
     n = len(polygon)
+    px, py = float(point[0]), float(point[1])
+
     for i in range(n):
-        j = (i + 1) % n
-        dist_sq = _point_to_segment_sq(point, polygon[i], polygon[j])
+        j = i + 1 if i + 1 < n else 0
+        dist_sq = _point_to_segment_sq(
+            px,
+            py,
+            float(polygon[i, 0]),
+            float(polygon[i, 1]),
+            float(polygon[j, 0]),
+            float(polygon[j, 1]),
+        )
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
     return min_dist_sq
 
 
+# OPTIMIZATION: Replaced numpy array operations with scalar arithmetic to avoid array creation overhead for 2D vectors.
 def _point_to_segment_sq(
-    point: np.ndarray,
-    seg_a: np.ndarray,
-    seg_b: np.ndarray,
+    px: float, py: float, ax: float, ay: float, bx: float, by: float
 ) -> float:
     """Squared distance from a point to a line segment."""
-    ab = seg_b - seg_a
-    ap = point - seg_a
-    ab_sq = float(np.dot(ab, ab))
+    abx = bx - ax
+    aby = by - ay
+    apx = px - ax
+    apy = py - ay
+
+    ab_sq = abx * abx + aby * aby
     if ab_sq < 1e-12:
-        return float(np.dot(ap, ap))
-    t = float(np.dot(ap, ab)) / ab_sq
+        return apx * apx + apy * apy
+
+    t = (apx * abx + apy * aby) / ab_sq
     t = max(0.0, min(1.0, t))
-    closest = seg_a + t * ab
-    diff = point - closest
-    return float(np.dot(diff, diff))
+
+    closest_x = ax + t * abx
+    closest_y = ay + t * aby
+
+    dx = px - closest_x
+    dy = py - closest_y
+
+    return dx * dx + dy * dy
