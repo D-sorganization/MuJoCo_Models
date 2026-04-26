@@ -1,0 +1,654 @@
+{
+  "metadata": {
+    "repository": "D-sorganization/MuJoCo_Models",
+    "branch": "main",
+    "head": "e5f355b4ab4ee68aea6f7f81959af6ba05caea99",
+    "date": "2026-04-26",
+    "assessor": "automated",
+    "version": "1.0.0"
+  },
+  "summary": {
+    "overall_score": 7.19,
+    "max_possible": 10.0,
+    "criteria_count": 16,
+    "findings": {
+      "P0": 1,
+      "P1": 5,
+      "P2": 4
+    },
+    "issues_to_create": 10
+  },
+  "criteria": {
+    "A": {
+      "name": "Project Organization",
+      "weight": 0.05,
+      "score": 7.0,
+      "weighted_score": 0.35,
+      "evidence": {
+        "source_files": 54,
+        "test_files": 50,
+        "total_lines": 9509,
+        "modules": [
+          "src/mujoco_models/exercises/",
+          "src/mujoco_models/shared/",
+          "src/mujoco_models/optimization/"
+        ],
+        "has_src_layout": true,
+        "tests_mirror_src": true,
+        "has_pyproject_toml": true,
+        "has_dockerfile": true,
+        "has_changelog": true,
+        "has_contributing": true,
+        "git_tags": 0,
+        "releases": 0,
+        "latest_commit_date": "2026-04-18"
+      },
+      "findings": [
+        {
+          "priority": "P1",
+          "id": "A-001",
+          "title": "No version tags or GitHub releases",
+          "description": "Repository has 68 commits but zero git tags and zero GitHub releases. No semantic versioning automation.",
+          "file_paths": [
+            ".git/"
+          ],
+          "line_numbers": []
+        },
+        {
+          "priority": "P2",
+          "id": "A-002",
+          "title": "CHANGELOG has only [Unreleased] sections",
+          "description": "CHANGELOG.md contains [Unreleased] and [0.1.0] but no dated releases since 2026-03-22.",
+          "file_paths": [
+            "CHANGELOG.md"
+          ],
+          "line_numbers": [
+            1,
+            12,
+            30
+          ]
+        }
+      ]
+    },
+    "B": {
+      "name": "Documentation",
+      "weight": 0.08,
+      "score": 8.0,
+      "weighted_score": 0.64,
+      "evidence": {
+        "has_readme": true,
+        "has_spec": true,
+        "has_contributing": true,
+        "has_security": true,
+        "has_code_of_conduct": true,
+        "has_agents_md": true,
+        "has_claude_md": true,
+        "docstring_blocks": 356,
+        "function_count": 170,
+        "docstring_ratio": 2.09,
+        "has_api_docs": false,
+        "has_sphinx": false
+      },
+      "findings": [
+        {
+          "priority": "P1",
+          "id": "B-001",
+          "title": "No generated API documentation or Sphinx setup",
+          "description": "Repository lacks Sphinx, mkdocs, or any API documentation generation. docs/ directory only contains past assessments.",
+          "file_paths": [
+            "docs/"
+          ],
+          "line_numbers": []
+        },
+        {
+          "priority": "P2",
+          "id": "B-002",
+          "title": "Some modules lack module-level docstrings",
+          "description": "Not all __init__.py files have module docstrings. While many do, consistency could be improved.",
+          "file_paths": [
+            "src/mujoco_models/__init__.py"
+          ],
+          "line_numbers": [
+            1
+          ]
+        }
+      ]
+    },
+    "C": {
+      "name": "Testing & Quality",
+      "weight": 0.12,
+      "score": 9.0,
+      "weighted_score": 1.08,
+      "evidence": {
+        "test_files": 50,
+        "unit_tests": 45,
+        "integration_tests": 2,
+        "parity_tests": 1,
+        "benchmark_tests": 1,
+        "coverage_percent": 95.37,
+        "coverage_threshold": 80,
+        "meets_threshold": true,
+        "has_property_tests": true,
+        "has_edge_case_tests": true,
+        "pytest_markers": [
+          "slow",
+          "integration",
+          "unit",
+          "requires_mujoco",
+          "benchmark"
+        ],
+        "has_hypothesis": true,
+        "test_structure_mirrors_src": true
+      },
+      "findings": [
+        {
+          "priority": "P2",
+          "id": "C-001",
+          "title": "Integration tests skip when mujoco not installed",
+          "description": "test_mujoco_loading.py skips when mujoco package unavailable, reducing CI coverage of integration scenarios.",
+          "file_paths": [
+            "tests/integration/test_mujoco_loading.py"
+          ],
+          "line_numbers": [
+            14
+          ]
+        },
+        {
+          "priority": "P2",
+          "id": "C-002",
+          "title": "hypothesis import error in current test environment",
+          "description": "test_hypothesis_properties.py fails collection due to hypothesis import issue in .venv environment.",
+          "file_paths": [
+            "tests/unit/shared/test_hypothesis_properties.py"
+          ],
+          "line_numbers": [
+            1
+          ]
+        }
+      ]
+    },
+    "D": {
+      "name": "CI/CD",
+      "weight": 0.1,
+      "score": 6.0,
+      "weighted_score": 0.6,
+      "evidence": {
+        "has_ci_workflow": true,
+        "workflow_file": ".github/workflows/ci-standard.yml",
+        "ci_triggers": [
+          "push",
+          "pull_request",
+          "workflow_dispatch"
+        ],
+        "python_matrix": [
+          "3.10",
+          "3.11",
+          "3.12"
+        ],
+        "ci_jobs": [
+          "pick-runner",
+          "quality-gate",
+          "tests"
+        ],
+        "has_lint": true,
+        "has_format_check": true,
+        "has_type_check": true,
+        "has_security_scan": true,
+        "has_test_matrix": true,
+        "has_concurrency_control": true,
+        "self_hosted_runner": "d-sorg-fleet",
+        "fallback_runner": "ubuntu-latest",
+        "open_ci_issue": true,
+        "ci_issue_number": 170,
+        "ci_issue_title": "[P1] CI pass rate 70% \u2014 4 failures, 2 cancelled"
+      },
+      "findings": [
+        {
+          "priority": "P0",
+          "id": "D-001",
+          "title": "CI pass rate at 70% with 4 failures and 2 cancelled",
+          "description": "Open GitHub issue #170 reports CI pass rate of only 70%. This is a critical blocker for reliable development.",
+          "file_paths": [
+            ".github/workflows/ci-standard.yml"
+          ],
+          "line_numbers": []
+        },
+        {
+          "priority": "P1",
+          "id": "D-002",
+          "title": "pip-audit ignores 6 CVEs without expiration or remediation tracking",
+          "description": "CI workflow ignores CVE-2026-4539, CVE-2026-32274, CVE-2026-21883, CVE-2026-27205, CVE-2024-47081, CVE-2026-25645 without remediation dates.",
+          "file_paths": [
+            ".github/workflows/ci-standard.yml"
+          ],
+          "line_numbers": [
+            98,
+            99,
+            100,
+            101,
+            102,
+            103
+          ]
+        },
+        {
+          "priority": "P1",
+          "id": "D-003",
+          "title": "Self-hosted runner dependency creates fragility",
+          "description": "CI depends on d-sorg-fleet self-hosted runner with fallback to ubuntu-latest. Runner availability directly impacts CI reliability.",
+          "file_paths": [
+            ".github/workflows/ci-standard.yml"
+          ],
+          "line_numbers": [
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40
+          ]
+        }
+      ]
+    },
+    "E": {
+      "name": "Code Style & Linting",
+      "weight": 0.07,
+      "score": 9.0,
+      "weighted_score": 0.63,
+      "evidence": {
+        "has_ruff": true,
+        "ruff_rules": [
+          "E",
+          "F",
+          "I",
+          "UP",
+          "B",
+          "T201",
+          "SIM",
+          "C4",
+          "PIE",
+          "PLE",
+          "FURB",
+          "RSE",
+          "LOG",
+          "PERF",
+          "RET"
+        ],
+        "has_mypy": true,
+        "mypy_strict": true,
+        "disallow_untyped_defs": true,
+        "has_pre_commit": true,
+        "pre_commit_hooks": 6,
+        "ruff_passes": true,
+        "mypy_passes": true,
+        "no_todo_fixme": true,
+        "no_wildcard_imports": true
+      },
+      "findings": [
+        {
+          "priority": "P2",
+          "id": "E-001",
+          "title": "ruff ignores E501 (line too long)",
+          "description": "Line length violations are silently ignored rather than fixed or enforced with a different limit.",
+          "file_paths": [
+            "pyproject.toml"
+          ],
+          "line_numbers": [
+            52
+          ]
+        }
+      ]
+    },
+    "F": {
+      "name": "Dependency Management",
+      "weight": 0.1,
+      "score": 7.0,
+      "weighted_score": 0.7,
+      "evidence": {
+        "has_pyproject_dependencies": true,
+        "has_dev_dependencies": true,
+        "has_requirements_lock": true,
+        "has_dependabot": true,
+        "dependabot_ecosystems": [
+          "github-actions",
+          "pip"
+        ],
+        "lock_file_lines": 97,
+        "lock_file_polluted": true
+      },
+      "findings": [
+        {
+          "priority": "P1",
+          "id": "F-001",
+          "title": "requirements-lock.txt polluted with unrelated packages",
+          "description": "Lock file contains packages from other repositories (drake-models, meb_conversion, movement_optimizer, opensim-models, pinocchio_models, ud-tools) and Windows paths.",
+          "file_paths": [
+            "requirements-lock.txt"
+          ],
+          "line_numbers": [
+            26,
+            35,
+            37,
+            55,
+            70,
+            77,
+            94
+          ]
+        }
+      ]
+    },
+    "G": {
+      "name": "Security",
+      "weight": 0.08,
+      "score": 7.0,
+      "weighted_score": 0.56,
+      "evidence": {
+        "has_security_md": true,
+        "has_bandit": true,
+        "has_pip_audit": true,
+        "ci_permissions_minimal": true,
+        "no_secrets_in_code": true,
+        "no_hardcoded_credentials": true,
+        "cve_ignored_count": 6,
+        "ignored_cves": [
+          "CVE-2026-4539",
+          "CVE-2026-32274",
+          "CVE-2026-21883",
+          "CVE-2026-27205",
+          "CVE-2024-47081",
+          "CVE-2026-25645"
+        ],
+        "has_sbom": false
+      },
+      "findings": [
+        {
+          "priority": "P1",
+          "id": "G-001",
+          "title": "6 CVEs ignored in CI without remediation plan",
+          "description": "pip-audit configuration ignores 6 known vulnerabilities. No tracking issue or expiration date for remediation.",
+          "file_paths": [
+            ".github/workflows/ci-standard.yml"
+          ],
+          "line_numbers": [
+            94,
+            95,
+            96,
+            97,
+            98,
+            99,
+            100,
+            101,
+            102,
+            103
+          ]
+        },
+        {
+          "priority": "P2",
+          "id": "G-002",
+          "title": "No SBOM generation",
+          "description": "No Software Bill of Materials generated or published. No CycloneDX or SPDX artifact in CI.",
+          "file_paths": [
+            ".github/workflows/ci-standard.yml"
+          ],
+          "line_numbers": []
+        }
+      ]
+    },
+    "H": {
+      "name": "Architecture & Design",
+      "weight": 0.1,
+      "score": 9.0,
+      "weighted_score": 0.9,
+      "evidence": {
+        "architecture_layers": 3,
+        "has_design_by_contract": true,
+        "has_preconditions": true,
+        "has_postconditions": true,
+        "follows_dry": true,
+        "function_count": 94,
+        "class_count": 16,
+        "max_file_lines": 406,
+        "max_file": "src/mujoco_models/exercises/base.py",
+        "avg_file_lines": 88,
+        "total_cyclomatic_complexity": 123,
+        "max_cyclomatic_complexity": 26,
+        "max_complexity_file": "src/mujoco_models/optimization/trajectory_optimizer.py",
+        "has_rust_core": true,
+        "rust_functions": 3,
+        "no_circular_imports": true
+      },
+      "findings": [
+        {
+          "priority": "P2",
+          "id": "H-001",
+          "title": "trajectory_optimizer.py has highest cyclomatic complexity (26)",
+          "description": "File exceeds recommended complexity threshold of 15. Consider decomposition into smaller functions.",
+          "file_paths": [
+            "src/mujoco_models/optimization/trajectory_optimizer.py"
+          ],
+          "line_numbers": []
+        }
+      ]
+    },
+    "I": {
+      "name": "Error Handling",
+      "weight": 0.06,
+      "score": 8.0,
+      "weighted_score": 0.48,
+      "evidence": {
+        "raise_statements": 44,
+        "except_handlers": 6,
+        "has_contract_validation": true,
+        "has_input_validation": true,
+        "uses_specific_exceptions": true,
+        "custom_exceptions": 0,
+        "broad_except_count": 0
+      },
+      "findings": [
+        {
+          "priority": "P1",
+          "id": "I-001",
+          "title": "No custom exception hierarchy",
+          "description": "All errors use built-in exceptions (ValueError, TypeError). No domain-specific exceptions for model build failures.",
+          "file_paths": [
+            "src/mujoco_models/"
+          ],
+          "line_numbers": []
+        }
+      ]
+    },
+    "J": {
+      "name": "Performance",
+      "weight": 0.07,
+      "score": 7.0,
+      "weighted_score": 0.49,
+      "evidence": {
+        "has_benchmarks": true,
+        "benchmark_tool": "pytest-benchmark",
+        "has_rust_core": true,
+        "rust_parallel": "rayon",
+        "recent_optimization_prs": 5,
+        "optimization_prs": [
+          "#168",
+          "#167",
+          "#166",
+          "#162",
+          "#158"
+        ],
+        "benchmarks_disabled_with_xdist": true,
+        "no_perf_regression_ci": true
+      },
+      "findings": [
+        {
+          "priority": "P1",
+          "id": "J-001",
+          "title": "No performance regression testing in CI",
+          "description": "Benchmarks exist but are not run in CI. pytest-benchmark warns that benchmarks are disabled when xdist is active.",
+          "file_paths": [
+            "tests/unit/test_benchmarks.py",
+            "pyproject.toml"
+          ],
+          "line_numbers": [
+            38
+          ]
+        },
+        {
+          "priority": "P2",
+          "id": "J-002",
+          "title": "Rust core not built or integrated in CI",
+          "description": "rust_core/ exists with Cargo.toml but no CI step builds or tests the Rust extension.",
+          "file_paths": [
+            "rust_core/Cargo.toml",
+            ".github/workflows/ci-standard.yml"
+          ],
+          "line_numbers": []
+        }
+      ]
+    },
+    "K": {
+      "name": "Maintainability",
+      "weight": 0.07,
+      "score": 8.0,
+      "weighted_score": 0.56,
+      "evidence": {
+        "total_commits": 68,
+        "conventional_commits": 37,
+        "conventional_commit_rate": 0.54,
+        "clean_working_tree": true,
+        "has_changelog": true,
+        "has_issue_templates": true,
+        "has_pr_template": true,
+        "has_contributing_guide": true,
+        "git_tags": 0,
+        "latest_commit_age_days": 8
+      },
+      "findings": [
+        {
+          "priority": "P2",
+          "id": "K-001",
+          "title": "Conventional commit compliance at 54%",
+          "description": "Only 37 of 68 commits (54%) use conventional commit format. Remaining commits use various formats.",
+          "file_paths": [
+            ".git/"
+          ],
+          "line_numbers": []
+        }
+      ]
+    },
+    "L": {
+      "name": "Accessibility & Usability",
+      "weight": 0.08,
+      "score": 8.0,
+      "weighted_score": 0.64,
+      "evidence": {
+        "has_cli": true,
+        "cli_exercises": 8,
+        "has_readme_quickstart": true,
+        "has_license": true,
+        "license_type": "MIT",
+        "install_requires_pythonpath": true,
+        "pypi_release": false,
+        "package_installable": false
+      },
+      "findings": [
+        {
+          "priority": "P1",
+          "id": "L-001",
+          "title": "Package not installable without PYTHONPATH workaround",
+          "description": "python -m mujoco_models fails without PYTHONPATH=src. Package is not properly installed in .venv.",
+          "file_paths": [
+            "pyproject.toml",
+            ".venv/"
+          ],
+          "line_numbers": []
+        }
+      ]
+    },
+    "M": {
+      "name": "Monitoring & Observability",
+      "weight": 0.05,
+      "score": 3.0,
+      "weighted_score": 0.15,
+      "evidence": {
+        "logging_calls": 20,
+        "has_structured_logging": false,
+        "has_metrics": false,
+        "has_tracing": false,
+        "has_health_check": false,
+        "has_observability_stack": false,
+        "log_format": "basic"
+      },
+      "findings": [
+        {
+          "priority": "P1",
+          "id": "M-001",
+          "title": "No structured logging or observability",
+          "description": "Only 20 basic logging calls across 54 source files. No structured JSON logging, no metrics, no tracing, no health endpoints.",
+          "file_paths": [
+            "src/mujoco_models/"
+          ],
+          "line_numbers": []
+        }
+      ]
+    },
+    "N": {
+      "name": "Compliance & Standards",
+      "weight": 0.04,
+      "score": 7.0,
+      "weighted_score": 0.28,
+      "evidence": {
+        "has_license": true,
+        "license_type": "MIT",
+        "has_code_of_conduct": true,
+        "has_security_policy": true,
+        "has_contributing": true,
+        "has_pre_commit": true,
+        "has_conventional_commits": true,
+        "has_dco": false,
+        "has_cla": false,
+        "has_spdx_headers": false
+      },
+      "findings": [
+        {
+          "priority": "P2",
+          "id": "N-001",
+          "title": "No DCO, CLA, or SPDX license headers",
+          "description": "Repository lacks Developer Certificate of Origin, Contributor License Agreement, or SPDX license identifiers in source files.",
+          "file_paths": [
+            "LICENSE"
+          ],
+          "line_numbers": []
+        }
+      ]
+    },
+    "O": {
+      "name": "Agentic Usability",
+      "weight": 0.03,
+      "score": 9.0,
+      "weighted_score": 0.27,
+      "evidence": {
+        "has_agents_md": true,
+        "has_spec_md": true,
+        "has_claude_md": true,
+        "has_agent_workflows": true,
+        "agent_workflows": 5,
+        "has_agent_skills": true,
+        "agent_skills": 2,
+        "has_pre_commit": true,
+        "has_conventional_commits_guide": true,
+        "has_no_wildcard_imports_rule": true
+      },
+      "findings": []
+    }
+  },
+  "overall_score": 83.3
+}
