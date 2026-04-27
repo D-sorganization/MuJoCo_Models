@@ -162,6 +162,35 @@ def interpolate_phases(
     return keyframes
 
 
+def _validate_balance_inputs(
+    com_position: np.ndarray,
+    base_of_support: np.ndarray,
+) -> None:
+    """Validate inputs for balance cost computation.
+
+    Args:
+        com_position: Center of mass position, shape (3,).
+        base_of_support: Convex polygon vertices, shape (n, 2).
+
+    Raises:
+        ValueError: If inputs have invalid shapes or non-finite
+            values.
+    """
+    _validate_array_finite(com_position, "com_position")
+    _validate_array_finite(base_of_support, "base_of_support")
+    if com_position.shape != (3,):
+        msg = f"com_position must have shape (3,), got {com_position.shape}"
+        raise ValueError(msg)
+    if base_of_support.ndim != 2 or base_of_support.shape[1] != 2:
+        msg = f"base_of_support must have shape (n, 2), got {base_of_support.shape}"
+        raise ValueError(msg)
+    if base_of_support.shape[0] < 3:
+        msg = (
+            f"base_of_support needs at least 3 vertices, got {base_of_support.shape[0]}"
+        )
+        raise ValueError(msg)
+
+
 def compute_balance_cost(
     com_position: np.ndarray,
     base_of_support: np.ndarray,
@@ -186,26 +215,42 @@ def compute_balance_cost(
         ValueError: If inputs have invalid shapes or non-finite
             values.
     """
-    _validate_array_finite(com_position, "com_position")
-    _validate_array_finite(base_of_support, "base_of_support")
-    if com_position.shape != (3,):
-        msg = f"com_position must have shape (3,), got {com_position.shape}"
-        raise ValueError(msg)
-    if base_of_support.ndim != 2 or base_of_support.shape[1] != 2:
-        msg = f"base_of_support must have shape (n, 2), got {base_of_support.shape}"
-        raise ValueError(msg)
-    if base_of_support.shape[0] < 3:
-        msg = (
-            f"base_of_support needs at least 3 vertices, got {base_of_support.shape[0]}"
-        )
-        raise ValueError(msg)
-
+    _validate_balance_inputs(com_position, base_of_support)
     com_xy = com_position[:2]
 
     if _point_in_polygon(com_xy, base_of_support):
         return 0.0
 
     return _squared_distance_to_polygon(com_xy, base_of_support)
+
+
+def _validate_bar_path_inputs(
+    bar_position: np.ndarray,
+    target_path: np.ndarray,
+) -> None:
+    """Validate inputs for bar path cost computation.
+
+    Args:
+        bar_position: Actual bar positions over time,
+            shape (n_timesteps, 3).
+        target_path: Target bar positions over time,
+            shape (n_timesteps, 3).
+
+    Raises:
+        ValueError: If inputs have mismatched shapes or non-finite
+            values.
+    """
+    _validate_array_finite(bar_position, "bar_position")
+    _validate_array_finite(target_path, "target_path")
+    if bar_position.shape != target_path.shape:
+        msg = (
+            f"Shape mismatch: bar_position {bar_position.shape} "
+            f"vs target_path {target_path.shape}"
+        )
+        raise ValueError(msg)
+    if bar_position.ndim != 2 or bar_position.shape[1] != 3:
+        msg = f"bar_position must have shape (n, 3), got {bar_position.shape}"
+        raise ValueError(msg)
 
 
 def compute_bar_path_cost(
@@ -231,17 +276,7 @@ def compute_bar_path_cost(
         ValueError: If inputs have mismatched shapes or non-finite
             values.
     """
-    _validate_array_finite(bar_position, "bar_position")
-    _validate_array_finite(target_path, "target_path")
-    if bar_position.shape != target_path.shape:
-        msg = (
-            f"Shape mismatch: bar_position {bar_position.shape} "
-            f"vs target_path {target_path.shape}"
-        )
-        raise ValueError(msg)
-    if bar_position.ndim != 2 or bar_position.shape[1] != 3:
-        msg = f"bar_position must have shape (n, 3), got {bar_position.shape}"
-        raise ValueError(msg)
+    _validate_bar_path_inputs(bar_position, target_path)
 
     horizontal_diff = bar_position[:, :2] - target_path[:, :2]
     return float(np.mean(np.sum(horizontal_diff**2, axis=1)))
