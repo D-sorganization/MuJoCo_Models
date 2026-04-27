@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from mujoco_models.exceptions import ValidationError
+
 
 def point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
     """Ray-casting test for point-in-polygon on the 2D plane.
@@ -24,12 +26,12 @@ def point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
         True if the point is inside the polygon.
 
     Raises:
-        ValueError: If point is not shape (2,) or polygon has fewer than 3 vertices.
+        ValidationError: If point is not shape (2,) or polygon has fewer than 3 vertices.
     """
     if point.shape != (2,):
-        raise ValueError(f"point must have shape (2,), got {point.shape}")
+        raise ValidationError(f"point must have shape (2,), got {point.shape}")
     if len(polygon) < 3:
-        raise ValueError(f"polygon must have at least 3 vertices, got {len(polygon)}")
+        raise ValidationError(f"polygon must have at least 3 vertices, got {len(polygon)}")
 
     n = len(polygon)
     inside = False

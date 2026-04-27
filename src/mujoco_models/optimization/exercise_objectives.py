@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
+from mujoco_models.exceptions import ValidationError
+
 logger = logging.getLogger(__name__)
 
 # Valid bar path constraint types.
@@ -57,7 +59,8 @@ class Phase:
                 f"Phase fraction must be in [0, 1], "
                 f"got {self.fraction} for phase '{self.name}'"
             )
-            raise ValueError(msg)
+
+            raise ValidationError(msg)
 
 
 @dataclass(frozen=True)
@@ -86,20 +89,20 @@ class ExerciseObjective:
         """Validate objective configuration."""
         if not self.name:
             msg = "Exercise name must not be empty"
-            raise ValueError(msg)
+            raise ValidationError(msg)
         if self.bar_path_constraint not in VALID_BAR_PATH_CONSTRAINTS:
             msg = (
                 f"Invalid bar_path_constraint "
                 f"'{self.bar_path_constraint}', "
                 f"must be one of {sorted(VALID_BAR_PATH_CONSTRAINTS)}"
             )
-            raise ValueError(msg)
+            raise ValidationError(msg)
         if self.balance_mode not in VALID_BALANCE_MODES:
             msg = (
                 f"Invalid balance_mode '{self.balance_mode}', "
                 f"must be one of {sorted(VALID_BALANCE_MODES)}"
             )
-            raise ValueError(msg)
+            raise ValidationError(msg)
         _validate_phase_ordering(self.phases)
 
     def get_phase(self, name: str) -> Phase:
@@ -118,7 +121,8 @@ class ExerciseObjective:
             if phase.name == name:
                 return phase
         msg = f"No phase named '{name}' in exercise '{self.name}'"
-        raise KeyError(msg)
+
+        raise ValidationError(msg)
 
     @property
     def n_phases(self) -> int:
@@ -146,7 +150,8 @@ def _validate_phase_ordering(phases: list[Phase]) -> None:
                 f"({phases[i - 1].fraction}) > "
                 f"phase '{phases[i].name}' ({phases[i].fraction})"
             )
-            raise ValueError(msg)
+
+            raise ValidationError(msg)
 
 
 @lru_cache(maxsize=1)
@@ -188,14 +193,15 @@ def get_exercise_objective(name: str) -> ExerciseObjective:
         The matching ExerciseObjective.
 
     Raises:
-        ValueError: If *name* is not a recognised exercise.
+        ValidationError: If *name* is not a recognised exercise.
     """
     registry = _build_registry()
     try:
         return registry[name]
     except KeyError:
         available = ", ".join(sorted(registry))
-        raise ValueError(f"Unknown exercise '{name}'. Available: {available}") from None
+
+        raise ValidationError(f"Unknown exercise '{name}'. Available: {available}") from None
 
 
 if TYPE_CHECKING:
@@ -228,4 +234,5 @@ def __getattr__(name: str) -> object:
         return _build_registry()
     if name in _OBJECTIVE_NAMES:
         return _build_registry()[name.removesuffix("_OBJECTIVE").lower()]
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

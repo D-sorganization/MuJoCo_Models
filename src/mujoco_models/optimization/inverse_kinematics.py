@@ -20,6 +20,8 @@ import logging
 
 import numpy as np
 
+from mujoco_models.exceptions import ValidationError
+
 from mujoco_models.optimization.exercise_objectives import (
     OBJECTIVE_REGISTRY,
     ExerciseObjective,
@@ -50,11 +52,11 @@ def solve_ik_keyframes(
         ``objective.joint_names``.
 
     Raises:
-        ValueError: If exercise_name is unknown or n_frames < 2.
+        ValidationError: If exercise_name is unknown or n_frames < 2.
     """
     if n_frames < 2:
         msg = f"n_frames must be >= 2, got {n_frames}"
-        raise ValueError(msg)
+        raise ValidationError(msg)
 
     objective = _lookup_objective(exercise_name)
     joint_names = objective.joint_names
@@ -62,7 +64,7 @@ def solve_ik_keyframes(
 
     if not objective.phases:
         msg = f"Exercise '{exercise_name}' has no phases defined"
-        raise ValueError(msg)
+        raise ValidationError(msg)
 
     fractions = np.linspace(0.0, 1.0, n_frames)
     keyframes = np.zeros((n_frames, n_joints))
@@ -92,12 +94,12 @@ def _lookup_objective(
         The matching ExerciseObjective.
 
     Raises:
-        ValueError: If the name is not registered.
+        ValidationError: If the name is not registered.
     """
     if exercise_name not in OBJECTIVE_REGISTRY:
         available = sorted(OBJECTIVE_REGISTRY.keys())
         msg = f"Unknown exercise '{exercise_name}'. Available: {available}"
-        raise ValueError(msg)
+        raise ValidationError(msg)
     return OBJECTIVE_REGISTRY[exercise_name]
 
 

@@ -100,7 +100,7 @@ def _build_config_from_args(args: argparse.Namespace) -> ExerciseConfig | None:
             body_spec=BodyModelSpec(total_mass=args.body_mass, height=args.height),
             barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=args.plate_mass),
         )
-    except ValueError as exc:
+    except (ValueError, RuntimeError) as exc:
         logger.error("Invalid configuration: %s", exc)
         return None
 
@@ -109,7 +109,7 @@ def _build_model_xml(exercise: str, config: ExerciseConfig) -> str | None:
     """Instantiate the registered builder for *exercise* and call ``build()``.
 
     Returns the MJCF XML string, or ``None`` when the builder raises a
-    known error (``ValueError`` or ``RuntimeError``).
+    known error (``ValidationError`` or ``RuntimeError``).
     """
     builder_cls = EXERCISE_REGISTRY[exercise]
     try:
