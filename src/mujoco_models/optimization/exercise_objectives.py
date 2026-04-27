@@ -10,6 +10,10 @@ Design by Contract:
     - Each exercise has a valid bar path constraint and balance mode.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 import logging

@@ -8,6 +8,10 @@ The leg-height fraction constant is defined here so that both the spec's
 ``pelvis_height`` property and the MJCF assembly layer share one source of truth.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 from dataclasses import dataclass

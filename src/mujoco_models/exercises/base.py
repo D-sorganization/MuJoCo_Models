@@ -9,6 +9,10 @@ Law of Demeter: Exercise builders interact with BarbellSpec and BodyModelSpec
 through their public APIs, never reaching into internal segment tables.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 import logging

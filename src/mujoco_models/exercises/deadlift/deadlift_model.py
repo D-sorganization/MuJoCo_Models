@@ -16,6 +16,10 @@ The barbell is welded to both hands. Initial pose has significant hip
 and knee flexion to reach the bar on the ground.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 import logging

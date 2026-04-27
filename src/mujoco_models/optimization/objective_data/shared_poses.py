@@ -3,6 +3,10 @@
 All joint angles are in radians.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 STANDING_POSE: dict[str, float] = {

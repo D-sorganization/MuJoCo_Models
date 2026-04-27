@@ -10,6 +10,10 @@ Design by Contract:
     - Output keyframes have shape (n_frames, n_joints).
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 import logging

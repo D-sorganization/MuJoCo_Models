@@ -5,6 +5,10 @@ for a single exercise or small group of related movements.  All joint
 angles are in radians.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 from mujoco_models.optimization.objective_data.bench_press import (

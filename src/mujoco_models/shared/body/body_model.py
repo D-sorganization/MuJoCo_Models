@@ -11,6 +11,10 @@ Public API (re-exported for backward compatibility):
     BodyModelSpec, _LEG_HEIGHT_FRACTION, create_full_body
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 import logging

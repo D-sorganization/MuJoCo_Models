@@ -6,6 +6,10 @@ so that MJCF structure is defined in exactly one place.
 MuJoCo MJCF reference: https://mujoco.readthedocs.io/en/stable/XMLreference.html
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
+
 from __future__ import annotations
 
 import logging
