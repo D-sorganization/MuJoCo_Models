@@ -123,3 +123,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - Preserve the shared body and barbell layers as the single source of truth for common MJCF assembly logic.
 - Prefer adding new exercise behavior through subclasses and shared helpers rather than duplicating body assembly logic.
 
+
+
+### Performance Optimization History
+- Performance optimizations using unrolled scalar operations over numpy methods for small arrays are encouraged for hot-path calculations, such as in `src/mujoco_models/shared/contracts/preconditions.py` and `src/mujoco_models/shared/utils/geometry.py`.
