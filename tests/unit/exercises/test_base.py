@@ -171,7 +171,8 @@ class TestBuildDecomposition:
         assert "barbell_to_hand_r" in weld_names
 
     def test_build_bodies_and_barbell_without_barbell(self) -> None:
-        """When ``uses_barbell`` is False, barbell_bodies is empty and no weld is added."""
+        """When ``uses_barbell`` is False, barbell_bodies is empty
+        and no weld is added."""
         builder = NoBarbellBuilder(ExerciseConfig())
         worldbody = ET.Element("worldbody")
         equality = ET.Element("equality")

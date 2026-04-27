@@ -85,7 +85,8 @@ class TestExerciseParity:
 
 
 class TestSegmentDataCrossCheck:
-    """Verify parity standard SEGMENT_MASS_FRACTIONS matches segment_data.SEGMENT_TABLE."""
+    """Verify parity standard SEGMENT_MASS_FRACTIONS matches
+    segment_data.SEGMENT_TABLE."""
 
     def test_same_segments(self) -> None:
         assert set(SEGMENT_MASS_FRACTIONS.keys()) == set(SEGMENT_TABLE.keys())

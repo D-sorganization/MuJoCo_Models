@@ -75,7 +75,8 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
     return min_dist_sq
 
 
-# OPTIMIZATION: Replaced numpy array operations with scalar arithmetic to avoid array creation overhead for 2D vectors.
+# OPTIMIZATION: Replaced numpy array operations with scalar arithmetic
+# to avoid array creation overhead for 2D vectors.
 def _point_to_segment_sq(
     px: float, py: float, ax: float, ay: float, bx: float, by: float
 ) -> float:

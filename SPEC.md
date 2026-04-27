@@ -95,7 +95,7 @@ Testing is organized around unit, integration, and parity coverage under `tests/
 
 The CI contract is defined in `.github/workflows/ci-standard.yml` and currently includes:
 
-- `ruff check src scripts tests`
+- `ruff check src scripts tests` (line length enforced at 88 characters)
 - `ruff format --check src scripts tests`
 - `mypy src --config-file pyproject.toml`
 - `pytest` with coverage enforcement at 80% on the source tree
