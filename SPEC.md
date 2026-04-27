@@ -21,6 +21,7 @@ The maintained source lives under `src/mujoco_models/` and is organized around t
 - `src/mujoco_models/exercises/` contains the exercise-specific model builders and the registry used by the CLI and tests.
 - `src/mujoco_models/shared/` contains reusable body, barbell, contract, geometry, parity, and MJCF helper code.
 - `src/mujoco_models/optimization/` contains objective data and optimization helpers used by model-generation and validation workflows.
+  - `trajectory_optimizer.py` exposes cost functions (`compute_balance_cost`, `compute_bar_path_cost`, etc.) with input validation extracted to dedicated `_validate_*` helpers to keep per-function cyclomatic complexity low.
 
 The shared body layer is split into focused modules:
 
