@@ -5,14 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-04-11
+## [Unreleased]
+
+## [0.2.0] - 2026-04-11
 
 ### Refactored (issue #118)
 
 - **Reusability**: Added `uses_barbell` property to `ExerciseModelBuilder` (default `True`) so `build()` can skip barbell construction and attachment when an exercise has no barbell.
 - **Code smells**: Removed the zero-mass `BarbellSpec.mens_olympic(plate_mass_per_side=0.0)` hack from `build_gait_model()` and `build_sit_to_stand_model()`. Their builders now override `uses_barbell = False`, and the barbell bodies/welds are omitted entirely rather than materialised with zero plate mass.
 
-## [Unreleased] - 2026-03-30
+## [0.1.1] - 2026-03-30
 
 ### Fixed (A-N Assessment Remediation — issue #90)
 
