@@ -12,10 +12,6 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import pytest
 
-hypothesis = pytest.importorskip("hypothesis")
-from hypothesis import given, settings
-from hypothesis import strategies as st
-
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
 from mujoco_models.shared.body.segment_data import SEGMENT_TABLE, segment_properties
 from mujoco_models.shared.utils.geometry import (
@@ -24,6 +20,10 @@ from mujoco_models.shared.utils.geometry import (
     rectangular_prism_inertia,
     sphere_inertia,
 )
+
+hypothesis = pytest.importorskip("hypothesis")
+from hypothesis import given, settings  # noqa: E402
+from hypothesis import strategies as st  # noqa: E402
 
 # Strategies for physically plausible ranges
 positive_float = st.floats(min_value=0.01, max_value=1e4, allow_nan=False)
