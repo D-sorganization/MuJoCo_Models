@@ -7,7 +7,6 @@ for programmatic discovery.
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 D-sorganization
 
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -11,7 +11,6 @@ The leg-height fraction constant is defined here so that both the spec's
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 D-sorganization
 
-
 from __future__ import annotations
 
 from dataclasses import dataclass

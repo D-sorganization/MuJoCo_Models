@@ -29,7 +29,6 @@ The barbell is welded to both hands at clean grip width.
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 D-sorganization
 
-
 from __future__ import annotations
 
 import logging

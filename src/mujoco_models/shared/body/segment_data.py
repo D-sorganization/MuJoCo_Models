@@ -9,7 +9,6 @@ Extracted from body_model.py to keep modules under the 300-line guideline.
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 D-sorganization
 
-
 from __future__ import annotations
 
 import math

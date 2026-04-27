@@ -7,7 +7,6 @@ generation before they propagate to downstream MJCF XML or simulation.
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 D-sorganization
 
-
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
