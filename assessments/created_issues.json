@@ -1,0 +1,107 @@
+[
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/192",
+    "title": "[P1] [A] No version tags or GitHub releases",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/193",
+    "title": "[P2] [A] CHANGELOG has only [Unreleased] sections",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/194",
+    "title": "[P1] [B] No generated API documentation or Sphinx setup",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/195",
+    "title": "[P2] [B] Some modules lack module-level docstrings",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/196",
+    "title": "[P2] [C] Integration tests skip when mujoco not installed",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/197",
+    "title": "[P2] [C] hypothesis import error in current test environment",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/198",
+    "title": "[P0] [D] CI pass rate at 70% with 4 failures and 2 cancelled",
+    "priority": "P0"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/199",
+    "title": "[P1] [D] pip-audit ignores 6 CVEs without expiration or remediation tracking",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/200",
+    "title": "[P1] [D] Self-hosted runner dependency creates fragility",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/201",
+    "title": "[P2] [E] ruff ignores E501 (line too long)",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/202",
+    "title": "[P1] [F] requirements-lock.txt polluted with unrelated packages",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/203",
+    "title": "[P1] [G] 6 CVEs ignored in CI without remediation plan",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/204",
+    "title": "[P2] [G] No SBOM generation",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/205",
+    "title": "[P2] [H] trajectory_optimizer.py has highest cyclomatic complexity (26)",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/206",
+    "title": "[P1] [I] No custom exception hierarchy",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/207",
+    "title": "[P1] [J] No performance regression testing in CI",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/208",
+    "title": "[P2] [J] Rust core not built or integrated in CI",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/209",
+    "title": "[P2] [K] Conventional commit compliance at 54%",
+    "priority": "P2"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/210",
+    "title": "[P1] [L] Package not installable without PYTHONPATH workaround",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/211",
+    "title": "[P1] [M] No structured logging or observability",
+    "priority": "P1"
+  },
+  {
+    "url": "https://github.com/D-sorganization/MuJoCo_Models/issues/212",
+    "title": "[P2] [N] No DCO, CLA, or SPDX license headers",
+    "priority": "P2"
+  }
+]
