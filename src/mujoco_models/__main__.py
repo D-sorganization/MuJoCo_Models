@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """CLI entry point for ``python -m mujoco_models <exercise> [options]``."""
 
 from __future__ import annotations

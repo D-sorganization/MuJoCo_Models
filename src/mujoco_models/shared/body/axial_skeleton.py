@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Axial skeleton assembly: pelvis, torso, and head.
 
 Builds the central body segments (pelvis with freejoint, torso with

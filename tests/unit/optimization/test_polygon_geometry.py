@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for 2D polygon geometry helpers.
 
 Covers ``point_in_polygon`` and ``squared_distance_to_polygon`` with

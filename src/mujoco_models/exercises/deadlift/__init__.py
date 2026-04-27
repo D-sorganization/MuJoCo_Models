@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Deadlift exercise model builder.
 
 Provides MuJoCo MJCF model generation for deadlift exercises,

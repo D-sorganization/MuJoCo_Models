@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Trajectory optimization and exercise objectives for barbell models.
 
 Provides exercise-specific optimization objectives, trajectory optimization,

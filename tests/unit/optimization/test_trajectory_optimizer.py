@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for trajectory optimizer cost functions and dataclass validation."""
 
 from __future__ import annotations

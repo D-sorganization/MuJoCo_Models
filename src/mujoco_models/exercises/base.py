@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Base exercise model builder for MuJoCo MJCF.
 
 DRY: All five exercises share the same skeleton for creating a MuJoCo

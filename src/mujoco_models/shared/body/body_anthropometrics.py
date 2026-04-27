@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Anthropometric data and lookup helpers for the full-body musculoskeletal model.
 
 Provides the ``BodyModelSpec`` dataclass (total mass and standing height) and

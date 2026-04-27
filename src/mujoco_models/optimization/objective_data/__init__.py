@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Per-exercise objective data modules.
 
 Each module defines kinematic target data (poses, phases, joint angles)

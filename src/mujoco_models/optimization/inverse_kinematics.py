@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Inverse kinematics keyframe generation for barbell exercises.
 
 Generates joint-angle keyframes by interpolating between the phases

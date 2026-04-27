@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Conventional deadlift model builder for MuJoCo MJCF.
 
 The lifter grips the barbell at approximately shoulder width with the bar

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for sit-to-stand model builder."""
 
 import math

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for barbell model generation."""
 
 import xml.etree.ElementTree as ET

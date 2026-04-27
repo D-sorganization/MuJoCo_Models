@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """MJCF XML generation helpers for MuJoCo models.
 
 DRY: All bodies, joints, and geometry share these formatting functions

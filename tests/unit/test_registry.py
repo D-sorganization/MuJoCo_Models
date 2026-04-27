@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the exercise registry (#23)."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Bench press exercise objective data.
 
 All joint angles are in radians.

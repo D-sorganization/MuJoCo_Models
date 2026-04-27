@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Barbell model generation for MuJoCo MJCF.
 
 Provides factory functions to create standard Olympic barbell bodies

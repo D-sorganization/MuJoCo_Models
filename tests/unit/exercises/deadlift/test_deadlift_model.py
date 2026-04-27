@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for deadlift model builder."""
 
 import xml.etree.ElementTree as ET

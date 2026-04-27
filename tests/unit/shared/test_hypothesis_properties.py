@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Hypothesis property-based tests for geometry and body model (#1).
 
 Uses hypothesis strategies to verify invariants hold across a wide range

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for TrajectoryConfig and TrajectoryResult validation edge cases.
 
 Covers issue #69: ensure all validation branches in __post_init__ are

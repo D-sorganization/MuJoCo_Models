@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Shared reference poses used across multiple exercise objectives.
 
 All joint angles are in radians.

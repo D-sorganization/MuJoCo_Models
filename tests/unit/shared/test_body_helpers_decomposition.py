@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Unit tests for the foot-contact helpers in body_helpers.py.
 
 Covers the decomposition of ``add_foot_contact_geoms`` (issue #129,

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Unit tests for the argument-parser decomposition in ``__main__``.
 
 Covers the helpers introduced during A-N Refresh 2026-04-14 (issue #129)

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Regression tests for the shared exercise builder base class."""
 
 from __future__ import annotations

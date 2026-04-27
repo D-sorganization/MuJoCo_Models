@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Sit-to-stand model builder for MuJoCo MJCF.
 
 Builds a model for sit-to-stand (STS) transfer analysis with a chair

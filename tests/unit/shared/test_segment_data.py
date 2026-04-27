@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for segment data integrity and anthropometric correctness (#2).
 
 Validates that the Winter (2009) segment table is self-consistent:

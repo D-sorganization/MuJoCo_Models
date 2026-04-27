@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Olympic barbell model for MuJoCo MJCF.
 
 Standard Olympic barbell dimensions (IWF / IPF regulations):

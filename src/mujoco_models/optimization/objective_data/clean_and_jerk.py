@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Clean and jerk exercise objective data.
 
 All joint angles are in radians.

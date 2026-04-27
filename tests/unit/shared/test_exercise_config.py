@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for ExerciseConfig validation and defaults (#21).
 
 Ensures that ExerciseConfig correctly constructs with defaults,

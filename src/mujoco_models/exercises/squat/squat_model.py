@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Back squat model builder for MuJoCo MJCF.
 
 The barbell rests across the upper trapezius / rear deltoids (high-bar

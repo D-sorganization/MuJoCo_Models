@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Upper-limb assembly: shoulders, elbows, and wrists.
 
 Attaches bilateral upper-arm, forearm, and hand segments to the torso,

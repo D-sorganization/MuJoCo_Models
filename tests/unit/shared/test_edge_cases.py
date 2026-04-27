@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Edge-case anthropometric and model-building tests.
 
 Tests extreme but valid anthropometric parameters (very small/large people),

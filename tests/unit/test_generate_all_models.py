@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Unit tests for the ``examples/generate_all_models.py`` helpers.
 
 Loaded via ``importlib`` because ``examples/`` is not a package in the

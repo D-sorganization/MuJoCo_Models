@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the IK keyframe generator.
 
 Covers ``solve_ik_keyframes`` for reachable targets, convergence through

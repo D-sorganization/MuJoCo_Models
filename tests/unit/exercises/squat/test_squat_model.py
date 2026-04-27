@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for squat model builder."""
 
 import xml.etree.ElementTree as ET

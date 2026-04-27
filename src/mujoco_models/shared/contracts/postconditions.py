@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Design-by-Contract postcondition checks for MuJoCo MJCF models.
 
 Used to validate outputs after computation -- catches bugs in model

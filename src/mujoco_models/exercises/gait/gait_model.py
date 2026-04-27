@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Gait (walking) model builder for MuJoCo MJCF.
 
 Builds a bipedal gait analysis model without a barbell. The initial pose

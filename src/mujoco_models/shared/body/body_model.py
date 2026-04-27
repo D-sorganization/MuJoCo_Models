@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """MJCF body assembly facade for the full-body musculoskeletal model.
 
 This module is a thin orchestration layer that delegates to focused

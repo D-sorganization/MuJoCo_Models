@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Full-body musculoskeletal model for MuJoCo MJCF.
 
 Provides a simplified but anatomically grounded full-body model with

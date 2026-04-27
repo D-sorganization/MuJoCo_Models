@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Snatch model builder for MuJoCo MJCF.
 
 The snatch is a single continuous motion that lifts the barbell from the

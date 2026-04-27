@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Shared plotting theme configuration."""
 
 from __future__ import annotations

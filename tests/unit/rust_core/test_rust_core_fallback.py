@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for Rust accelerator -- fallback/interface verification.
 
 Since the Rust extension requires compilation with maturin, these tests

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for precondition contract checks."""
 
 import numpy as np

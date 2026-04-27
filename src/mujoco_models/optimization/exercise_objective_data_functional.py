@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Exercise objective data for functional movements (gait, sit-to-stand).
 
 Re-exports from per-exercise modules under ``objective_data/``.

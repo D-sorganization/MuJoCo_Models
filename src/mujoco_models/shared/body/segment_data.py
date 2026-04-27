@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Winter (2009) anthropometric segment data.
 
 Segment mass fractions, length fractions, and radius fractions of total

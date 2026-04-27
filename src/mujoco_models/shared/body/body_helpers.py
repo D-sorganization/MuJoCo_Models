@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Helper functions for body model assembly.
 
 Extracted from body_model.py to keep modules under the 300-line budget.

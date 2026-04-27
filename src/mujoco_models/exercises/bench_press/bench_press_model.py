@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Bench press model builder for MuJoCo MJCF.
 
 The lifter lies supine on a bench. The barbell is gripped in both hands

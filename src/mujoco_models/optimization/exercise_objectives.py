@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Exercise-specific optimization objectives for barbell movements.
 
 Defines target poses, movement phases, and constraints for each of

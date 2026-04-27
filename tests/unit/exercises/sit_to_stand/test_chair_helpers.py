@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Unit tests for the chair-building helpers on SitToStandModelBuilder.
 
 Covers the helpers extracted during the A-N Refresh 2026-04-14 decomposition

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Cross-repo parity compliance tests.
 
 These tests verify that this repo's models match the canonical standard.

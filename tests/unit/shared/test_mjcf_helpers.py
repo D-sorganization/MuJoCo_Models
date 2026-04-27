@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for MJCF XML generation helpers."""
 
 import xml.etree.ElementTree as ET

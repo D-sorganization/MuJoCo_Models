@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Lower-limb assembly: hips, knees, and ankles.
 
 Attaches bilateral thigh, shank, and foot segments to the pelvis,

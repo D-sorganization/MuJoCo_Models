@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Trajectory optimization for barbell exercise models using MuJoCo.
 
 Implements cost functions and trajectory optimization configuration for

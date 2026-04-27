@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Integration tests: verify MJCF models load into MuJoCo without errors."""
 
 from typing import Any

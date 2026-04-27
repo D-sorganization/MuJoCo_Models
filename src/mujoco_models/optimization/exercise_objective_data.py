@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Exercise objective data constants for barbell movements.
 
 Re-exports from per-exercise modules under ``objective_data/``.

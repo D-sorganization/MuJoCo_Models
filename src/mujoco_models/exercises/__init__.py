@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Exercise model builders for MuJoCo MJCF.
 
 Provides a registry mapping exercise names to their builder classes

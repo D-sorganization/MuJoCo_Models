@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Performance benchmarks for model generation (#14).
 
 Uses pytest-benchmark to track model build times. These are informational;

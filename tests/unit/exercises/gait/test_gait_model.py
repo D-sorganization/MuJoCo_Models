@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for gait model builder."""
 
 import xml.etree.ElementTree as ET

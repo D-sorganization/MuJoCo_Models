@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the CLI entry point (__main__.py)."""
 
 from __future__ import annotations

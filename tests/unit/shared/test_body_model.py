@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the full-body musculoskeletal model."""
 
 import xml.etree.ElementTree as ET

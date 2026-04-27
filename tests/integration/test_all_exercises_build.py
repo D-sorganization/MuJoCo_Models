@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Integration tests: verify all exercise models build end-to-end.
 
 Each model must produce well-formed MJCF XML with the correct structure:

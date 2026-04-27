@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Geometry and inertia computation utilities.
 
 DRY: Inertia formulas for cylinders, rectangular prisms, and composite

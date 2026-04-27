@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Functional movement objective data (gait, sit-to-stand).
 
 All joint angles are in radians.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for ground contact model: foot geometry, friction, and contact exclusions."""
 
 import xml.etree.ElementTree as ET

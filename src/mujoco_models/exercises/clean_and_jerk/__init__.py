@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Clean and jerk exercise model builder.
 
 Provides MuJoCo MJCF model generation for Olympic weightlifting clean and jerk

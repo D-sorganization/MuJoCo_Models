@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Clean and jerk model builder for MuJoCo MJCF.
 
 The clean and jerk is a two-part lift:

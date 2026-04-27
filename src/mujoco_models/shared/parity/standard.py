@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Cross-repo parity standard — canonical biomechanical parameters.
 
 These values MUST be identical across MuJoCo, Drake, Pinocchio, and

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """2D polygon geometry helpers for balance cost computation.
 
 Provides point-in-polygon tests and point-to-polygon distance

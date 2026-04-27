@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Design-by-Contract precondition checks.
 
 All public functions in this project validate inputs via these guards.
