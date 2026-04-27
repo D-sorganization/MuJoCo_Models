@@ -5,6 +5,9 @@ Provides exercise-specific optimization objectives, trajectory optimization,
 and inverse kinematics keyframe generation for MuJoCo barbell exercise models.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
 from __future__ import annotations
 
 from mujoco_models.optimization.exercise_objectives import (

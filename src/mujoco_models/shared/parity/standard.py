@@ -6,6 +6,9 @@ OpenSim repos.  Any deviation breaks cross-repo parity and must be
 justified.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
 from __future__ import annotations
 
 import math

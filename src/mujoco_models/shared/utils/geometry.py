@@ -8,6 +8,9 @@ MuJoCo convention: Z-up, gravity = (0, 0, -9.80665).
 Cylinder axis aligned with Z-axis (MuJoCo default for capsule/cylinder).
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
 from __future__ import annotations
 
 import logging

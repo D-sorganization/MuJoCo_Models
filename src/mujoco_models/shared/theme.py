@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: MIT
 """Shared plotting theme configuration."""
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
 from __future__ import annotations
 
 import logging

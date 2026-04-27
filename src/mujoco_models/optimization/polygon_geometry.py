@@ -5,6 +5,9 @@ Provides point-in-polygon tests and point-to-polygon distance
 calculations used by the trajectory optimizer's balance cost function.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
 from __future__ import annotations
 
 import numpy as np

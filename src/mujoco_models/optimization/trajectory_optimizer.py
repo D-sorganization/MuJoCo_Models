@@ -9,6 +9,9 @@ Design by Contract:
     - Config values are validated for physical plausibility.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
 from __future__ import annotations
 
 import logging

@@ -13,6 +13,9 @@ Biomechanical notes:
 - MuJoCo Z-up convention: gravity = (0, 0, -9.80665)
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
 from __future__ import annotations
 
 import logging

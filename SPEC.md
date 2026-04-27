@@ -105,7 +105,18 @@ The CI contract is defined in `.github/workflows/ci-standard.yml` and currently 
 
 Local validation should follow the same shape as CI when changes affect source behavior. Documentation-only changes should still keep the spec truthful and aligned with the current tree.
 
-## 8. Maintenance Rules
+## 8. Licensing
+
+All Python source files in `src/` include an SPDX license header:
+
+```python
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+```
+
+This header is present in every module-level `.py` file as of the SPDX header update.
+
+## 9. Maintenance Rules
 
 - Keep `SPEC.md` aligned with the actual package layout and supported entrypoints.
 - Update the spec whenever the public model-generation surface changes.

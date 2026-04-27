@@ -5,6 +5,9 @@ Provides a simplified but anatomically grounded full-body model with
 major body segments and joints suitable for barbell exercise simulation.
 """
 
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
+
 from mujoco_models.shared.body.body_anthropometrics import (
     BodyModelSpec,
 )
