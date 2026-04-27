@@ -2,7 +2,7 @@
 """Design-by-Contract precondition checks.
 
 All public functions in this project validate inputs via these guards.
-Violations raise ValueError with descriptive messages -- never silently
+Violations raise ValidationError with descriptive messages -- never silently
 accept invalid geometry or physics parameters.
 """
 
@@ -21,9 +21,9 @@ def _require_scalar_finite(value: float, name: str) -> None:
     try:
         is_finite = math.isfinite(value)
     except TypeError as exc:
-        raise ValueError(f"{name} must be a finite scalar") from exc
+        raise ValidationError(f"{name} must be a finite scalar") from exc
     if not is_finite:
-        raise ValueError(f"{name} contains non-finite values")
+        raise ValidationError(f"{name} contains non-finite values")
 
 
 def require_positive(value: float, name: str) -> None:
@@ -34,27 +34,27 @@ def require_positive(value: float, name: str) -> None:
     # ~25% overall speedup in model building.
     _require_scalar_finite(value, name)
     if value <= 0:
-        raise ValueError(f"{name} must be positive, got {value}")
+        raise ValidationError(f"{name} must be positive, got {value}")
 
 
 def require_non_negative(value: float, name: str) -> None:
     """Require *value* >= 0."""
     _require_scalar_finite(value, name)
     if value < 0:
-        raise ValueError(f"{name} must be non-negative, got {value}")
+        raise ValidationError(f"{name} must be non-negative, got {value}")
 
 
 def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
     """Require *vec* to have unit norm within *tol*."""
     arr = np.asarray(vec, dtype=float)
     if arr.shape != (3,):
-        raise ValueError(f"{name} must be a 3-vector, got shape {arr.shape}")
+        raise ValidationError(f"{name} must be a 3-vector, got shape {arr.shape}")
     vx, vy, vz = float(arr[0]), float(arr[1]), float(arr[2])
     # OPTIMIZATION: Unrolled scalar math instead of np.linalg.norm
     # to avoid allocation and dispatch overhead.
     norm = math.sqrt(vx * vx + vy * vy + vz * vz)
     if abs(norm - 1.0) > tol:
-        raise ValueError(f"{name} must be unit-length (norm={norm:.6f})")
+        raise ValidationError(f"{name} must be unit-length (norm={norm:.6f})")
 
 
 def require_finite(arr: ArrayLike, name: str) -> None:
@@ -62,12 +62,12 @@ def require_finite(arr: ArrayLike, name: str) -> None:
     # ⚡ Bolt Optimization: Fast path for scalars.
     if isinstance(arr, (int, float)):
         if not math.isfinite(arr):
-            raise ValueError(f"{name} contains non-finite values")
+            raise ValidationError(f"{name} contains non-finite values")
         return
 
     a = np.asarray(arr, dtype=float)
     if not np.all(np.isfinite(a)):
-        raise ValueError(f"{name} contains non-finite values")
+        raise ValidationError(f"{name} contains non-finite values")
 
 
 def require_in_range(value: float, low: float, high: float, name: str) -> None:
@@ -76,11 +76,11 @@ def require_in_range(value: float, low: float, high: float, name: str) -> None:
     require_finite(low, name)
     require_finite(high, name)
     if not (low <= value <= high):
-        raise ValueError(f"{name} must be in [{low}, {high}], got {value}")
+        raise ValidationError(f"{name} must be in [{low}, {high}], got {value}")
 
 
 def require_shape(arr: ArrayLike, expected: tuple[int, ...], name: str) -> None:
     """Require *arr* to have the given shape."""
     a = np.asarray(arr)
     if a.shape != expected:
-        raise ValueError(f"{name} must have shape {expected}, got {a.shape}")
+        raise ValidationError(f"{name} must have shape {expected}, got {a.shape}")
