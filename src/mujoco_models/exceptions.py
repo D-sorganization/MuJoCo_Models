@@ -10,26 +10,17 @@ problems separately from generic Python built-in exceptions.
 # Copyright (c) 2026 D-sorganization
 
 
-
 class MuJoCoModelError(Exception):
     """Base exception for all MuJoCo model domain errors."""
-
-    pass
 
 
 class ModelBuildError(MuJoCoModelError):
     """Raised when a model cannot be constructed from its specification."""
 
-    pass
-
 
 class ValidationError(MuJoCoModelError, ValueError):
     """Raised when input data fails domain validation."""
 
-    pass
-
 
 class PreconditionError(MuJoCoModelError):
     """Raised when a runtime precondition is violated."""
-
-    pass

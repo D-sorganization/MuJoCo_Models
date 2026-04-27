@@ -26,12 +26,14 @@ def point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
         True if the point is inside the polygon.
 
     Raises:
-        ValidationError: If point is not shape (2,) or polygon has fewer than 3 vertices.
+        ValidationError: If point is not shape (2,) or polygon has
+            fewer than 3 vertices.
     """
     if point.shape != (2,):
         raise ValidationError(f"point must have shape (2,), got {point.shape}")
     if len(polygon) < 3:
-        raise ValidationError(f"polygon must have at least 3 vertices, got {len(polygon)}")
+        n_vert = len(polygon)
+        raise ValidationError(f"polygon must have at least 3 vertices, got {n_vert}")
 
     n = len(polygon)
     inside = False

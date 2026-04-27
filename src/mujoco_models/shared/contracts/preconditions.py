@@ -16,6 +16,8 @@ import math
 import numpy as np
 from numpy.typing import ArrayLike
 
+from mujoco_models.exceptions import ValidationError
+
 
 def _require_scalar_finite(value: float, name: str) -> None:
     try:

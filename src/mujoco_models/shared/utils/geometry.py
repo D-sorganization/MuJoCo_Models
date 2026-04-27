@@ -19,7 +19,6 @@ import math
 import numpy as np
 
 from mujoco_models.exceptions import ValidationError
-
 from mujoco_models.shared.contracts.postconditions import (
     ensure_positive_definite_inertia,
 )

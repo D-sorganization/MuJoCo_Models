@@ -201,7 +201,9 @@ def get_exercise_objective(name: str) -> ExerciseObjective:
     except KeyError:
         available = ", ".join(sorted(registry))
 
-        raise ValidationError(f"Unknown exercise '{name}'. Available: {available}") from None
+        raise ValidationError(
+            f"Unknown exercise '{name}'. Available: {available}"
+        ) from None
 
 
 if TYPE_CHECKING:

@@ -40,14 +40,12 @@ def ensure_mjcf_root(root_or_xml: str | ET.Element) -> ET.Element:
     return root
 
 
-
 def ensure_positive_mass(mass: float, body_name: str) -> None:
     """Assert that a body's mass is positive after computation."""
     if mass <= 0:
         raise ValidationError(
             f"Postcondition violated: {body_name} mass={mass} is not positive"
         )
-
 
 
 def ensure_positive_definite_inertia(

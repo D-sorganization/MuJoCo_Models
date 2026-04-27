@@ -59,6 +59,13 @@ The registry in `src/mujoco_models/exercises/__init__.py` exposes the supported 
 
 Each exercise module also exposes a convenience function named `build_*_model()` that returns an MJCF XML string.
 
+The package-level `__init__.py` also re-exports the exception hierarchy for downstream consumers:
+
+- `MuJoCoModelError` (base exception)
+- `ModelBuildError`
+- `ValidationError`
+- `PreconditionError`
+
 ## 5. Model Generation Flow
 
 Model generation follows the same pipeline across exercises:

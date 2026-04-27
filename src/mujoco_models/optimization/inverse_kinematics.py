@@ -21,7 +21,6 @@ import logging
 import numpy as np
 
 from mujoco_models.exceptions import ValidationError
-
 from mujoco_models.optimization.exercise_objectives import (
     OBJECTIVE_REGISTRY,
     ExerciseObjective,
