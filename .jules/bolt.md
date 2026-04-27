@@ -21,3 +21,7 @@
 ## 2024-04-26 - Unrolled Scalar Arithmetic for Tiny Vectors
 **Learning:** In tight computational loops involving tiny 2D vectors (e.g., ray-casting algorithms and distance to line segment calculations in `polygon_geometry.py` and `trajectory_optimizer.py`), using NumPy array operations (like `np.dot` and vector subtraction) introduces significant array creation, slicing, and Python-C API dispatch overhead. Converting these operations into raw Python float/scalar operations significantly speeds up execution without sacrificing readability.
 **Action:** When performing geometry math on 2D or 3D vectors within tight loops, unroll the math manually to scalar arithmetic to avoid NumPy allocation overheads.
+
+## 2024-05-30 - Unrolled Scalar Arithmetic for Tiny Vectors using built-in math module
+**Learning:** For small dimensions like 3D vectors, calling functions like `np.linalg.norm()` and `np.dot()` introduces significant Python-C API dispatch and array creation overhead. Using unrolled scalar math such as `math.sqrt(vx * vx + vy * vy + vz * vz)` and simple arithmetic operates dramatically faster inside tight loops in validation (`require_unit_vector`) and core geometric calculations (`parallel_axis_shift`).
+**Action:** Always unroll calculations for tiny dimensions (1D-3D) explicitly inside critical sections, avoiding unnecessary `numpy` array coercion and function call overheads. Use Python's built-in `math` module instead.

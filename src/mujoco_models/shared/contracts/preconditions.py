@@ -45,7 +45,10 @@ def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
     arr = np.asarray(vec, dtype=float)
     if arr.shape != (3,):
         raise ValueError(f"{name} must be a 3-vector, got shape {arr.shape}")
-    norm = float(np.linalg.norm(arr))
+    vx, vy, vz = float(arr[0]), float(arr[1]), float(arr[2])
+    # OPTIMIZATION: Unrolled scalar math instead of np.linalg.norm
+    # to avoid allocation and dispatch overhead.
+    norm = math.sqrt(vx * vx + vy * vy + vz * vz)
     if abs(norm - 1.0) > tol:
         raise ValueError(f"{name} must be unit-length (norm={norm:.6f})")
 

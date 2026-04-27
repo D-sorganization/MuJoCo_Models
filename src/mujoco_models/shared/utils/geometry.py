@@ -166,8 +166,10 @@ def parallel_axis_shift(
     require_positive(mass, "mass")
     d = np.asarray(displacement, dtype=float)
     require_shape(d, (3,), "displacement")
-    dx, dy, dz = d[0], d[1], d[2]
-    d_sq = float(np.dot(d, d))
+    dx, dy, dz = float(d[0]), float(d[1]), float(d[2])
+    # OPTIMIZATION: Replaced np.dot with unrolled scalar math for small 3D vectors
+    # to avoid function dispatch overhead.
+    d_sq = dx * dx + dy * dy + dz * dz
 
     ixx = inertia[0] + mass * (d_sq - dx * dx)
     iyy = inertia[1] + mass * (d_sq - dy * dy)
