@@ -37,22 +37,51 @@ All code must pass the following before merge:
 
 ### Commit Messages
 
-Use conventional commit format:
+Use conventional commit format for every commit and for the final squash-merge
+title:
 
 ```
-type: concise description
+type(scope): concise description
 
 Longer explanation if needed.
 ```
 
 Types: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`.
 
+The scope is optional, but the type and `: ` separator are required. Keep the
+subject short, imperative, and lower-case after the type where possible.
+
+Examples:
+
+- `docs: clarify commit message policy`
+- `fix(parser): reject invalid joint limits`
+- `feat!: remove deprecated model alias`
+
+Before opening a PR, install the local commit-message hook:
+
+```bash
+pip install pre-commit
+pre-commit install --hook-type pre-commit --hook-type commit-msg
+```
+
+To check an existing commit message file manually:
+
+```bash
+python scripts/check_commit_message.py .git/COMMIT_EDITMSG
+```
+
+If your branch already contains non-conventional subjects, rewrite them before
+review using interactive rebase or create a conventional squash title before
+merge.
+
 ## Pull Request Process
 
 1. Ensure all CI checks pass.
-2. Update documentation if you changed public APIs.
-3. Request review from at least one maintainer.
-4. Squash merge when approved.
+2. Confirm every commit subject follows the conventional commit format.
+3. Use a conventional commit title for squash merges.
+4. Update documentation if you changed public APIs.
+5. Request review from at least one maintainer.
+6. Squash merge when approved.
 
 ## Developer Certificate of Origin (DCO)
 

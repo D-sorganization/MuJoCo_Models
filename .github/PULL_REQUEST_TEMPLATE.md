@@ -12,6 +12,7 @@
 - [ ] New tests added for new functionality
 - [ ] `ruff check` and `ruff format --check` pass
 - [ ] `mypy src` passes
+- [ ] Commit subjects and squash title follow conventional commit format
 
 ## Related Issues
 
