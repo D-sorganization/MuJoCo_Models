@@ -47,6 +47,7 @@ _IDS = [n for n, _ in ALL_BUILDERS]
 
 
 @_SKIP_MUJOCO
+@pytest.mark.requires_mujoco
 class TestMuJoCoLoading:
     @pytest.mark.parametrize("name,builder", ALL_BUILDERS, ids=_IDS)
     def test_model_loads_without_error(self, name: str, builder: Any) -> None:
