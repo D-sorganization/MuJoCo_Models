@@ -1,13 +1,12 @@
 # SPDX-License-Identifier: MIT
-"""Domain-specific exceptions for MuJoCo model operations.
+# Copyright (c) 2026 D-sorganization
+"""Domain-specific exception hierarchy for MuJoCo Models.
 
-All errors raised by this package should use (or inherit from)
-:class:`MuJoCoModelError` so that consumers can catch domain-specific
-problems separately from generic Python built-in exceptions.
+All public exceptions inherit from :class:`MuJoCoModelError` so callers can
+catch every model-related failure with a single ``except`` clause.
 """
 
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 D-sorganization
+from __future__ import annotations
 
 
 class MuJoCoModelError(Exception):

@@ -51,6 +51,14 @@ The CLI is implemented in `src/mujoco_models/__main__.py` and builds models from
 - `BarbellSpec`
 - `EXERCISE_REGISTRY`
 
+The package root also re-exports the public exception hierarchy for callers that
+need stable failure handling without importing internal modules:
+
+- `MuJoCoModelError`
+- `ModelBuildError`
+- `ValidationError`
+- `PreconditionError`
+
 The registry in `src/mujoco_models/exercises/__init__.py` exposes the supported builders and aliases:
 
 - `squat` and `back_squat`
