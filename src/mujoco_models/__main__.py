@@ -118,7 +118,9 @@ def _build_model_xml(exercise: str, config: ExerciseConfig) -> str | None:
         return None
     duration_ms = (time.perf_counter() - start) * 1000
     logger.info(
-        "Built %s model in %.2f ms", exercise, duration_ms,
+        "Built %s model in %.2f ms",
+        exercise,
+        duration_ms,
         extra={"event": "model_build", "duration_ms": round(duration_ms, 2)},
     )
     return xml
