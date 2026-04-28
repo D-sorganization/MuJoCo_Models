@@ -103,10 +103,40 @@ jobs:
           path: sbom.json
 
     needs: pick-runner
+  rust:
+    needs:
+      - pick-runner
+      - quality-gate
+    runs-on: ${{ needs.pick-runner.outputs.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-action@stable
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust_core
+      - name: Run Rust tests
+        run: |
+          cd rust_core
+          cargo test --verbose
+      - name: Build Rust extension
+        run: |
+          cd rust_core
+          cargo build --verbose --release
+      - name: Upload Rust artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-core-${{ github.sha }}
+          path: rust_core/target/release/libmujoco_models_core.so
+          if-no-files-found: warn
+
   tests:
     needs:
       - pick-runner
       - quality-gate
+      - rust
     runs-on: ${{ needs.pick-runner.outputs.runner }}
     timeout-minutes: 15
     strategy:
