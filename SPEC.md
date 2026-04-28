@@ -2,13 +2,13 @@
 
 ## 1. Identity
 
-| Field | Value |
-| --- | --- |
-| Repository | `MuJoCo_Models` |
-| GitHub | `https://github.com/D-sorganization/MuJoCo_Models` |
-| Primary language | Python 3.10+ |
-| Package name | `mujoco_models` |
-| License | MIT |
+| Field            | Value                                              |
+| ---------------- | -------------------------------------------------- |
+| Repository       | `MuJoCo_Models`                                    |
+| GitHub           | `https://github.com/D-sorganization/MuJoCo_Models` |
+| Primary language | Python 3.10+                                       |
+| Package name     | `mujoco_models`                                    |
+| License          | MIT                                                |
 
 ## 2. Purpose
 
@@ -129,6 +129,12 @@ with that documentation entrypoint.
 
 Local validation should follow the same shape as CI when changes affect source behavior. Documentation-only changes should still keep the spec truthful and aligned with the current tree.
 
+Contributor governance is documented in `CONTRIBUTING.md` and reinforced by
+`.github/PULL_REQUEST_TEMPLATE.md`. The local pre-commit configuration includes
+a `commit-msg` hook implemented by `scripts/check_commit_message.py` to validate
+commit subjects against the repository's conventional commit types:
+`feat`, `fix`, `refactor`, `test`, `docs`, `ci`, and `chore`.
+
 ## 8. Licensing
 
 All Python source files in `src/` include an SPDX license header:
@@ -147,7 +153,6 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - Preserve the shared body and barbell layers as the single source of truth for common MJCF assembly logic.
 - Prefer adding new exercise behavior through subclasses and shared helpers rather than duplicating body assembly logic.
 
-
-
 ### Performance Optimization History
+
 - Performance optimizations using unrolled scalar operations over numpy methods for small arrays are encouraged for hot-path calculations, such as in `src/mujoco_models/shared/contracts/preconditions.py` and `src/mujoco_models/shared/utils/geometry.py`.
