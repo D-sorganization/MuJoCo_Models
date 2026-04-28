@@ -34,11 +34,15 @@ The shared body layer is split into focused modules:
 
 The shared barbell layer lives in `shared/barbell/barbell_model.py` and builds the three-body barbell assembly plus weld constraints.
 
+Repository documentation for generated API references lives under `docs/` and is
+built with Sphinx using `docs/conf.py`, `docs/index.rst`, and `docs/api.rst`.
+
 ## 4. Public Interface
 
-The supported entrypoint is module execution:
+The supported entrypoints are module execution and the package console script:
 
 - `python -m mujoco_models <exercise> [options]`
+- `mujoco-models <exercise> [options]`
 
 The CLI is implemented in `src/mujoco_models/__main__.py` and builds models from:
 
@@ -67,6 +71,13 @@ The registry in `src/mujoco_models/exercises/__init__.py` exposes the supported 
 
 Each exercise module also exposes a convenience function named `build_*_model()` that returns an MJCF XML string.
 
+The package-level `__init__.py` also re-exports the exception hierarchy for downstream consumers:
+
+- `MuJoCoModelError` (base exception)
+- `ModelBuildError`
+- `ValidationError`
+- `PreconditionError`
+
 ## 5. Model Generation Flow
 
 Model generation follows the same pipeline across exercises:
@@ -92,7 +103,7 @@ The model-building APIs accept plain dataclass configuration rather than implici
 - All lengths are expressed in meters and all masses in kilograms.
 - MuJoCo uses a Z-up convention in this repository: gravity is `(0.0, 0.0, -9.80665)`.
 
-The repo does not currently define a package console script. `python -m mujoco_models` is the stable runtime entrypoint.
+The package also exposes `mujoco-models` as a console script via `[project.scripts]` in `pyproject.toml`. Both entrypoints are functionally equivalent.
 
 ## 7. Testing And CI
 
@@ -111,6 +122,10 @@ The CI contract is defined in `.github/workflows/ci-standard.yml` and currently 
 - a placeholder scan for `TODO` and `FIXME`
 - `pip-audit`
 - `bandit -r src/`
+
+Documentation changes that affect the Sphinx configuration or API reference
+surface should keep the generated-docs layout in `docs/` and the spec aligned
+with that documentation entrypoint.
 
 Local validation should follow the same shape as CI when changes affect source behavior. Documentation-only changes should still keep the spec truthful and aligned with the current tree.
 

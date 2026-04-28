@@ -34,7 +34,13 @@ dev = [
     "mypy>=1.15.0",
     "hypothesis>=6.0.0",
     "pytest-benchmark>=4.0.0",
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=2.0.0",
 ]
+
+
+[project.scripts]
+mujoco-models = "mujoco_models.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/D-sorganization/MuJoCo_Models"
