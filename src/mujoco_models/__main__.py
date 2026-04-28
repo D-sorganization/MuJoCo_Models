@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MIT
-"""CLI entry point for ``python -m mujoco_models <exercise> [options]``."""
+
+"""CLI entry point for ``python -m mujoco_models`` or ``mujoco-models``."""
 
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 D-sorganization

@@ -36,6 +36,10 @@ dev = [
     "pytest-benchmark>=4.0.0",
 ]
 
+
+[project.scripts]
+mujoco-models = "mujoco_models.__main__:main"
+
 [project.urls]
 Homepage = "https://github.com/D-sorganization/MuJoCo_Models"
 Repository = "https://github.com/D-sorganization/MuJoCo_Models"

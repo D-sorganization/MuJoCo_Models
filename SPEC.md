@@ -36,9 +36,10 @@ The shared barbell layer lives in `shared/barbell/barbell_model.py` and builds t
 
 ## 4. Public Interface
 
-The supported entrypoint is module execution:
+The supported entrypoints are module execution and the package console script:
 
 - `python -m mujoco_models <exercise> [options]`
+- `mujoco-models <exercise> [options]`
 
 The CLI is implemented in `src/mujoco_models/__main__.py` and builds models from:
 
@@ -84,7 +85,7 @@ The model-building APIs accept plain dataclass configuration rather than implici
 - All lengths are expressed in meters and all masses in kilograms.
 - MuJoCo uses a Z-up convention in this repository: gravity is `(0.0, 0.0, -9.80665)`.
 
-The repo does not currently define a package console script. `python -m mujoco_models` is the stable runtime entrypoint.
+The package also exposes `mujoco-models` as a console script via `[project.scripts]` in `pyproject.toml`. Both entrypoints are functionally equivalent.
 
 ## 7. Testing And CI
 
