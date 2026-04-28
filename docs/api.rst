@@ -5,8 +5,3 @@ API Reference
    :members:
    :undoc-members:
    :show-inheritance:
-
-.. automodule:: mujoco_models.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
