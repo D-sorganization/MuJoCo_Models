@@ -19,6 +19,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from mujoco_models.exceptions import ValidationError
+
 from .exercise_objectives import ExerciseObjective
 from .inverse_kinematics import _interpolate_at_fraction
 
@@ -53,16 +55,16 @@ class TrajectoryConfig:
         """Validate configuration values are physically plausible."""
         if self.n_timesteps < 1:
             msg = f"n_timesteps must be >= 1, got {self.n_timesteps}"
-            raise ValueError(msg)
+            raise ValidationError(msg)
         if self.dt <= 0.0:
             msg = f"dt must be positive, got {self.dt}"
-            raise ValueError(msg)
+            raise ValidationError(msg)
         if self.max_iterations < 1:
             msg = f"max_iterations must be >= 1, got {self.max_iterations}"
-            raise ValueError(msg)
+            raise ValidationError(msg)
         if self.convergence_tol <= 0.0:
             msg = f"convergence_tol must be positive, got {self.convergence_tol}"
-            raise ValueError(msg)
+            raise ValidationError(msg)
         _validate_non_negative_weight("control_weight", self.control_weight)
         _validate_non_negative_weight("state_weight", self.state_weight)
         _validate_non_negative_weight("terminal_weight", self.terminal_weight)
@@ -78,7 +80,7 @@ def _validate_non_negative_weight(name: str, value: float) -> None:
     """Validate that a weight is non-negative."""
     if value < 0.0:
         msg = f"{name} must be non-negative, got {value}"
-        raise ValueError(msg)
+        raise ValidationError(msg)
 
 
 @dataclass
@@ -114,20 +116,20 @@ class TrajectoryResult:
                 f"joint_positions has {self.joint_positions.shape[0]}"
                 f" timesteps, expected {n_t}"
             )
-            raise ValueError(msg)
+            raise ValidationError(msg)
         if self.joint_velocities.shape[0] != n_t:
             msg = (
                 f"joint_velocities has "
                 f"{self.joint_velocities.shape[0]}"
                 f" timesteps, expected {n_t}"
             )
-            raise ValueError(msg)
+            raise ValidationError(msg)
         if self.joint_torques.shape[0] != n_t:
             msg = (
                 f"joint_torques has {self.joint_torques.shape[0]}"
                 f" timesteps, expected {n_t}"
             )
-            raise ValueError(msg)
+            raise ValidationError(msg)
 
 
 def interpolate_phases(
@@ -148,12 +150,12 @@ def interpolate_phases(
         Array of shape ``(n_frames, n_joints)`` with linearly
         interpolated joint angles.  Joint ordering is alphabetical.
     Raises:
-        ValueError: If n_frames < 2 or objective has no phases.
+        ValidationError: If n_frames < 2 or objective has no phases.
     """
     if n_frames < 2:
-        raise ValueError(f"n_frames must be >= 2, got {n_frames}")
+        raise ValidationError(f"n_frames must be >= 2, got {n_frames}")
     if not objective.phases:
-        raise ValueError("objective must have at least one phase")
+        raise ValidationError("objective must have at least one phase")
     joint_names = objective.joint_names
     n_joints = len(joint_names)
 
@@ -177,22 +179,22 @@ def _validate_balance_inputs(
         base_of_support: Convex polygon vertices, shape (n, 2).
 
     Raises:
-        ValueError: If inputs have invalid shapes or non-finite
+        ValidationError: If inputs have invalid shapes or non-finite
             values.
     """
     _validate_array_finite(com_position, "com_position")
     _validate_array_finite(base_of_support, "base_of_support")
     if com_position.shape != (3,):
         msg = f"com_position must have shape (3,), got {com_position.shape}"
-        raise ValueError(msg)
+        raise ValidationError(msg)
     if base_of_support.ndim != 2 or base_of_support.shape[1] != 2:
         msg = f"base_of_support must have shape (n, 2), got {base_of_support.shape}"
-        raise ValueError(msg)
+        raise ValidationError(msg)
     if base_of_support.shape[0] < 3:
         msg = (
             f"base_of_support needs at least 3 vertices, got {base_of_support.shape[0]}"
         )
-        raise ValueError(msg)
+        raise ValidationError(msg)
 
 
 def compute_balance_cost(
@@ -216,7 +218,7 @@ def compute_balance_cost(
         edge if outside, or 0.0 if inside.
 
     Raises:
-        ValueError: If inputs have invalid shapes or non-finite
+        ValidationError: If inputs have invalid shapes or non-finite
             values.
     """
     _validate_balance_inputs(com_position, base_of_support)
@@ -241,7 +243,7 @@ def _validate_bar_path_inputs(
             shape (n_timesteps, 3).
 
     Raises:
-        ValueError: If inputs have mismatched shapes or non-finite
+        ValidationError: If inputs have mismatched shapes or non-finite
             values.
     """
     _validate_array_finite(bar_position, "bar_position")
@@ -251,10 +253,10 @@ def _validate_bar_path_inputs(
             f"Shape mismatch: bar_position {bar_position.shape} "
             f"vs target_path {target_path.shape}"
         )
-        raise ValueError(msg)
+        raise ValidationError(msg)
     if bar_position.ndim != 2 or bar_position.shape[1] != 3:
         msg = f"bar_position must have shape (n, 3), got {bar_position.shape}"
-        raise ValueError(msg)
+        raise ValidationError(msg)
 
 
 def compute_bar_path_cost(
@@ -277,7 +279,7 @@ def compute_bar_path_cost(
         Mean squared deviation in the horizontal plane (x-y).
 
     Raises:
-        ValueError: If inputs have mismatched shapes or non-finite
+        ValidationError: If inputs have mismatched shapes or non-finite
             values.
     """
     _validate_bar_path_inputs(bar_position, target_path)
@@ -290,7 +292,7 @@ def _validate_array_finite(arr: np.ndarray, name: str) -> None:
     """Check that an array contains only finite values."""
     if not np.all(np.isfinite(arr)):
         msg = f"{name} contains non-finite values"
-        raise ValueError(msg)
+        raise ValidationError(msg)
 
 
 def _point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
