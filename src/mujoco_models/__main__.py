@@ -2,7 +2,6 @@
 
 """CLI entry point for ``python -m mujoco_models`` or ``mujoco-models``."""
 
-# SPDX-License-Identifier: MIT
 # Copyright (c) 2026 D-sorganization
 
 from __future__ import annotations
@@ -10,9 +9,11 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import time
 
 from mujoco_models.exercises import EXERCISE_REGISTRY
 from mujoco_models.exercises.base import ExerciseConfig
+from mujoco_models.logging_config import configure_logging
 from mujoco_models.shared.barbell import BarbellSpec
 from mujoco_models.shared.body import BodyModelSpec
 
@@ -84,10 +85,7 @@ def _configure_logging(verbose: bool) -> None:
 
     Precondition: called exactly once per CLI invocation.
     """
-    logging.basicConfig(
-        level=logging.DEBUG if verbose else logging.WARNING,
-        format="%(name)s %(levelname)s: %(message)s",
-    )
+    configure_logging(level=logging.DEBUG if verbose else logging.WARNING)
 
 
 def _build_config_from_args(args: argparse.Namespace) -> ExerciseConfig | None:
@@ -113,11 +111,20 @@ def _build_model_xml(exercise: str, config: ExerciseConfig) -> str | None:
     known error (``ValidationError`` or ``RuntimeError``).
     """
     builder_cls = EXERCISE_REGISTRY[exercise]
+    start = time.perf_counter()
     try:
-        return builder_cls(config).build()
+        xml = builder_cls(config).build()
     except (ValueError, RuntimeError) as exc:
         logger.error("Model build failed for '%s': %s", exercise, exc)
         return None
+    duration_ms = (time.perf_counter() - start) * 1000
+    logger.info(
+        "Built %s model in %.2f ms",
+        exercise,
+        duration_ms,
+        extra={"event": "model_build", "duration_ms": round(duration_ms, 2)},
+    )
+    return xml
 
 
 def _emit_xml(xml_str: str, output: str | None) -> int:
