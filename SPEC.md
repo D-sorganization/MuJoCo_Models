@@ -34,6 +34,9 @@ The shared body layer is split into focused modules:
 
 The shared barbell layer lives in `shared/barbell/barbell_model.py` and builds the three-body barbell assembly plus weld constraints.
 
+Repository documentation for generated API references lives under `docs/` and is
+built with Sphinx using `docs/conf.py`, `docs/index.rst`, and `docs/api.rst`.
+
 ## 4. Public Interface
 
 The supported entrypoints are module execution and the package console script:
@@ -111,6 +114,10 @@ The CI contract is defined in `.github/workflows/ci-standard.yml` and currently 
 - a placeholder scan for `TODO` and `FIXME`
 - `pip-audit`
 - `bandit -r src/`
+
+Documentation changes that affect the Sphinx configuration or API reference
+surface should keep the generated-docs layout in `docs/` and the spec aligned
+with that documentation entrypoint.
 
 Local validation should follow the same shape as CI when changes affect source behavior. Documentation-only changes should still keep the spec truthful and aligned with the current tree.
 
