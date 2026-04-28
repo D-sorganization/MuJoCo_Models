@@ -129,6 +129,13 @@ jobs:
       - name: Install Dependencies
         run: pip install -e ".[dev]"
 
+      - name: Verify package is importable without PYTHONPATH
+        run: |
+          python3 -m mujoco_models --help >/dev/null 2>&1 || {
+            echo "::error::Package not importable after pip install. Check pyproject.toml build config."
+            exit 1
+          }
+
       - name: Run Test Suite
         run: |
           python3 -m pytest \
