@@ -91,6 +91,17 @@ jobs:
         run: |
           bandit -r src/ -ll -ii --format txt
 
+      - name: Generate SBOM
+        run: |
+          pip install cyclonedx-bom
+          cyclonedx-py environment -o sbom.json --output-format JSON
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+
     needs: pick-runner
   tests:
     needs:
