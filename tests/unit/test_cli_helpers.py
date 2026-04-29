@@ -91,13 +91,13 @@ def _default_args(**overrides: Any) -> argparse.Namespace:
 def test_configure_logging_forwards_verbose_level(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Verbose flag forwards ``DEBUG`` to ``logging.basicConfig``."""
+    """Verbose flag forwards ``DEBUG`` to structured logging setup."""
     captured: dict[str, Any] = {}
 
-    def _fake_basic_config(**kwargs: Any) -> None:
+    def _fake_configure_logging(**kwargs: Any) -> None:
         captured.update(kwargs)
 
-    monkeypatch.setattr(logging, "basicConfig", _fake_basic_config)
+    monkeypatch.setattr(cli, "configure_logging", _fake_configure_logging)
     cli._configure_logging(verbose=True)
     assert captured.get("level") == logging.DEBUG
 
@@ -105,16 +105,15 @@ def test_configure_logging_forwards_verbose_level(
 def test_configure_logging_defaults_to_warning(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Non-verbose invocation forwards ``WARNING`` to ``logging.basicConfig``."""
+    """Non-verbose invocation forwards ``WARNING`` to structured logging setup."""
     captured: dict[str, Any] = {}
 
-    def _fake_basic_config(**kwargs: Any) -> None:
+    def _fake_configure_logging(**kwargs: Any) -> None:
         captured.update(kwargs)
 
-    monkeypatch.setattr(logging, "basicConfig", _fake_basic_config)
+    monkeypatch.setattr(cli, "configure_logging", _fake_configure_logging)
     cli._configure_logging(verbose=False)
     assert captured.get("level") == logging.WARNING
-    assert "format" in captured
 
 
 def test_build_config_from_args_returns_valid_config() -> None:
