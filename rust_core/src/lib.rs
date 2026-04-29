@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use numpy::{PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
+use numpy::{PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use rayon::prelude::*;
@@ -14,7 +14,7 @@ fn inverse_dynamics_batch<'py>(
     masses: PyReadonlyArray1<'py, f64>, // (n_segments,)
     lengths: PyReadonlyArray1<'py, f64>, // (n_segments,)
     gravity: f64,
-) -> PyResult<&'py PyArray2<f64>> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let n = q.shape()[0];
     let n_joints = q.shape()[1];
 
@@ -76,7 +76,7 @@ fn inverse_dynamics_batch<'py>(
             }
         });
 
-    Ok(PyArray2::from_vec2(
+    Ok(PyArray2::from_vec2_bound(
         py,
         &torques
             .chunks(n_joints)
@@ -92,7 +92,7 @@ fn com_batch<'py>(
     q: PyReadonlyArray2<'py, f64>,
     masses: PyReadonlyArray1<'py, f64>,
     lengths: PyReadonlyArray1<'py, f64>,
-) -> PyResult<&'py PyArray2<f64>> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let n = q.shape()[0];
     let n_joints = q.shape()[1];
 
@@ -143,7 +143,7 @@ fn com_batch<'py>(
             row[1] = z_sum / total_mass;
         });
 
-    Ok(PyArray2::from_vec2(
+    Ok(PyArray2::from_vec2_bound(
         py,
         &com.chunks(2).map(|c| c.to_vec()).collect::<Vec<_>>(),
     )?)
@@ -156,7 +156,7 @@ fn interpolate_phases_rs<'py>(
     phase_fractions: PyReadonlyArray1<'py, f64>,
     phase_angles: PyReadonlyArray2<'py, f64>,
     n_frames: usize,
-) -> PyResult<&'py PyArray2<f64>> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let fracs = phase_fractions.as_slice()?;
     let angles = phase_angles.as_array();
     let n_phases = angles.shape()[0];
@@ -206,7 +206,7 @@ fn interpolate_phases_rs<'py>(
             }
         });
 
-    Ok(PyArray2::from_vec2(
+    Ok(PyArray2::from_vec2_bound(
         py,
         &result
             .chunks(n_joints)
