@@ -182,7 +182,7 @@ jobs:
             -n auto \
             --timeout=60 \
             --timeout-method=thread \
-            -m "not slow and not requires_mujoco" \
+            -m "not slow and not requires_mujoco and not benchmark" \
             --cov=src \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
@@ -190,3 +190,20 @@ jobs:
             --cov-fail-under=80 \
             --tb=short \
             -v
+
+      - name: Run Benchmarks
+        run: |
+          python3 -m pytest \
+            -m "benchmark" \
+            --timeout=120 \
+            --timeout-method=thread \
+            --benchmark-only \
+            --benchmark-json=benchmark-results.json \
+            --tb=short \
+            -v
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
