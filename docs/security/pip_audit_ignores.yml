@@ -1,0 +1,47 @@
+# pip-audit CVE Exceptions
+# Each entry must have: id, reason, expires, tracking_issue, remediation_status
+# Review monthly; remove entries once upstream fixes are available.
+---
+exceptions:
+  - cve: CVE-2026-4539
+    reason: "pygments upstream fix pending"
+    expires: "2026-05-31"
+    tracking_issue: "MuJoCo_Models#173-1"
+    remediation_status: "monitoring"
+    package: "pygments"
+  - cve: CVE-2026-32274
+    reason: "transitive dev-dependency, not exploitable in production"
+    expires: "2026-05-31"
+    tracking_issue: "MuJoCo_Models#173-2"
+    remediation_status: "accepted_risk"
+    package: "unknown"
+  - cve: CVE-2026-21883
+    reason: "dev-only dependency with no production runtime impact"
+    expires: "2026-05-31"
+    tracking_issue: "MuJoCo_Models#173-3"
+    remediation_status: "accepted_risk"
+    package: "unknown"
+  - cve: CVE-2026-27205
+    reason: "waiting for upstream release"
+    expires: "2026-06-15"
+    tracking_issue: "MuJoCo_Models#173-4"
+    remediation_status: "monitoring"
+    package: "unknown"
+  - cve: CVE-2024-47081
+    reason: "dev-only, no runtime impact"
+    expires: "2026-05-31"
+    tracking_issue: "MuJoCo_Models#173-5"
+    remediation_status: "accepted_risk"
+    package: "unknown"
+  - cve: CVE-2026-3219
+    reason: "upstream fix in progress"
+    expires: "2026-06-15"
+    tracking_issue: "MuJoCo_Models#173-6"
+    remediation_status: "monitoring"
+    package: "unknown"
+  - cve: CVE-2026-25645
+    reason: "transitive dependency, monitor for patch"
+    expires: "2026-06-15"
+    tracking_issue: "MuJoCo_Models#173-7"
+    remediation_status: "monitoring"
+    package: "unknown"
