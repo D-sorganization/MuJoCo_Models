@@ -1,9 +1,10 @@
-# spec-check.yml � Specification Freshness Enforcement
+# spec-check.yml - Specification Freshness Enforcement
 name: Spec Check
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
+  workflow_dispatch:
 
 permissions:
   contents: read

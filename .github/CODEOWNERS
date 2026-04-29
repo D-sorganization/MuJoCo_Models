@@ -1,0 +1,14 @@
+# Global fallback
+* @D-sorganization/maintainers
+
+# CI/CD workflows
+/.github/workflows/ @D-sorganization/maintainers
+
+# Core source code
+/src/ @D-sorganization/maintainers
+
+# Documentation
+/docs/ @D-sorganization/maintainers
+
+# Security
+/docs/security/ @D-sorganization/maintainers
