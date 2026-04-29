@@ -22,19 +22,33 @@ permissions:
 jobs:
   pick-runner:
     runs-on: d-sorg-fleet
-    timeout-minutes: 2
+    timeout-minutes: 5
     outputs:
       runner: ${{ steps.check.outputs.runner }}
     steps:
-      - name: Check for self-hosted runner
+      - name: Check for self-hosted runner with retry
         id: check
         env:
           GH_TOKEN: ${{ secrets.RUNNER_CHECK_TOKEN }}
-        run: "ONLINE=$(gh api /orgs/${{ github.repository_owner }}/actions/runners \\\n  --jq '[.runners[] | select(.status == \"online\") | select(.labels[].name == \"d-sorg-fleet\")] | length' \\\n  2>/dev/null || echo \"0\")\nif [[ \"$ONLINE\" -gt 0 ]]; then\n  echo \"runner=d-sorg-fleet\" >> $GITHUB_OUTPUT\n  echo \"Self-hosted runner online — routing locally\"\nelse\n  echo \"runner=d-sorg-fleet\" >> $GITHUB_OUTPUT\n  echo \"No self-hosted runner — using local self-hosted\"\nfi"
-  quality-gate:
-    runs-on: ${{ needs.pick-runner.outputs.runner }}
-    timeout-minutes: 15
-    steps:
+        run: |
+          for attempt in 1 2 3; do
+            ONLINE=$(gh api /orgs/${{ github.repository_owner }}/actions/runners \
+              --jq '[.runners[] | select(.status == "online") | select(.labels[].name == "d-sorg-fleet")] | length' \
+              2>/dev/null || echo "0")
+            if [[ "$ONLINE" =~ ^[0-9]+$ && "$ONLINE" -gt 0 ]]; then
+              echo "runner=d-sorg-fleet" >> $GITHUB_OUTPUT
+              echo "Self-hosted runner online — routing locally (attempt $attempt)"
+              exit 0
+            fi
+            if [[ "$attempt" -lt 3 ]]; then
+              echo "No self-hosted runner online — retrying in 15s (attempt $attempt/3)"
+              sleep 15
+            fi
+          done
+          echo "::warning::No self-hosted runner after 3 attempts; falling back to GitHub-hosted"
+          echo "runner=ubuntu-latest" >> $GITHUB_OUTPUT
+          echo "No self-hosted runner — using GitHub-hosted"
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
