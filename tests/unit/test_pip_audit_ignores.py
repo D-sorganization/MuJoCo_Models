@@ -108,6 +108,6 @@ class TestPipAuditIgnores:
     )
     def test_tracking_issue_format(self, entry: dict) -> None:
         issue = entry["tracking_issue"]
-        assert issue.startswith("MuJoCo_Models#173-"), (
-            f"{issue} must reference MuJoCo_Models#173-N"
+        assert issue.startswith("MuJoCo_Models#176-"), (
+            f"{issue} must reference MuJoCo_Models#176-N"
         )
