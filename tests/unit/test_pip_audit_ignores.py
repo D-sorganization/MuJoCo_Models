@@ -7,10 +7,17 @@ from pathlib import Path
 import pytest
 import yaml
 
-REPO_ROOT = Path(__file__).parents[3]
+REPO_ROOT = Path(__file__).parents[2]
 IGNORES_PATH = REPO_ROOT / "docs" / "security" / "pip_audit_ignores.yml"
 
-REQUIRED_FIELDS = {"cve", "reason", "expires", "tracking_issue", "remediation_status", "package"}
+REQUIRED_FIELDS = {
+    "cve",
+    "reason",
+    "expires",
+    "tracking_issue",
+    "remediation_status",
+    "package",
+}
 VALID_STATUSES = {"monitoring", "accepted_risk", "patched", "false_positive"}
 
 
@@ -32,9 +39,7 @@ class TestPipAuditIgnores:
         assert isinstance(ignores_data["exceptions"], list), "exceptions must be a list"
 
     def test_entry_count(self, ignores_data: dict) -> None:
-        assert len(ignores_data["exceptions"]) == 7, (
-            "expected 7 tracked CVE exceptions"
-        )
+        assert len(ignores_data["exceptions"]) == 7, "expected 7 tracked CVE exceptions"
 
     @pytest.mark.parametrize(
         "entry",
