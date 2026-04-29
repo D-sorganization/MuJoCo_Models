@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use numpy::{PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
+use numpy::{PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use rayon::prelude::*;
@@ -82,7 +82,7 @@ fn inverse_dynamics_batch<'py>(
             .chunks(n_joints)
             .map(|c| c.to_vec())
             .collect::<Vec<_>>(),
-    ))
+    )?)
 }
 
 /// Batch center-of-mass computation.
@@ -146,7 +146,7 @@ fn com_batch<'py>(
     Ok(PyArray2::from_vec2_bound(
         py,
         &com.chunks(2).map(|c| c.to_vec()).collect::<Vec<_>>(),
-    ))
+    )?)
 }
 
 /// Phase interpolation with linear blending (vectorized).
@@ -212,7 +212,7 @@ fn interpolate_phases_rs<'py>(
             .chunks(n_joints)
             .map(|c| c.to_vec())
             .collect::<Vec<_>>(),
-    ))
+    )?)
 }
 
 #[pymodule]
