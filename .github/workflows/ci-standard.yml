@@ -45,10 +45,14 @@ jobs:
               sleep 15
             fi
           done
-          echo "::warning::No self-hosted runner after 3 attempts; falling back to GitHub-hosted"
-          echo "runner=ubuntu-latest" >> $GITHUB_OUTPUT
-          echo "No self-hosted runner — using GitHub-hosted"
+          echo "::warning::No self-hosted runner reported after 3 attempts; keeping local self-hosted routing"
+          echo "runner=d-sorg-fleet" >> $GITHUB_OUTPUT
+          echo "No self-hosted runner reported — using local self-hosted"
 
+  quality-gate:
+    runs-on: ${{ needs.pick-runner.outputs.runner }}
+    timeout-minutes: 15
+    steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
