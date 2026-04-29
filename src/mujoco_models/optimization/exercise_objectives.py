@@ -115,7 +115,7 @@ class ExerciseObjective:
             The matching Phase.
 
         Raises:
-            KeyError: If no phase with that name exists.
+            ValidationError: If no phase with that name exists.
         """
         for phase in self.phases:
             if phase.name == name:
