@@ -118,7 +118,7 @@ jobs:
       - pick-runner
       - quality-gate
     runs-on: ${{ needs.pick-runner.outputs.runner }}
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
       - name: Install Rust toolchain
