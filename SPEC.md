@@ -129,6 +129,9 @@ Pip-audit CVE suppressions are tracked in
 `docs/security/pip_audit_ignores.yml`. Each exception records the CVE, package,
 reason, expiration date, remediation status, and tracking issue, and
 `tests/unit/test_pip_audit_ignores.py` validates that structure.
+The scheduled CVE exception monitoring workflow checks that suppression
+expiration dates remain current and uploads an unsuppressed pip-audit report
+from the same local self-hosted runner pool used by CI.
 
 Documentation changes that affect the Sphinx configuration or API reference
 surface should keep the generated-docs layout in `docs/` and the spec aligned
