@@ -119,6 +119,8 @@ The CI contract is defined in `.github/workflows/ci-standard.yml` and currently 
 - `ruff format --check src scripts tests`
 - `mypy src --config-file pyproject.toml`
 - `pytest` with coverage enforcement at 80% on the source tree
+- the `dev` optional dependency set in `pyproject.toml`, including PyYAML for
+  repository governance tests that parse tracked YAML metadata
 - a placeholder scan for `TODO` and `FIXME`
 - `pip-audit`
 - `bandit -r src/`
@@ -133,6 +135,12 @@ surface should keep the generated-docs layout in `docs/` and the spec aligned
 with that documentation entrypoint.
 
 Local validation should follow the same shape as CI when changes affect source behavior. Documentation-only changes should still keep the spec truthful and aligned with the current tree.
+
+Validation-related tests should assert the repository exception hierarchy. For
+example, objective phase lookup failures are expected to raise
+`ValidationError`, and CLI logging helper tests should patch the repository's
+structured logging hook rather than the standard-library `logging.basicConfig`
+implementation detail.
 
 Contributor governance is documented in `CONTRIBUTING.md` and reinforced by
 `.github/PULL_REQUEST_TEMPLATE.md`. The local pre-commit configuration includes
