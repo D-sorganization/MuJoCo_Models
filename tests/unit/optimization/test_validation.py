@@ -10,6 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from mujoco_models.exceptions import ValidationError
 from mujoco_models.optimization.exercise_objectives import (
     ExerciseObjective,
     Phase,
@@ -245,12 +246,12 @@ class TestExerciseObjectiveValidation:
         )
         assert obj.get_phase("start").fraction == 0.0
 
-    def test_get_phase_not_found_raises_key_error(self) -> None:
+    def test_get_phase_not_found_raises_validation_error(self) -> None:
         obj = ExerciseObjective(
             name="test",
             phases=[Phase("start", 0.0)],
         )
-        with pytest.raises(KeyError, match="No phase named 'missing'"):
+        with pytest.raises(ValidationError, match="No phase named 'missing'"):
             obj.get_phase("missing")
 
     def test_n_phases_property(self) -> None:
