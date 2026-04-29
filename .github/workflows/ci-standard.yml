@@ -194,6 +194,7 @@ jobs:
       - name: Run Benchmarks
         run: |
           python3 -m pytest \
+            -o addopts="-ra -q --strict-markers --strict-config --durations=20" \
             -m "benchmark" \
             --timeout=120 \
             --timeout-method=thread \
@@ -205,5 +206,5 @@ jobs:
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-results
+          name: benchmark-results-py${{ matrix.python }}
           path: benchmark-results.json
