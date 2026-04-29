@@ -169,3 +169,10 @@ This header is present in every module-level `.py` file as of the SPDX header up
 ### Performance Optimization History
 
 - Performance optimizations using unrolled scalar operations over numpy methods for small arrays are encouraged for hot-path calculations, such as in `src/mujoco_models/shared/contracts/preconditions.py` and `src/mujoco_models/shared/utils/geometry.py`.
+
+### CI Runner Routing
+
+- CI workflows must route to local self-hosted runners. The standard CI runner
+  selector retries transient runner inventory failures, but it must keep
+  `d-sorg-fleet` as the selected runner instead of falling back to hosted
+  GitHub runners.
