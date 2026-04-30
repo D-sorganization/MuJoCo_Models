@@ -1,5 +1,9 @@
 # CLAUDE.md -- MuJoCo_Models
 
+## Branch Policy
+
+All work on `main` branch. PRs target `main`.
+
 ## What This Is
 
 MuJoCo musculoskeletal simulation models for classical barbell exercises
