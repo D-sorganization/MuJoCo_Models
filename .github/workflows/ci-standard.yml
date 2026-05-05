@@ -53,7 +53,7 @@ jobs:
     runs-on: ${{ needs.pick-runner.outputs.runner }}
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up Python venv
@@ -125,7 +125,7 @@ jobs:
           cyclonedx-py environment -o sbom.json --output-format JSON
 
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom.json
@@ -138,7 +138,7 @@ jobs:
     runs-on: ${{ needs.pick-runner.outputs.runner }}
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Rust dependencies
@@ -154,7 +154,7 @@ jobs:
           cd rust_core
           cargo build --verbose --release
       - name: Upload Rust artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rust-core-${{ github.sha }}
           path: rust_core/target/release/libmujoco_models_core.so
@@ -171,7 +171,7 @@ jobs:
       matrix:
         python: ["3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Python venv
         run: |
           PYTHON="python${{ matrix.python }}"
@@ -222,7 +222,7 @@ jobs:
             -v
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results-py${{ matrix.python }}
           path: benchmark-results.json
