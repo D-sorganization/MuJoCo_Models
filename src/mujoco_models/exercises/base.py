@@ -306,6 +306,9 @@ class ExerciseModelBuilder(ABC):
     ) -> None:
         """Add position actuators and joint-position sensors for all hinge joints."""
         actuator = ET.SubElement(root, "actuator")
+        sensor = ET.SubElement(root, "sensor")
+
+        # OPTIMIZATION: Combine actuator and sensor creation into a single pass
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
             if name:
@@ -314,10 +317,6 @@ class ExerciseModelBuilder(ABC):
                 act.set("joint", name)
                 act.set("kp", "100")
 
-        sensor = ET.SubElement(root, "sensor")
-        for joint in worldbody.iter("joint"):
-            name = joint.get("name", "")
-            if name:
                 s = ET.SubElement(sensor, "jointpos")
                 s.set("name", f"pos_{name}")
                 s.set("joint", name)

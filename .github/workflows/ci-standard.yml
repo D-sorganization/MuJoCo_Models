@@ -36,7 +36,9 @@ jobs:
               --jq '[.runners[] | select(.status == "online") | select(.labels[].name == "d-sorg-fleet")] | length' \
               2>/dev/null || echo "0")
             if [[ "$ONLINE" =~ ^[0-9]+$ && "$ONLINE" -gt 0 ]]; then
-              echo "runner=d-sorg-fleet" >> $GITHUB_OUTPUT
+              mkdir -p "$(dirname "$GITHUB_OUTPUT")"
+              mkdir -p "$(dirname "$GITHUB_OUTPUT")"
+              echo "runner=d-sorg-fleet" >> "$GITHUB_OUTPUT"
               echo "Self-hosted runner online — routing locally (attempt $attempt)"
               exit 0
             fi
@@ -46,7 +48,9 @@ jobs:
             fi
           done
           echo "::warning::No self-hosted runner reported after 3 attempts; keeping local self-hosted routing"
-          echo "runner=d-sorg-fleet" >> $GITHUB_OUTPUT
+          mkdir -p "$(dirname "$GITHUB_OUTPUT")"
+          mkdir -p "$(dirname "$GITHUB_OUTPUT")"
+          echo "runner=d-sorg-fleet" >> "$GITHUB_OUTPUT"
           echo "No self-hosted runner reported — using local self-hosted"
 
   quality-gate:
