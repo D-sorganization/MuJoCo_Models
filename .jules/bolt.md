@@ -25,3 +25,7 @@
 ## 2024-05-30 - Unrolled Scalar Arithmetic for Tiny Vectors using built-in math module
 **Learning:** For small dimensions like 3D vectors, calling functions like `np.linalg.norm()` and `np.dot()` introduces significant Python-C API dispatch and array creation overhead. Using unrolled scalar math such as `math.sqrt(vx * vx + vy * vy + vz * vz)` and simple arithmetic operates dramatically faster inside tight loops in validation (`require_unit_vector`) and core geometric calculations (`parallel_axis_shift`).
 **Action:** Always unroll calculations for tiny dimensions (1D-3D) explicitly inside critical sections, avoiding unnecessary `numpy` array coercion and function call overheads. Use Python's built-in `math` module instead.
+
+## 2024-05-07 - Avoid Nested ElementTree `iter()` Traversal
+**Learning:** Using nested `xml.etree.ElementTree.iter()` calls creates expensive O(N*M) tree traversals. In methods like `_build_keyframe` in `mujoco_models/exercises/base.py`, this causes significant unnecessary overhead.
+**Action:** Instead of iterating through all children for every element, iterate over potential parent elements once (O(M)) and use `.find()` to locate specific children efficiently while preserving document order.
