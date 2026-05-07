@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  mujoco-models:
+    build: .
+    volumes:
+      - .:/workspace
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - MUJOCO_GL=egl
+    network_mode: host
+    command: python -m mujoco_models
