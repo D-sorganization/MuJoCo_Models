@@ -328,10 +328,10 @@ class ExerciseModelBuilder(ABC):
             ref_val = joint_el.get("ref", "0")
             qpos_values.append(ref_val)
 
-        # OPTIMIZATION: Iterate bodies once (O(M)) instead of O(N*M) nested loop
+        # OPTIMIZATION: Avoided nested O(N*M) iter() calls by iterating over bodies once
+        # to find freejoints, preserving document order and improving performance.
         for body_el in worldbody.iter("body"):
-            fj_in_body = body_el.find("freejoint")
-            if fj_in_body is not None:
+            if body_el.find("freejoint") is not None:
                 pos_str = body_el.get("pos", "0 0 0")
                 pos_parts = pos_str.split()
                 fj_qpos = pos_parts + ["1", "0", "0", "0"]

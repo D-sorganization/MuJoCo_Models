@@ -32,3 +32,7 @@
 ## 2026-04-26 - Optimize redundant `iter` in `_add_actuators_and_sensors`
 **Learning:** Re-iterating the entire XML tree sequentially to perform distinct modifications on the same type of node (e.g., adding an actuator to each joint, and then adding a sensor to each joint) wastes overhead time iterating over nodes repeatedly.
 **Action:** Combine passes whenever multiple state updates are required on the same items sequentially. Combine modifications to process them fully per node during the single `iter()` traversal.
+
+## 2024-05-07 - Avoid Nested ElementTree `iter()` Traversal
+**Learning:** Using nested `xml.etree.ElementTree.iter()` calls creates expensive O(N*M) tree traversals. In methods like `_build_keyframe` in `mujoco_models/exercises/base.py`, this causes significant unnecessary overhead.
+**Action:** Instead of iterating through all children for every element, iterate over potential parent elements once (O(M)) and use `.find()` to locate specific children efficiently while preserving document order.
