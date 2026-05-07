@@ -93,6 +93,7 @@ Model generation follows the same pipeline across exercises:
 9. Serialize and validate the MJCF XML.
 
 Exercise subclasses only customize attachment strategy, optional worldbody hooks, and the initial pose. The shared base class in `src/mujoco_models/exercises/base.py` owns the common build pipeline.
+The keyframe builder now walks `<body>` elements once and uses `find("freejoint")` to prepend free-joint pose data without the prior nested `ElementTree.iter()` traversal.
 
 ## 6. Data And Configuration
 
