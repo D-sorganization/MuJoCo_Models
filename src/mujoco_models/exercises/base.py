@@ -306,6 +306,9 @@ class ExerciseModelBuilder(ABC):
     ) -> None:
         """Add position actuators and joint-position sensors for all hinge joints."""
         actuator = ET.SubElement(root, "actuator")
+        sensor = ET.SubElement(root, "sensor")
+
+        # OPTIMIZATION: Combine actuator and sensor creation into a single pass
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
             if name:
@@ -314,10 +317,6 @@ class ExerciseModelBuilder(ABC):
                 act.set("joint", name)
                 act.set("kp", "100")
 
-        sensor = ET.SubElement(root, "sensor")
-        for joint in worldbody.iter("joint"):
-            name = joint.get("name", "")
-            if name:
                 s = ET.SubElement(sensor, "jointpos")
                 s.set("name", f"pos_{name}")
                 s.set("joint", name)
@@ -329,15 +328,14 @@ class ExerciseModelBuilder(ABC):
             ref_val = joint_el.get("ref", "0")
             qpos_values.append(ref_val)
 
-        for fj in worldbody.iter("freejoint"):
-            for body_el in worldbody.iter("body"):
-                fj_in_body = body_el.find("freejoint")
-                if fj_in_body is not None and fj_in_body is fj:
-                    pos_str = body_el.get("pos", "0 0 0")
-                    pos_parts = pos_str.split()
-                    fj_qpos = pos_parts + ["1", "0", "0", "0"]
-                    qpos_values = fj_qpos + qpos_values
-                    break
+        # OPTIMIZATION: Iterate bodies once (O(M)) instead of O(N*M) nested loop
+        for body_el in worldbody.iter("body"):
+            fj_in_body = body_el.find("freejoint")
+            if fj_in_body is not None:
+                pos_str = body_el.get("pos", "0 0 0")
+                pos_parts = pos_str.split()
+                fj_qpos = pos_parts + ["1", "0", "0", "0"]
+                qpos_values = fj_qpos + qpos_values
 
         if qpos_values:
             keyframe = ET.SubElement(root, "keyframe")

@@ -25,3 +25,10 @@
 ## 2024-05-30 - Unrolled Scalar Arithmetic for Tiny Vectors using built-in math module
 **Learning:** For small dimensions like 3D vectors, calling functions like `np.linalg.norm()` and `np.dot()` introduces significant Python-C API dispatch and array creation overhead. Using unrolled scalar math such as `math.sqrt(vx * vx + vy * vy + vz * vz)` and simple arithmetic operates dramatically faster inside tight loops in validation (`require_unit_vector`) and core geometric calculations (`parallel_axis_shift`).
 **Action:** Always unroll calculations for tiny dimensions (1D-3D) explicitly inside critical sections, avoiding unnecessary `numpy` array coercion and function call overheads. Use Python's built-in `math` module instead.
+## 2026-04-26 - Optimize nested `iter` in `_build_keyframe`
+**Learning:** Calling `iter()` in nested loops causes an expensive $O(N \times M)$ XML tree traversal. In `_build_keyframe` (generating the start state configuration), this involved checking each `freejoint` against every single `body` in the tree.
+**Action:** Remove the outer loop. Iterate over the large parent elements once (`O(M)` pass), and use `.find("freejoint")` to check for child items instead. This cuts the overhead entirely.
+
+## 2026-04-26 - Optimize redundant `iter` in `_add_actuators_and_sensors`
+**Learning:** Re-iterating the entire XML tree sequentially to perform distinct modifications on the same type of node (e.g., adding an actuator to each joint, and then adding a sensor to each joint) wastes overhead time iterating over nodes repeatedly.
+**Action:** Combine passes whenever multiple state updates are required on the same items sequentially. Combine modifications to process them fully per node during the single `iter()` traversal.
