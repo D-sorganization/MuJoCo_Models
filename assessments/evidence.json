@@ -1,0 +1,87 @@
+{
+  "repo": "MuJoCo_Models",
+  "branch": "main",
+  "head_sha": "8dd1f3fbd657fe36a8ed4f5b1096b5cf4b3c7046",
+  "head_date": "2026-04-29",
+  "owner_repo": "D-sorganization/MuJoCo_Models",
+  "A": {
+    "src_files": 56,
+    "test_files": 53,
+    "manifests": 2,
+    "gitignore_lines": 32,
+    "has_readme": 1,
+    "clutter_files": 15
+  },
+  "B": {
+    "readme_lines": 61,
+    "readme_headers": 7,
+    "docs_files": 3,
+    "md_files": 8
+  },
+  "C": {
+    "test_py": 53,
+    "test_rs": 0,
+    "src_py": 56,
+    "src_rs": 0,
+    "test_total": 53,
+    "src_total": 56,
+    "has_coverage": 1,
+    "has_pytest_config": 1
+  },
+  "D": {
+    "bare_except": 0,
+    "except_exception": 0,
+    "noqa_suppressions": 16
+  },
+  "E": {
+    "benchmark_files": 0,
+    "cache_decorators": 0
+  },
+  "F": {
+    "todo_fixme": 0,
+    "duplicate_risk": 0
+  },
+  "G": {
+    "req_lockfiles": 0,
+    "req_files": 2
+  },
+  "H": {
+    "secrets_raw": 0,
+    "bandit_cfg": 0,
+    "security_md": 1
+  },
+  "I": {
+    "env_example": 1,
+    "config_files": 3
+  },
+  "J": {
+    "logging_refs": 19,
+    "metrics_refs": 7
+  },
+  "K": {
+    "suppressions": 16,
+    "todo_total": 0
+  },
+  "L": {
+    "workflow_files": 4,
+    "precommit_config": 1
+  },
+  "M": {
+    "dockerfile": 1,
+    "compose_files": 0
+  },
+  "N": {
+    "license": 1,
+    "copyright_headers": 55,
+    "contributing": 1
+  },
+  "O": {
+    "claude_md": 1,
+    "agents_md": 1,
+    "claude_lines": 104,
+    "agents_lines": 47
+  },
+  "code_files": 133,
+  "src_loc": 5259,
+  "test_loc": 4825
+}
