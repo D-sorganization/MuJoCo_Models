@@ -36,3 +36,7 @@
 ## 2024-05-07 - Avoid Nested ElementTree `iter()` Traversal
 **Learning:** Using nested `xml.etree.ElementTree.iter()` calls creates expensive O(N*M) tree traversals. In methods like `_build_keyframe` in `mujoco_models/exercises/base.py`, this causes significant unnecessary overhead.
 **Action:** Instead of iterating through all children for every element, iterate over potential parent elements once (O(M)) and use `.find()` to locate specific children efficiently while preserving document order.
+
+## 2024-05-08 - Fast 2D Vector Reductions
+**Learning:** Using `np.sum(..., axis=1)` on small 2D arrays (like shape N, 2) inside tight loops is surprisingly slow due to reduction overhead and intermediate array allocation.
+**Action:** When computing sums over fixed small dimensions (like x, y deviations), slice the 1D arrays and perform element-wise arithmetic (e.g. `dx*dx + dy*dy`) directly to avoid intermediate Nx2 arrays and axis reduction overhead.
