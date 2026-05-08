@@ -36,3 +36,7 @@
 ## 2024-05-07 - Avoid Nested ElementTree `iter()` Traversal
 **Learning:** Using nested `xml.etree.ElementTree.iter()` calls creates expensive O(N*M) tree traversals. In methods like `_build_keyframe` in `mujoco_models/exercises/base.py`, this causes significant unnecessary overhead.
 **Action:** Instead of iterating through all children for every element, iterate over potential parent elements once (O(M)) and use `.find()` to locate specific children efficiently while preserving document order.
+
+## 2026-04-26 - Optimize MJCF XML string formatting for relpose
+**Learning:** Similar to `geom_size` and `geom_euler`, using generator expressions within `"".join()` for `relpose` (which is typically a 7-tuple) incurs unnecessary generator allocation overhead.
+**Action:** Extend the hardcoded string formatting optimization to `relpose` for length 7 to avoid generator overhead in hot loops.
