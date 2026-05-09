@@ -176,6 +176,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - Performance optimizations using unrolled scalar operations over numpy methods for small arrays are encouraged for hot-path calculations, such as in `src/mujoco_models/shared/contracts/preconditions.py` and `src/mujoco_models/shared/utils/geometry.py`.
 - ElementTree (`ET`) loop traversals during XML generation are optimized by avoiding nested loop passes and preferring `.find()` and combined iterators where applicable, as demonstrated in `ExerciseModelBuilder`.
 - Unrolled 1D slice operations (`dx*dx + dy*dy`) are preferred over intermediate 2D array allocations and `np.sum(..., axis=1)` for small matrix reductions, as demonstrated in `src/mujoco_models/optimization/trajectory_optimizer.py`.
+- Generator expressions used inside string joining operations are avoided for fixed short tuples (e.g., sizes, rotations, relative poses) to skip unnecessary generator allocation overhead during model building.
 
 ### CI Runner Routing
 

@@ -192,8 +192,17 @@ def add_weld_constraint(
         "body1": body1,
         "body2": body2,
     }
+    # ⚡ Bolt Optimization:
+    # Hardcode string formatting for exactly 7-element relpose
+    # to avoid generator expression overhead inside tight loops.
     if relpose is not None:
-        attrs["relpose"] = " ".join(f"{v:.6f}" for v in relpose)
+        if len(relpose) == 7:
+            attrs["relpose"] = (
+                f"{relpose[0]:.6f} {relpose[1]:.6f} {relpose[2]:.6f} "
+                f"{relpose[3]:.6f} {relpose[4]:.6f} {relpose[5]:.6f} {relpose[6]:.6f}"
+            )
+        else:
+            attrs["relpose"] = " ".join(f"{v:.6f}" for v in relpose)
 
     return ET.SubElement(equality, "weld", attrib=attrs)
 

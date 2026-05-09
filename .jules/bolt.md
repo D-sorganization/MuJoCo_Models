@@ -40,3 +40,7 @@
 ## 2024-05-08 - Fast 2D Vector Reductions
 **Learning:** Using `np.sum(..., axis=1)` on small 2D arrays (like shape N, 2) inside tight loops is surprisingly slow due to reduction overhead and intermediate array allocation.
 **Action:** When computing sums over fixed small dimensions (like x, y deviations), slice the 1D arrays and perform element-wise arithmetic (e.g. `dx*dx + dy*dy`) directly to avoid intermediate Nx2 arrays and axis reduction overhead.
+
+## 2026-05-09 - Optimize MJCF XML string formatting in add_weld_constraint for relpose
+**Learning:** Using generator expressions within `"".join()` for `relpose` (which is typically a 7-tuple: x, y, z, qw, qx, qy, qz) incurs unnecessary generator allocation overhead and slows down execution.
+**Action:** Extend the hardcoded string formatting optimization to `relpose` for length 7 to avoid generator overhead in hot loops when building weld constraints.
