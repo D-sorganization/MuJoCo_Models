@@ -69,7 +69,7 @@ def solve_ik_keyframes(
     keyframes = np.zeros((n_frames, n_joints))
 
     for frame_idx, frac in enumerate(fractions):
-        angles = _interpolate_at_fraction(frac, objective.phases, joint_names)
+        angles = _interpolate_at_fraction(frac, objective.phases, joint_names)  # type: ignore
         keyframes[frame_idx] = angles
 
     logger.debug(

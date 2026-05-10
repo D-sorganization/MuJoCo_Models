@@ -40,7 +40,7 @@ class TestGaitModelBuilder:
         root = ET.fromstring(xml_str)
         option = root.find("option")
         assert option is not None
-        assert "-9.806650" in option.get("gravity")
+        assert "-9.806650" in option.get("gravity")  # type: ignore
 
     def test_custom_body_mass(self) -> None:
         xml_str = build_gait_model(body_mass=65.0)
@@ -63,7 +63,7 @@ class TestGaitModelBuilder:
         joint = ET.SubElement(body, "joint", name="hip_l_flex", type="hinge")
         builder.set_initial_pose(worldbody)
         assert joint.get("ref") is not None
-        assert float(joint.get("ref")) == pytest.approx(
+        assert float(joint.get("ref")) == pytest.approx(  # type: ignore
             _GAIT_INITIAL_REFS["hip_l_flex"], rel=1e-4
         )
 

@@ -149,7 +149,7 @@ class TestAllExercisesBuild:
     def test_bodyweight_exercises_omit_barbell(self, name: str) -> None:
         """Gait and sit-to-stand must not emit any barbell bodies."""
         builder = dict(ALL_BUILDERS)[name]
-        xml_str = builder()
+        xml_str = builder()  # type: ignore
         root = ET.fromstring(xml_str)
         body_names = {b.get("name") for b in root.findall(".//body")}  # type: ignore
         assert "barbell_shaft" not in body_names
@@ -175,7 +175,7 @@ class TestAllExercisesBuild:
         worldbody = root.find("worldbody")
         ground_geoms = [
             g
-            for g in worldbody.findall("geom")
+            for g in worldbody.findall("geom")  # type: ignore
             if g.get("name") == "ground"  # type: ignore
         ]
         assert len(ground_geoms) == 1
