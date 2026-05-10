@@ -120,7 +120,7 @@ class TestCreateBarbellBodies:
         spec = BarbellSpec.mens_olympic(plate_mass_per_side=50.0)
         create_barbell_bodies(worldbody, equality, spec)
         total = sum(
-            float(b.find("inertial").get("mass"))
+            float(b.find("inertial").get("mass"))  # type: ignore
             for b in worldbody.findall("body")  # type: ignore
         )
         assert total == pytest.approx(spec.total_mass, rel=1e-4)

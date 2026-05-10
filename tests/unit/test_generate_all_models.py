@@ -62,7 +62,7 @@ def test_iter_unique_builders_deduplicates_by_class() -> None:
     assert len(classes) == len(set(classes))
 
 
-def test_write_model_writes_xml_file(tmp_path) -> None:
+def test_write_model_writes_xml_file(tmp_path) -> None:  # type: ignore
     """``_write_model`` produces an MJCF XML file at the expected path."""
     mod = _load_module()
     unique = mod._iter_unique_builders()  # type: ignore[attr-defined]
@@ -77,7 +77,7 @@ def test_write_model_writes_xml_file(tmp_path) -> None:
     assert "<mujoco" in head
 
 
-def test_generate_models_writes_one_file_per_unique_builder(tmp_path) -> None:
+def test_generate_models_writes_one_file_per_unique_builder(tmp_path) -> None:  # type: ignore
     """``_generate_models`` keeps generation separate from CLI reporting."""
     mod = _load_module()
     cfg = ExerciseConfig()
@@ -101,7 +101,7 @@ def test_format_generation_report_lists_paths_and_summary() -> None:
     ]
 
 
-def test_main_accepts_explicit_argv(tmp_path, capsys) -> None:
+def test_main_accepts_explicit_argv(tmp_path, capsys) -> None:  # type: ignore
     """``main`` can be tested without mutating process-level ``sys.argv``."""
     mod = _load_module()
 

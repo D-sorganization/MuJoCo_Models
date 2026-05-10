@@ -140,7 +140,7 @@ class TestExerciseModelBuilderAccessors:
 
         barbell_shaft = root.find(".//body[@name='barbell_shaft']/inertial")
         assert barbell_shaft is not None
-        assert float(barbell_shaft.get("mass")) == pytest.approx(
+        assert float(barbell_shaft.get("mass")) == pytest.approx(  # type: ignore
             builder.barbell_spec.shaft_mass
         )  # type: ignore[arg-type]
 

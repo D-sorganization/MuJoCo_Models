@@ -33,7 +33,7 @@ class TestRequirePositive:
 
     def test_rejects_non_scalar_as_value_error(self) -> None:
         with pytest.raises(ValueError, match="finite scalar"):
-            require_positive([float("nan")], "x")
+            require_positive([float("nan")], "x")  # type: ignore
 
     def test_includes_name_in_message(self) -> None:
         with pytest.raises(ValueError, match="mass"):
@@ -58,7 +58,7 @@ class TestRequireNonNegative:
 
     def test_rejects_non_scalar_as_value_error(self) -> None:
         with pytest.raises(ValueError, match="finite scalar"):
-            require_non_negative([float("nan")], "x")
+            require_non_negative([float("nan")], "x")  # type: ignore
 
 
 class TestRequireUnitVector:

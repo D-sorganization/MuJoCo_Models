@@ -163,7 +163,7 @@ def interpolate_phases(
     keyframes = np.zeros((n_frames, n_joints))
 
     for i, f in enumerate(fractions):
-        keyframes[i] = _interpolate_at_fraction(f, objective.phases, joint_names)
+        keyframes[i] = _interpolate_at_fraction(f, objective.phases, joint_names)  # type: ignore
 
     return keyframes
 

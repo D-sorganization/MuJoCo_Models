@@ -41,7 +41,7 @@ class TestSitToStandModelBuilder:
         root = ET.fromstring(xml_str)
         option = root.find("option")
         assert option is not None
-        assert "-9.806650" in option.get("gravity")
+        assert "-9.806650" in option.get("gravity")  # type: ignore
 
     def test_has_chair_body(self) -> None:
         xml_str = build_sit_to_stand_model()
@@ -92,7 +92,7 @@ class TestSitToStandModelBuilder:
         joint = ET.SubElement(body, "joint", name="hip_l_flex", type="hinge")
         builder.set_initial_pose(worldbody)
         assert joint.get("ref") is not None
-        assert float(joint.get("ref")) == pytest.approx(math.radians(90), rel=1e-3)
+        assert float(joint.get("ref")) == pytest.approx(math.radians(90), rel=1e-3)  # type: ignore
 
     def test_set_initial_pose_symmetric(self) -> None:
         """Sit-to-stand initial pose should be symmetric (both hips same)."""
