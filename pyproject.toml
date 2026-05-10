@@ -91,59 +91,18 @@ check_untyped_defs = true
 disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
-python_files = "test_*.py"
-python_classes = "Test*"
-python_functions = "test_*"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-timeout = 60
-timeout_method = "thread"
-
-# Default lane: fast, deterministic, offline. Heavy paths (slow,
-# live_simulation, e2e, requires_network) are deselected.
-addopts = """
-  -ra
-  -q
-  --strict-markers
-  --strict-config
-  --durations=20
-  -n auto
-  --dist loadscope
-  -m "not slow and not live_simulation and not e2e and not requires_network"
-"""
-
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers --strict-config --durations=20 -m \"not slow and not live_simulation and not e2e and not requires_network and not heavy\""
 markers = [
-  # ---- tier markers ----
-  "unit: pure logic, fully mocked, < 100 ms wall-clock",
-  "integration: cross-module / file-system / process boundaries, < 5 s",
-  "e2e: full-stack smoke tests; nightly + release gate only",
-  "slow: > 1 s wall-clock; deselect with -m 'not slow'",
-  "live_simulation: requires a real physics / math engine; deselect by default",
-
-  # ---- environment markers ----
-  "requires_network: needs real outbound network; deselect by default",
-  "requires_gpu: needs CUDA / Metal / ROCm",
-  "requires_gl: needs OpenGL or a display",
-  "headless_safe: verified under QT_QPA_PLATFORM=offscreen",
-
-  # ---- per-engine markers ----
-  "requires_mujoco: skip when import mujoco fails",
-  "requires_drake: skip when import pydrake fails",
-  "requires_pinocchio: skip when pinocchio is the stub PyPI wheel",
-  "requires_opensim: skip when import opensim fails",
-  "requires_matlab: skip when MATLAB Engine for Python is unavailable",
-
-  # ---- workflow markers ----
-  "serial: must run with -n 0 (xdist parallel breaks this test)",
-  "benchmark: deterministic perf smoke; not a primary correctness gate",
-  "smoke: release-blocking smoke; subset of e2e",
-]
-
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning",
+    "unit: Pure logic, highly isolated, execution in < 100ms",
+    "integration: Subsystem boundaries, DBs, I/O, heavy mocking",
+    "e2e: Full system boot, real networks, user workflows",
+    "slow: marks tests as slow",
+    "live_simulation: marks tests as requiring live simulation environment",
+    "requires_network: needs real outbound network",
+    "heavy: resource-intensive tests",
 ]
 
 [tool.coverage.run]
