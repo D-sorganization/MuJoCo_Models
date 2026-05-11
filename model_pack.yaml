@@ -1,0 +1,23 @@
+schema: model_pack/v1
+repo: MuJoCo_Models
+package: mujoco_models
+engine: mujoco
+engine_version: ">=3.0,<4"
+anthropometrics: winter_2009
+format: mjcf
+models_root: src/mujoco_models/exercises
+exercises:
+  - id: squat
+    path: src/mujoco_models/exercises/squat
+  - id: deadlift
+    path: src/mujoco_models/exercises/deadlift
+  - id: bench_press
+    path: src/mujoco_models/exercises/bench_press
+  - id: snatch
+    path: src/mujoco_models/exercises/snatch
+  - id: clean_and_jerk
+    path: src/mujoco_models/exercises/clean_and_jerk
+  - id: gait
+    path: src/mujoco_models/exercises/gait
+  - id: sit_to_stand
+    path: src/mujoco_models/exercises/sit_to_stand
