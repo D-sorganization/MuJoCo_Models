@@ -80,9 +80,9 @@ class TestPipAuditIgnores:
     )
     def test_expiration_date_format(self, entry: dict) -> None:
         exp = entry["expires"]
-        assert (
-            len(exp) == 10 and exp[4] == "-" and exp[7] == "-"
-        ), f"{exp} must be YYYY-MM-DD"
+        assert len(exp) == 10 and exp[4] == "-" and exp[7] == "-", (
+            f"{exp} must be YYYY-MM-DD"
+        )
 
     @pytest.mark.parametrize(
         "entry",
@@ -108,6 +108,6 @@ class TestPipAuditIgnores:
     )
     def test_tracking_issue_format(self, entry: dict) -> None:
         issue = entry["tracking_issue"]
-        assert issue.startswith(
-            "MuJoCo_Models#176-"
-        ), f"{issue} must reference MuJoCo_Models#176-N"
+        assert issue.startswith("MuJoCo_Models#176-"), (
+            f"{issue} must reference MuJoCo_Models#176-N"
+        )
