@@ -21,11 +21,21 @@ logger = logging.getLogger(__name__)
 
 
 def _add_exercise_argument(parser: argparse.ArgumentParser) -> None:
-    """Add the positional ``exercise`` argument."""
+    """Add the ``exercise`` argument as positional or via ``--exercise``."""
+    choices = sorted(set(EXERCISE_REGISTRY.keys()))
     parser.add_argument(
         "exercise",
-        choices=sorted(set(EXERCISE_REGISTRY.keys())),
+        nargs="?",
+        choices=choices,
+        default=None,
         help="Exercise to generate a model for.",
+    )
+    parser.add_argument(
+        "--exercise",
+        dest="exercise_flag",
+        choices=choices,
+        default=None,
+        help="Alternative to the positional argument; identical semantics.",
     )
 
 
@@ -61,10 +71,25 @@ def _add_output_arguments(parser: argparse.ArgumentParser) -> None:
         help="Output file path (default: stdout).",
     )
     parser.add_argument(
+        "--export",
+        type=str,
+        default=None,
+        help="Alias for --output, used by the UpstreamDrift launcher contract.",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
         help="Enable verbose logging.",
+    )
+
+
+def _add_discovery_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add discovery flags used by the UpstreamDrift launcher contract."""
+    parser.add_argument(
+        "--list-exercises",
+        action="store_true",
+        help="Print the list of declared exercises and exit.",
     )
 
 
@@ -77,6 +102,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_exercise_argument(parser)
     _add_anthropometry_arguments(parser)
     _add_output_arguments(parser)
+    _add_discovery_arguments(parser)
     return parser
 
 
@@ -142,20 +168,52 @@ def _emit_xml(xml_str: str, output: str | None) -> int:
     return 0
 
 
+def _resolve_exercise(args: argparse.Namespace) -> str | None:
+    """Return the chosen exercise from either positional or ``--exercise``."""
+    if args.exercise and args.exercise_flag and args.exercise != args.exercise_flag:
+        logger.error(
+            "Conflicting exercise selection: positional=%r, --exercise=%r",
+            args.exercise,
+            args.exercise_flag,
+        )
+        return None
+    return args.exercise or args.exercise_flag
+
+
+def _handle_list_exercises() -> int:
+    """Emit the declared exercise IDs on stdout and exit 0."""
+    from mujoco_models.model_pack import list_exercises
+
+    for name in list_exercises():
+        sys.stdout.write(f"{name}\n")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI main function. Returns 0 on success, 1 on error."""
     args = _build_parser().parse_args(argv)
     _configure_logging(args.verbose)
 
+    if args.list_exercises:
+        return _handle_list_exercises()
+
+    exercise = _resolve_exercise(args)
+    if exercise is None:
+        logger.error(
+            "No exercise specified. Use --exercise <name> or --list-exercises.",
+        )
+        return 1
+
     config = _build_config_from_args(args)
     if config is None:
         return 1
 
-    xml_str = _build_model_xml(args.exercise, config)
+    xml_str = _build_model_xml(exercise, config)
     if xml_str is None:
         return 1
 
-    return _emit_xml(xml_str, args.output)
+    output = args.export if args.export is not None else args.output
+    return _emit_xml(xml_str, output)
 
 
 if __name__ == "__main__":

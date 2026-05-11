@@ -45,9 +45,9 @@ class TestPhaseConstraints:
     @pytest.mark.parametrize("name", sorted(EXPECTED_NAMES))
     def test_fractions_in_range(self, name: str):  # type: ignore
         for phase in EXERCISE_OBJECTIVES[name].phases:
-            assert (
-                0.0 <= phase.fraction <= 1.0
-            ), f"{name}/{phase.name}: fraction {phase.fraction} out of range"
+            assert 0.0 <= phase.fraction <= 1.0, (
+                f"{name}/{phase.name}: fraction {phase.fraction} out of range"
+            )
 
     @pytest.mark.parametrize("name", sorted(EXPECTED_NAMES))
     def test_fractions_monotonic(self, name: str):  # type: ignore

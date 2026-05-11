@@ -20,7 +20,8 @@ classifiers = [
 dependencies = [
     "numpy>=1.26.4,<3.0.0",
     "matplotlib>=3.7.0",
-    "mujoco>=3.3.0",
+    "mujoco>=3.3.0,<4",
+    "PyYAML>=6.0.0",
 ]
 
 [project.optional-dependencies]
@@ -43,6 +44,9 @@ dev = [
 [project.scripts]
 mujoco-models = "mujoco_models.__main__:main"
 
+[project.entry-points."biomech.model_pack"]
+mujoco_models = "mujoco_models.model_pack"
+
 [project.urls]
 Homepage = "https://github.com/D-sorganization/MuJoCo_Models"
 Repository = "https://github.com/D-sorganization/MuJoCo_Models"
@@ -52,10 +56,13 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-include = ["src/**/*"]
+include = ["src/**/*", "model_pack.yaml"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mujoco_models"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"model_pack.yaml" = "mujoco_models/model_pack.yaml"
 
 [tool.ruff]
 line-length = 88

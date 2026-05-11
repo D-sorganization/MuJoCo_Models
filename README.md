@@ -56,6 +56,31 @@ with open("squat.xml", "w") as f:
 - **DRY** -- Shared base class, shared barbell/body models, shared MJCF helpers
 - **Law of Demeter** -- Exercise builders interact only with public APIs of shared components
 
+## Used by UpstreamDrift
+
+This repo publishes a `model_pack/v1` manifest (`model_pack.yaml` at repo
+root) and a `biomech.model_pack` entry point (`mujoco_models.model_pack`)
+so that the UpstreamDrift launcher can discover and host these exercises.
+See the umbrella tracking issue:
+[UpstreamDrift#5179](https://github.com/D-sorganization/UpstreamDrift/issues/5179).
+
+Discovery API:
+
+```python
+from mujoco_models.model_pack import resolve, manifest, list_exercises
+
+resolve()         # absolute path to the installed exercises directory
+manifest()        # parsed model_pack.yaml as a dict
+list_exercises()  # ['squat', 'deadlift', ...]
+```
+
+CLI export contract:
+
+```bash
+python -m mujoco_models --exercise gait --export /tmp/gait.xml
+mujoco-models --list-exercises
+```
+
 ## License
 
 MIT

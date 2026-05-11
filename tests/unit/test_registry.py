@@ -10,9 +10,9 @@ from mujoco_models.exercises.base import ExerciseModelBuilder
 class TestExerciseRegistry:
     def test_all_entries_are_builder_subclasses(self) -> None:
         for name, cls in EXERCISE_REGISTRY.items():
-            assert issubclass(
-                cls, ExerciseModelBuilder
-            ), f"{name} -> {cls} is not an ExerciseModelBuilder"
+            assert issubclass(cls, ExerciseModelBuilder), (
+                f"{name} -> {cls} is not an ExerciseModelBuilder"
+            )
 
     def test_minimum_exercises(self) -> None:
         expected = {"squat", "bench_press", "deadlift", "snatch", "clean_and_jerk"}
