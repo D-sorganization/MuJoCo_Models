@@ -44,3 +44,7 @@
 ## 2026-04-26 - Optimize MJCF XML string formatting in add_weld_constraint for relpose
 **Learning:** Similar to `geom_size` and `geom_euler`, using generator expressions within `"".join()` for `relpose` (which is typically a 7-tuple) incurs unnecessary generator allocation overhead.
 **Action:** Extend the hardcoded string formatting optimization to `relpose` for length 7 to avoid generator overhead in hot loops.
+
+## 2026-04-26 - Vectorize piecewise linear interpolation with np.interp
+**Learning:** Using a python loop over time steps to compute piecewise linear interpolations (e.g., `_interpolate_at_fraction`) is extremely slow, especially when it iterates over each frame for trajectory keyframes generation.
+**Action:** Replace the python frame iteration with a vectorized `np.interp` approach. Extract the phases and their targets into arrays upfront and perform a 1D interpolation over all fractions at once for each joint (`np.interp(fractions, phase_fractions, phase_targets[:, j])`). This removes python overhead and dramatically speeds up phase interpolations.
