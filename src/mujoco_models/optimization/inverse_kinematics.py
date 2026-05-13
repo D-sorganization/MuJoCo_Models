@@ -68,9 +68,14 @@ def solve_ik_keyframes(
     fractions = np.linspace(0.0, 1.0, n_frames)
     keyframes = np.zeros((n_frames, n_joints))
 
-    for frame_idx, frac in enumerate(fractions):
-        angles = _interpolate_at_fraction(frac, objective.phases, joint_names)  # type: ignore
-        keyframes[frame_idx] = angles
+    # OPTIMIZATION: Vectorized interpolation along the frames dimension using np.interp.
+    # This avoids a python loop computing the piecewise interpolation frame by frame.
+    phases = objective.phases
+    phase_fractions = np.array([p.fraction for p in phases])
+    phase_targets = np.array([_phase_to_array(p, joint_names) for p in phases])
+
+    for j in range(n_joints):
+        keyframes[:, j] = np.interp(fractions, phase_fractions, phase_targets[:, j])
 
     logger.debug(
         "Generated %d keyframes for '%s' with %d joints",
@@ -100,47 +105,6 @@ def _lookup_objective(
         msg = f"Unknown exercise '{exercise_name}'. Available: {available}"
         raise ValidationError(msg)
     return OBJECTIVE_REGISTRY[exercise_name]
-
-
-def _interpolate_at_fraction(
-    fraction: float,
-    phases: list[Phase],
-    joint_names: list[str],
-) -> np.ndarray:
-    """Interpolate joint angles at a given movement fraction.
-
-    Finds the two bracketing phases and linearly interpolates
-    between their target joint angles.
-
-    Args:
-        fraction: Position in the movement, 0.0 to 1.0.
-        phases: Ordered list of movement phases.
-        joint_names: Sorted list of joint names.
-
-    Returns:
-        Array of joint angles, shape (n_joints,).
-    """
-    # Clamp to phase boundaries
-    if fraction <= phases[0].fraction:
-        return _phase_to_array(phases[0], joint_names)
-    if fraction >= phases[-1].fraction:
-        return _phase_to_array(phases[-1], joint_names)
-
-    # Find bracketing phases
-    for i in range(len(phases) - 1):
-        if phases[i].fraction <= fraction <= phases[i + 1].fraction:
-            phase_a = phases[i]
-            phase_b = phases[i + 1]
-            span = phase_b.fraction - phase_a.fraction
-            if span < 1e-12:
-                return _phase_to_array(phase_b, joint_names)
-            t = (fraction - phase_a.fraction) / span
-            arr_a = _phase_to_array(phase_a, joint_names)
-            arr_b = _phase_to_array(phase_b, joint_names)
-            return arr_a + t * (arr_b - arr_a)
-
-    # Fallback (should not reach here with valid phases)
-    return _phase_to_array(phases[-1], joint_names)
 
 
 def _phase_to_array(

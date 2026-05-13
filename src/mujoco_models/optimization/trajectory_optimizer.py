@@ -22,7 +22,7 @@ import numpy as np
 from mujoco_models.exceptions import ValidationError
 
 from .exercise_objectives import ExerciseObjective
-from .inverse_kinematics import _interpolate_at_fraction
+from .inverse_kinematics import _phase_to_array
 
 logger = logging.getLogger(__name__)
 
@@ -162,8 +162,14 @@ def interpolate_phases(
     fractions = np.linspace(0.0, 1.0, n_frames)
     keyframes = np.zeros((n_frames, n_joints))
 
-    for i, f in enumerate(fractions):
-        keyframes[i] = _interpolate_at_fraction(f, objective.phases, joint_names)  # type: ignore
+    # OPTIMIZATION: Vectorized interpolation along the frames dimension using np.interp.
+    # This avoids a python loop computing the piecewise interpolation frame by frame.
+    phases = objective.phases
+    phase_fractions = np.array([p.fraction for p in phases])
+    phase_targets = np.array([_phase_to_array(p, joint_names) for p in phases])
+
+    for j in range(n_joints):
+        keyframes[:, j] = np.interp(fractions, phase_fractions, phase_targets[:, j])
 
     return keyframes
 
