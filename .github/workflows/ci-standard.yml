@@ -97,6 +97,7 @@ jobs:
           fi
 
       - name: Security Audit
+        timeout-minutes: 5
         run: |
           pip install pip-audit
           pip install --upgrade pygments
