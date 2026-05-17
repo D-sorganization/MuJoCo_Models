@@ -139,7 +139,6 @@ jobs:
   rust:
     needs:
       - pick-runner
-      - quality-gate
     runs-on: ${{ needs.pick-runner.outputs.runner }}
     timeout-minutes: 25
     steps:
@@ -168,11 +167,11 @@ jobs:
   tests:
     needs:
       - pick-runner
-      - quality-gate
       - rust
     runs-on: ${{ needs.pick-runner.outputs.runner }}
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         python: ["3.10", "3.11", "3.12"]
     steps:
