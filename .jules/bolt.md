@@ -48,3 +48,7 @@
 ## 2026-04-26 - Vectorize piecewise linear interpolation with np.interp
 **Learning:** Using a python loop over time steps to compute piecewise linear interpolations (e.g., `_interpolate_at_fraction`) is extremely slow, especially when it iterates over each frame for trajectory keyframes generation.
 **Action:** Replace the python frame iteration with a vectorized `np.interp` approach. Extract the phases and their targets into arrays upfront and perform a 1D interpolation over all fractions at once for each joint (`np.interp(fractions, phase_fractions, phase_targets[:, j])`). This removes python overhead and dramatically speeds up phase interpolations.
+
+## 2026-05-17 - Optimize scalar validation with inline math.isfinite
+**Learning:** Checking for finity dynamically using a nested python function call in tight loops adds unnecessary overhead. The `_require_scalar_finite` check called multiple times per attribute within methods like `require_positive` adds significant execution time.
+**Action:** Inline `math.isfinite` check directly inside the core `require_positive` and `require_non_negative` checks. Use a `try...except TypeError` block to catch instances where the value is an array or object, which is much faster than delegating to another python function. This removes stack allocation overheads for millions of checks.
