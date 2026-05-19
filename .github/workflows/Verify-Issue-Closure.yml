@@ -21,7 +21,7 @@ permissions:
 
 concurrency:
   group: verify-issue-closure-${{ github.event.issue.number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   verify-closure:
