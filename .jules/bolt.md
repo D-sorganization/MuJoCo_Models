@@ -52,3 +52,7 @@
 ## 2026-05-17 - Optimize scalar validation with inline math.isfinite
 **Learning:** Checking for finity dynamically using a nested python function call in tight loops adds unnecessary overhead. The `_require_scalar_finite` check called multiple times per attribute within methods like `require_positive` adds significant execution time.
 **Action:** Inline `math.isfinite` check directly inside the core `require_positive` and `require_non_negative` checks. Use a `try...except TypeError` block to catch instances where the value is an array or object, which is much faster than delegating to another python function. This removes stack allocation overheads for millions of checks.
+
+## 2026-05-19 - Optimize numpy finite checks for arrays
+**Learning:** Checking for finity on numpy arrays using `np.all(np.isfinite(arr))` uses the `np.all` function, which has to dispatch and determine the type of input. This overhead is small but stacks up in tight loops over thousands of arrays. Since `np.isfinite(arr)` already produces a numpy array of booleans, it's faster to call the `.all()` method on the resulting array directly.
+**Action:** Use `np.isfinite(arr).all()` rather than `np.all(np.isfinite(arr))` for checking if an array contains finite values. Also consider falling back to `np.asarray()` and standard methods via duck typing when a function might accept raw numbers or tuples.

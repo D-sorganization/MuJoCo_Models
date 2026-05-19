@@ -300,7 +300,7 @@ def compute_bar_path_cost(
 
 def _validate_array_finite(arr: np.ndarray, name: str) -> None:
     """Check that an array contains only finite values."""
-    if not np.all(np.isfinite(arr)):
+    if not np.isfinite(arr).all():
         msg = f"{name} contains non-finite values"
         raise ValidationError(msg)
 

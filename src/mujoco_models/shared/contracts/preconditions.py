@@ -68,9 +68,17 @@ def require_finite(arr: ArrayLike, name: str) -> None:
             raise ValidationError(f"{name} contains non-finite values")
         return
 
-    a = np.asarray(arr, dtype=float)
-    if not np.all(np.isfinite(a)):
-        raise ValidationError(f"{name} contains non-finite values")
+    try:
+        # Try to use array's fast methods first if it's already a numpy array
+        if not np.isfinite(arr).all():
+            raise ValidationError(f"{name} contains non-finite values")
+    except TypeError as exc:
+        try:
+            a = np.asarray(arr, dtype=float)
+            if not np.isfinite(a).all():
+                raise ValidationError(f"{name} contains non-finite values") from None
+        except (TypeError, ValueError):
+            raise ValidationError(f"{name} contains non-finite values") from exc
 
 
 def require_in_range(value: float, low: float, high: float, name: str) -> None:
