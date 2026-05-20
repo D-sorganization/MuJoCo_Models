@@ -108,6 +108,7 @@ markers = [
     "e2e: Full system boot, real networks, user workflows",
     "slow: marks tests as slow",
     "live_simulation: marks tests as requiring live simulation environment",
+    "requires_mujoco: needs a working MuJoCo native runtime",
     "requires_network: needs real outbound network",
     "heavy: resource-intensive tests",
 ]

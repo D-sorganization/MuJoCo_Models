@@ -94,8 +94,13 @@ jobs:
       - name: Security Audit
         timeout-minutes: 15
         run: |
-          pip install pip-audit
-          pip install --upgrade pygments
+          rm -rf .audit-venv
+          python -m venv .audit-venv
+          AUDIT_PYTHON="$PWD/.audit-venv/bin/python"
+          "$AUDIT_PYTHON" -m pip install --upgrade pip setuptools wheel
+          "$AUDIT_PYTHON" -m pip install -e .[dev]
+          "$AUDIT_PYTHON" -m pip install pip-audit
+          "$AUDIT_PYTHON" -m pip install --upgrade pygments
           # CVE exceptions with expiration dates.
           # Each entry must have: (1) CVE ID, (2) reason, (3) expiration, (4) tracking issue.
           # See .github/cve-exceptions.md for full details.
@@ -106,7 +111,7 @@ jobs:
           # - CVE-2024-47081: dev-only, no runtime impact (expires 2026-05-31, #173-5)
           # - CVE-2026-3219: upstream fix in progress (expires 2026-06-15, #173-6)
           # - CVE-2026-25645: transitive dependency, monitor for patch (expires 2026-06-15, #173-7)
-          pip-audit --skip-editable \
+          "$PWD/.audit-venv/bin/pip-audit" --skip-editable \
             --ignore-vuln CVE-2026-4539 \
             --ignore-vuln CVE-2026-32274 \
             --ignore-vuln CVE-2026-21883 \
@@ -218,6 +223,7 @@ jobs:
       - name: Run Benchmarks
         run: |
           python -m pytest \
+            -p no:xvfb \
             -o addopts="-ra -q --strict-markers --strict-config --durations=20" \
             -m "benchmark" \
             --timeout=120 \
