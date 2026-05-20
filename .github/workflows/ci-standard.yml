@@ -123,7 +123,7 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          pip install cyclonedx-bom
+          pip install --no-cache-dir cyclonedx-bom
           cyclonedx-py environment -o sbom.json --output-format JSON
 
       - name: Upload SBOM artifact
