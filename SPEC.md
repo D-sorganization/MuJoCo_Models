@@ -119,7 +119,7 @@ The CI contract is defined in `.github/workflows/ci-standard.yml` and currently 
 - `ruff check src scripts tests` (line length enforced at 88 characters)
 - cyclomatic complexity (McCabe) enforcement via `ruff` rule `C90` with a max complexity of 10
 - `ruff format --check src scripts tests`
-- `mypy src --config-file pyproject.toml`
+- `mypy src --config-file pyproject.toml` (aligned with the fleet-standard pin)
 - `pytest` with coverage enforcement at 80% on the source tree
 - the `dev` optional dependency set in `pyproject.toml`, including PyYAML for
   repository governance tests that parse tracked YAML metadata
