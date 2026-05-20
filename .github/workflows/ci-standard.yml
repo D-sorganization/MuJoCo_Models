@@ -198,10 +198,12 @@ jobs:
           python -c "from mujoco_models.model_pack import resolve, manifest, list_exercises; resolve(); manifest(); list_exercises()"
 
       - name: Run Test Suite
+        env:
+          PYTHONUNBUFFERED: "1"
         run: |
-          python -m pytest \
+          python -u -m pytest \
             --timeout=60 \
-            --timeout-method=thread \
+            --timeout-method=signal \
             -m "not slow and not requires_mujoco and not benchmark" \
             --cov=src \
             --cov-report=term-missing \
