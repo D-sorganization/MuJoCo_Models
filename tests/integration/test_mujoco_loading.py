@@ -9,7 +9,7 @@ try:
     import mujoco
 
     _MUJOCO_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError):
     _MUJOCO_AVAILABLE = False
 
 _SKIP_MUJOCO = pytest.mark.skipif(

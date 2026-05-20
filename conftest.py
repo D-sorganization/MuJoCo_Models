@@ -7,6 +7,7 @@ Fleet Testing Standards §5: thread-safety and headless env vars must be
 set before any heavy import (numpy/MKL, matplotlib, Qt, MuJoCo's GLFW).
 See: docs/FLEET_TESTING_STANDARDS.md in Repository_Management.
 """
+
 from __future__ import annotations
 
 import os
@@ -25,4 +26,3 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 # Qt headless backend. Matters for MuJoCo's GLFW viewer paths and any
 # indirect PyQt/PySide imports during test collection.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-

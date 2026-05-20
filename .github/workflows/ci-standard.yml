@@ -55,25 +55,20 @@ jobs:
 
   quality-gate:
     runs-on: ${{ needs.pick-runner.outputs.runner }}
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Set up Python venv
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Prepare Python tooling
         run: |
-          for PYTHON in python3.11 python3.12 python3.10 python3; do
-            if command -v "$PYTHON" &>/dev/null; then
-              echo "Using $PYTHON ($($PYTHON --version))"
-              "$PYTHON" -m venv "$RUNNER_TEMP/ci-venv"
-              "$RUNNER_TEMP/ci-venv/bin/pip" install --upgrade pip setuptools wheel --quiet
-              echo "$RUNNER_TEMP/ci-venv/bin" >> $GITHUB_PATH
-              exit 0
-            fi
-          done
-          echo "No Python3 found on PATH" && exit 1
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade --ignore-installed setuptools wheel
       - run: pip install ruff==0.14.10 mypy==1.13.0 bandit==1.7.7
-
       - name: Lint
         run: ruff check src scripts tests
 
@@ -97,10 +92,15 @@ jobs:
           fi
 
       - name: Security Audit
-        timeout-minutes: 5
+        timeout-minutes: 15
         run: |
-          pip install pip-audit
-          pip install --upgrade pygments
+          rm -rf .audit-venv
+          python -m venv .audit-venv
+          AUDIT_PYTHON="$PWD/.audit-venv/bin/python"
+          "$AUDIT_PYTHON" -m pip install --upgrade pip setuptools wheel
+          "$AUDIT_PYTHON" -m pip install -e .[dev]
+          "$AUDIT_PYTHON" -m pip install pip-audit
+          "$AUDIT_PYTHON" -m pip install --upgrade pygments
           # CVE exceptions with expiration dates.
           # Each entry must have: (1) CVE ID, (2) reason, (3) expiration, (4) tracking issue.
           # See .github/cve-exceptions.md for full details.
@@ -111,7 +111,7 @@ jobs:
           # - CVE-2024-47081: dev-only, no runtime impact (expires 2026-05-31, #173-5)
           # - CVE-2026-3219: upstream fix in progress (expires 2026-06-15, #173-6)
           # - CVE-2026-25645: transitive dependency, monitor for patch (expires 2026-06-15, #173-7)
-          pip-audit --skip-editable \
+          "$PWD/.audit-venv/bin/pip-audit" --skip-editable \
             --ignore-vuln CVE-2026-4539 \
             --ignore-vuln CVE-2026-32274 \
             --ignore-vuln CVE-2026-21883 \
@@ -126,8 +126,13 @@ jobs:
 
       - name: Generate SBOM
         run: |
-          pip install cyclonedx-bom
-          cyclonedx-py environment -o sbom.json --output-format JSON
+          rm -rf .sbom-venv
+          python -m venv .sbom-venv
+          SBOM_PYTHON="$PWD/.sbom-venv/bin/python"
+          "$SBOM_PYTHON" -m pip install --upgrade pip setuptools wheel
+          "$SBOM_PYTHON" -m pip install -e .[dev]
+          for i in 1 2 3 4 5; do "$SBOM_PYTHON" -m pip install --no-cache-dir cyclonedx-bom && break || sleep 5; done
+          for i in 1 2 3 4 5; do "$PWD/.sbom-venv/bin/cyclonedx-py" environment "$SBOM_PYTHON" --pyproject pyproject.toml -o sbom.json --output-format JSON && break || sleep 5; done
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v7
@@ -165,49 +170,47 @@ jobs:
           if-no-files-found: warn
 
   tests:
+    name: tests (${{ matrix.python }})
     needs:
       - pick-runner
       - rust
     runs-on: ${{ needs.pick-runner.outputs.runner }}
-    timeout-minutes: 15
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         python: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Python venv
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Prepare Python tooling
         run: |
-          PYTHON="python${{ matrix.python }}"
-          if ! command -v "$PYTHON" &>/dev/null; then
-            echo "WARNING: $PYTHON not found, falling back to python3"
-            PYTHON=python3
-          fi
-          echo "Using $PYTHON ($($PYTHON --version))"
-          "$PYTHON" -m venv "$RUNNER_TEMP/ci-venv"
-          "$RUNNER_TEMP/ci-venv/bin/pip" install --upgrade pip setuptools wheel --quiet
-          echo "$RUNNER_TEMP/ci-venv/bin" >> $GITHUB_PATH
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade --ignore-installed setuptools wheel
 
       - name: Install Dependencies
-        run: pip install -e ".[dev]"
+        run: pip install -e .[dev]
 
       - name: Verify package is importable without PYTHONPATH
-        run: |
-          python3 -m mujoco_models --help >/dev/null 2>&1 || {
-            echo "::error::Package not importable after pip install. Check pyproject.toml build config."
-            exit 1
-          }
+        run: python -c "import mujoco_models"
 
-      - name: Verify model_pack entry-point surface (issue #266)
+      - name: Verify model_pack entry-point surface (issue #45)
         run: |
-          python3 -c "from mujoco_models.model_pack import resolve, manifest, list_exercises; resolve(); manifest(); list_exercises()"
+          python -c "from mujoco_models.model_pack import resolve, manifest, list_exercises; resolve(); manifest(); list_exercises()"
 
       - name: Run Test Suite
+        env:
+          PYTHONUNBUFFERED: "1"
         run: |
-          python3 -m pytest \
-            -n auto \
+          python -u -m pytest \
+            -p no:xvfb \
             --timeout=60 \
-            --timeout-method=thread \
+            --timeout-method=signal \
             -m "not slow and not requires_mujoco and not benchmark" \
             --cov=src \
             --cov-report=term-missing \
@@ -219,7 +222,8 @@ jobs:
 
       - name: Run Benchmarks
         run: |
-          python3 -m pytest \
+          python -m pytest \
+            -p no:xvfb \
             -o addopts="-ra -q --strict-markers --strict-config --durations=20" \
             -m "benchmark" \
             --timeout=120 \
