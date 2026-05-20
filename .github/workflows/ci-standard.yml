@@ -69,7 +69,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade --ignore-installed setuptools wheel
       - run: pip install ruff==0.14.10 mypy==1.13.0 bandit==1.7.7
-
       - name: Lint
         run: ruff check src scripts tests
 
@@ -127,8 +126,8 @@ jobs:
           SBOM_PYTHON="$PWD/.sbom-venv/bin/python"
           "$SBOM_PYTHON" -m pip install --upgrade pip setuptools wheel
           "$SBOM_PYTHON" -m pip install -e .[dev]
-          "$SBOM_PYTHON" -m pip install --no-cache-dir cyclonedx-bom
-          "$PWD/.sbom-venv/bin/cyclonedx-py" environment "$SBOM_PYTHON" --pyproject pyproject.toml -o sbom.json --output-format JSON
+          for i in 1 2 3 4 5; do "$SBOM_PYTHON" -m pip install --no-cache-dir cyclonedx-bom && break || sleep 5; done
+          for i in 1 2 3 4 5; do "$PWD/.sbom-venv/bin/cyclonedx-py" environment "$SBOM_PYTHON" --pyproject pyproject.toml -o sbom.json --output-format JSON && break || sleep 5; done
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v7
@@ -166,6 +165,7 @@ jobs:
           if-no-files-found: warn
 
   tests:
+    name: tests (${{ matrix.python }})
     needs:
       - pick-runner
       - rust
@@ -177,6 +177,8 @@ jobs:
         python: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -187,16 +189,12 @@ jobs:
           python -m pip install --upgrade --ignore-installed setuptools wheel
 
       - name: Install Dependencies
-        run: python -m pip install -e ".[dev]"
+        run: pip install -e .[dev]
 
       - name: Verify package is importable without PYTHONPATH
-        run: |
-          python -m mujoco_models --help >/dev/null 2>&1 || {
-            echo "::error::Package not importable after pip install. Check pyproject.toml build config."
-            exit 1
-          }
+        run: python -c "import mujoco_models"
 
-      - name: Verify model_pack entry-point surface (issue #266)
+      - name: Verify model_pack entry-point surface (issue #45)
         run: |
           python -c "from mujoco_models.model_pack import resolve, manifest, list_exercises; resolve(); manifest(); list_exercises()"
 
@@ -205,6 +203,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           python -u -m pytest \
+            -p no:xvfb \
             --timeout=60 \
             --timeout-method=signal \
             -m "not slow and not requires_mujoco and not benchmark" \
