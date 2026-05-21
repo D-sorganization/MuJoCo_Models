@@ -177,7 +177,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - Inlining basic math operations (like `math.isfinite`) directly into precondition checks reduces Python function stack frame overhead and is encouraged for methods called repeatedly in tight loops.
 - ElementTree (`ET`) loop traversals during XML generation are optimized by avoiding nested loop passes and preferring `.find()` and combined iterators where applicable, as demonstrated in `ExerciseModelBuilder`.
 - Unrolled 1D slice operations (`dx*dx + dy*dy`) are preferred over intermediate 2D array allocations and `np.sum(..., axis=1)` for small matrix reductions, as demonstrated in `src/mujoco_models/optimization/trajectory_optimizer.py`.
-- Hardcoded string formatting is preferred over `"".join(f"{v:.6f}" for v in ...)` generator expressions for known small fixed-size tuples (e.g. 1D, 2D, 3D, or 7D arrays) during MJCF generation to avoid generator allocation overhead.
+- Hardcoded string formatting using `%` operators (e.g. `"%.6f %.6f %.6f" % (x, y, z)`) is preferred over `"".join(f"{v:.6f}" for v in ...)` generator expressions and Python 3 f-strings for known small fixed-size tuples (e.g. 1D, 2D, 3D, or 7D arrays) during MJCF generation to avoid generator allocation and expression compilation overhead.
 - Vectorized array operations like `np.interp` over all frames at once are preferred over Python `for` loops evaluating piecewise functions frame-by-frame during trajectory generation.
 - Checking for finiteness of NumPy arrays using `np.isfinite(arr).all()` is preferred over `np.all(np.isfinite(arr))` to avoid Python function dispatch overhead in tight loops.
 
