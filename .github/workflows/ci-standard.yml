@@ -238,3 +238,17 @@ jobs:
         with:
           name: benchmark-results-py${{ matrix.python }}
           path: benchmark-results.json
+
+  ci-complete:
+    name: CI Complete
+    needs: [pick-runner, quality-gate, rust, tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Verify all jobs succeeded
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "One or more required jobs failed or were cancelled."
+            exit 1
+          fi
+          echo "All jobs completed successfully."
