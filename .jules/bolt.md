@@ -56,3 +56,7 @@
 ## 2026-05-19 - Optimize numpy finite checks for arrays
 **Learning:** Checking for finity on numpy arrays using `np.all(np.isfinite(arr))` uses the `np.all` function, which has to dispatch and determine the type of input. This overhead is small but stacks up in tight loops over thousands of arrays. Since `np.isfinite(arr)` already produces a numpy array of booleans, it's faster to call the `.all()` method on the resulting array directly.
 **Action:** Use `np.isfinite(arr).all()` rather than `np.all(np.isfinite(arr))` for checking if an array contains finite values. Also consider falling back to `np.asarray()` and standard methods via duck typing when a function might accept raw numbers or tuples.
+
+## 2026-05-21 - Optimize MJCF XML string formatting with `%` operator
+**Learning:** Python 3 f-strings with format specifiers (e.g. `f"{x:.6f} {y:.6f} {z:.6f}"`) are measurably slower than older `%` formatting equivalents (e.g. `"%.6f %.6f %.6f" % (x, y, z)`) when executing millions of times in tight loops. This is because `%` formatting with simple primitives skips the evaluation overhead of f-string expression compilation.
+**Action:** Replace `f"{x:.6f}"` style formatting with `"%.6f" % x` when serializing fixed, small collections (like coordinates or tuples of length 1, 2, 3, or 7) in high-frequency text-generation code paths.
