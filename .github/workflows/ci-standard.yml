@@ -206,8 +206,12 @@ jobs:
       - name: Run Test Suite
         env:
           PYTHONUNBUFFERED: "1"
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
         run: |
           python -u -m pytest \
+            -p pytest_cov \
+            -p pytest_timeout \
+            -p pytest_benchmark.plugin \
             -p no:xvfb \
             --timeout=60 \
             --timeout-method=signal \
@@ -221,8 +225,12 @@ jobs:
             -v
 
       - name: Run Benchmarks
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
         run: |
           python -m pytest \
+            -p pytest_timeout \
+            -p pytest_benchmark.plugin \
             -p no:xvfb \
             -o addopts="-ra -q --strict-markers --strict-config --durations=20" \
             -m "benchmark" \
