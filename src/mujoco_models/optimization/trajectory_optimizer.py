@@ -188,8 +188,17 @@ def _validate_balance_inputs(
         ValidationError: If inputs have invalid shapes or non-finite
             values.
     """
-    _validate_array_finite(com_position, "com_position")
-    _validate_array_finite(base_of_support, "base_of_support")
+    # OPTIMIZATION: Inlined np.isfinite checks directly inside the validation guard
+    # rather than delegating to a helper function, eliminating function call frame
+    # overhead in tight optimization loops.
+    try:
+        if not np.isfinite(com_position).all():
+            raise ValidationError("com_position contains non-finite values")
+        if not np.isfinite(base_of_support).all():
+            raise ValidationError("base_of_support contains non-finite values")
+    except TypeError as exc:
+        raise ValidationError("Inputs contain non-finite values") from exc
+
     if com_position.shape != (3,):
         msg = f"com_position must have shape (3,), got {com_position.shape}"
         raise ValidationError(msg)
@@ -252,8 +261,17 @@ def _validate_bar_path_inputs(
         ValidationError: If inputs have mismatched shapes or non-finite
             values.
     """
-    _validate_array_finite(bar_position, "bar_position")
-    _validate_array_finite(target_path, "target_path")
+    # OPTIMIZATION: Inlined np.isfinite checks directly inside the validation guard
+    # rather than delegating to a helper function, eliminating function call frame
+    # overhead in tight optimization loops.
+    try:
+        if not np.isfinite(bar_position).all():
+            raise ValidationError("bar_position contains non-finite values")
+        if not np.isfinite(target_path).all():
+            raise ValidationError("target_path contains non-finite values")
+    except TypeError as exc:
+        raise ValidationError("Inputs contain non-finite values") from exc
+
     if bar_position.shape != target_path.shape:
         msg = (
             f"Shape mismatch: bar_position {bar_position.shape} "
@@ -296,13 +314,6 @@ def compute_bar_path_cost(
     dx = bar_position[:, 0] - target_path[:, 0]
     dy = bar_position[:, 1] - target_path[:, 1]
     return float(np.mean(dx * dx + dy * dy))
-
-
-def _validate_array_finite(arr: np.ndarray, name: str) -> None:
-    """Check that an array contains only finite values."""
-    if not np.isfinite(arr).all():
-        msg = f"{name} contains non-finite values"
-        raise ValidationError(msg)
 
 
 def _point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:

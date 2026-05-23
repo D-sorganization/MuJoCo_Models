@@ -60,3 +60,6 @@
 ## 2026-05-21 - Optimize MJCF XML string formatting with `%` operator
 **Learning:** Python 3 f-strings with format specifiers (e.g. `f"{x:.6f} {y:.6f} {z:.6f}"`) are measurably slower than older `%` formatting equivalents (e.g. `"%.6f %.6f %.6f" % (x, y, z)`) when executing millions of times in tight loops. This is because `%` formatting with simple primitives skips the evaluation overhead of f-string expression compilation.
 **Action:** Replace `f"{x:.6f}"` style formatting with `"%.6f" % x` when serializing fixed, small collections (like coordinates or tuples of length 1, 2, 3, or 7) in high-frequency text-generation code paths.
+## 2024-05-23 - Inlining array finiteness checks in tight loops
+**Learning:** Delegating simple mathematical checks like `np.isfinite` to helper functions (`_validate_array_finite`) introduces significant Python function call frame overhead when these checks are placed inside tightly executed validation guards.
+**Action:** Inline `np.isfinite` checks directly inside frequently called validation guards (e.g. wrapped in a `try...except TypeError` block) instead of delegating to helper functions, thereby eliminating the function call overhead.
