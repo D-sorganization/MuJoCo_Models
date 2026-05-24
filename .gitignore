@@ -1,32 +1,43 @@
+# Rust
+rust_core/target/
+
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
-dist/
-build/
-*.egg
-.eggs/
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
-.hypothesis/
-htmlcov/
-coverage.xml
-.coverage
-*.so
-.env
-.venv/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
 venv/
-*.log
+.env/
+.venv/
+env.bak/
+venv.bak/
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+benchmark-results.json
+
+# Build and Dist
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Other
 .DS_Store
-Thumbs.db
-# Temp/scratch files
-mypy_out*.txt
-mypy2.txt
-issue-*.txt
-issues.json
-issues.txt
-mj_issues.json
-fix_mypy.py
-output/
-*.tmp
+.audit-venv/
+.sbom-venv/
+sbom.json
+profile_*.py
+test_*.py
+stats

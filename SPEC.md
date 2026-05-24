@@ -180,6 +180,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - Hardcoded string formatting using `%` operators (e.g. `"%.6f %.6f %.6f" % (x, y, z)`) is preferred over `"".join(f"{v:.6f}" for v in ...)` generator expressions and Python 3 f-strings for known small fixed-size tuples (e.g. 1D, 2D, 3D, or 7D arrays) during MJCF generation to avoid generator allocation and expression compilation overhead.
 - Vectorized array operations like `np.interp` over all frames at once are preferred over Python `for` loops evaluating piecewise functions frame-by-frame during trajectory generation.
 - Checking for finiteness of NumPy arrays using `np.isfinite(arr).all()` is preferred over `np.all(np.isfinite(arr))` to avoid Python function dispatch overhead in tight loops.
+- Inlining array finiteness checks directly inside validation guards using `np.isfinite(arr).all()` rather than delegating them to helper functions avoids function call overhead in tight optimization loops.
 
 ### CI Runner Routing
 
