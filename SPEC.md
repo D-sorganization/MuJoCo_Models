@@ -188,3 +188,5 @@ This header is present in every module-level `.py` file as of the SPDX header up
   selector retries transient runner inventory failures, but it must keep
   `d-sorg-fleet` as the selected runner instead of falling back to hosted
   GitHub runners.
+
+<!-- Update trigger for CI freshness check -->
