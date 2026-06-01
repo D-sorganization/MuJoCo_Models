@@ -12,6 +12,7 @@ accept invalid geometry or physics parameters.
 from __future__ import annotations
 
 import math
+from typing import cast
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -58,7 +59,8 @@ def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
         except (TypeError, ValueError):
             raise ValidationError(f"{name} must be a 3-vector of numbers") from None
     elif getattr(vec, "shape", None) == (3,):
-        vx, vy, vz = float(vec[0]), float(vec[1]), float(vec[2])
+        arr = cast("np.ndarray", vec)
+        vx, vy, vz = float(arr[0]), float(arr[1]), float(arr[2])
     else:
         arr = np.asarray(vec, dtype=float)
         if arr.shape != (3,):
