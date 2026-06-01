@@ -128,7 +128,8 @@ def require_shape(arr: ArrayLike, expected: tuple[int, ...], name: str) -> None:
             # If the first element is a list, it's likely >1D, fallback to np.asarray
             a = np.asarray(arr)
             if a.shape != expected:
-                raise ValidationError(f"{name} must have shape {expected}, got {a.shape}")
+                msg = f"{name} must have shape {expected}, got {a.shape}"
+                raise ValidationError(msg)
             return
 
         if len(arr) != expected[0]:
