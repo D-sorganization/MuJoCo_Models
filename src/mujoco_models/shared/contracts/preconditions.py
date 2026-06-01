@@ -49,10 +49,22 @@ def require_non_negative(value: float, name: str) -> None:
 
 def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
     """Require *vec* to have unit norm within *tol*."""
-    arr = np.asarray(vec, dtype=float)
-    if arr.shape != (3,):
-        raise ValidationError(f"{name} must be a 3-vector, got shape {arr.shape}")
-    vx, vy, vz = float(arr[0]), float(arr[1]), float(arr[2])
+    # ⚡ Bolt Optimization: Fast path for lists and tuples without coercing to ndarray
+    if isinstance(vec, (tuple, list)):
+        if len(vec) != 3:
+            raise ValidationError(f"{name} must be a 3-vector, got shape ({len(vec)},)")
+        try:
+            vx, vy, vz = float(vec[0]), float(vec[1]), float(vec[2])
+        except (TypeError, ValueError):
+            raise ValidationError(f"{name} must be a 3-vector of numbers") from None
+    elif getattr(vec, "shape", None) == (3,):
+        vx, vy, vz = float(vec[0]), float(vec[1]), float(vec[2])
+    else:
+        arr = np.asarray(vec, dtype=float)
+        if arr.shape != (3,):
+            raise ValidationError(f"{name} must be a 3-vector, got shape {arr.shape}")
+        vx, vy, vz = float(arr[0]), float(arr[1]), float(arr[2])
+
     # OPTIMIZATION: Unrolled scalar math instead of np.linalg.norm
     # to avoid allocation and dispatch overhead.
     norm = math.sqrt(vx * vx + vy * vy + vz * vz)
@@ -60,13 +72,23 @@ def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
         raise ValidationError(f"{name} must be unit-length (norm={norm:.6f})")
 
 
-def require_finite(arr: ArrayLike, name: str) -> None:
+def require_finite(arr: ArrayLike, name: str) -> None:  # noqa: C901
     """Require all elements of *arr* to be finite (no NaN/Inf)."""
     # ⚡ Bolt Optimization: Fast path for scalars.
     if isinstance(arr, (int, float)):
         if not math.isfinite(arr):
             raise ValidationError(f"{name} contains non-finite values")
         return
+
+    # ⚡ Bolt Optimization: Fast path for basic iterables like lists and tuples
+    if isinstance(arr, (list, tuple)):
+        try:
+            for x in arr:
+                if not math.isfinite(x):  # type: ignore
+                    raise ValidationError(f"{name} contains non-finite values")
+            return
+        except TypeError:
+            pass  # Fallback if list contains non-scalars
 
     try:
         # Try to use array's fast methods first if it's already a numpy array
@@ -92,6 +114,28 @@ def require_in_range(value: float, low: float, high: float, name: str) -> None:
 
 def require_shape(arr: ArrayLike, expected: tuple[int, ...], name: str) -> None:
     """Require *arr* to have the given shape."""
+    # ⚡ Bolt Optimization: Fast path to avoid `np.asarray`
+    shape = getattr(arr, "shape", None)
+    if shape is not None:
+        if shape != expected:
+            raise ValidationError(f"{name} must have shape {expected}, got {shape}")
+        return
+
+    # Fast path for 1D lists/tuples using len() directly
+    if isinstance(arr, (list, tuple)) and len(expected) == 1:
+        # Check if it's truly a 1D list (i.e. first element is not another iterable)
+        if len(arr) > 0 and isinstance(arr[0], (list, tuple, np.ndarray)):
+            # If the first element is a list, it's likely >1D, fallback to np.asarray
+            a = np.asarray(arr)
+            if a.shape != expected:
+                raise ValidationError(f"{name} must have shape {expected}, got {a.shape}")
+            return
+
+        if len(arr) != expected[0]:
+            msg = f"{name} must have shape {expected}, got ({len(arr)},)"
+            raise ValidationError(msg)
+        return
+
     a = np.asarray(arr)
     if a.shape != expected:
         raise ValidationError(f"{name} must have shape {expected}, got {a.shape}")

@@ -63,3 +63,6 @@
 ## 2024-05-23 - Inlining array finiteness checks in tight loops
 **Learning:** Delegating simple mathematical checks like `np.isfinite` to helper functions (`_validate_array_finite`) introduces significant Python function call frame overhead when these checks are placed inside tightly executed validation guards.
 **Action:** Inline `np.isfinite` checks directly inside frequently called validation guards (e.g. wrapped in a `try...except TypeError` block) instead of delegating to helper functions, thereby eliminating the function call overhead.
+## 2026-06-01 - Avoid np.asarray overhead in validation checks
+**Learning:** Calling `np.asarray()` inside tight validation loops adds unnecessary dispatch and object coercion overhead (~300ns), which dominates execution when validating large numbers of basic 1D iterables (lists/tuples) or objects that already implement array methods.
+**Action:** Establish fast paths in validation logic by checking for attributes (`getattr(arr, "shape", None)`) or specifically handling standard iterables (`isinstance(arr, (list, tuple))`) before falling back to full `np.asarray()` conversion.
