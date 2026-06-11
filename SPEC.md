@@ -190,3 +190,5 @@ This header is present in every module-level `.py` file as of the SPDX header up
   GitHub runners.
 
 <!-- Update trigger for CI freshness check -->
+## Performance Notes
+- 2026-06-11: Optimized builtin min/max in tight geometry loops. Replaced `max(0, min(1, t))` with faster explicit `if/elif` logic in `_point_to_segment_sq`.
