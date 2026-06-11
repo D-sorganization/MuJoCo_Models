@@ -111,3 +111,22 @@ class TestSquaredDistanceToPolygon:
         d1 = squared_distance_to_polygon(np.array([2.0, 0.5]), sq)
         d2 = squared_distance_to_polygon(np.array([-1.0, 0.5]), sq)
         assert d1 == pytest.approx(d2)
+
+    def test_point_to_segment_clamping(self) -> None:
+        """Test explicit clamping coverage in _point_to_segment_sq."""
+        from mujoco_models.optimization.polygon_geometry import _point_to_segment_sq
+
+        # Test t < 0.0 branch
+        assert _point_to_segment_sq(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0) == 1.0
+
+        # Test t > 1.0 branch
+        assert _point_to_segment_sq(2.0, 0.0, 0.0, 0.0, 1.0, 0.0) == 1.0
+
+        # Test 0.0 <= t <= 1.0 branch
+        assert _point_to_segment_sq(0.5, 0.5, 0.0, 0.0, 1.0, 0.0) == 0.25
+
+    def test_point_to_segment_clamping_zero(self) -> None:
+        """Test explicit clamping coverage for ab_sq < 1e-12 in _point_to_segment_sq."""
+        from mujoco_models.optimization.polygon_geometry import _point_to_segment_sq
+
+        assert _point_to_segment_sq(1.0, 1.0, 0.0, 0.0, 0.0, 0.0) == 2.0
