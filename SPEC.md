@@ -192,3 +192,4 @@ This header is present in every module-level `.py` file as of the SPDX header up
 <!-- Update trigger for CI freshness check -->
 ## Performance Notes
 - 2026-06-11: Optimized builtin min/max in tight geometry loops. Replaced `max(0, min(1, t))` with faster explicit `if/elif` logic in `_point_to_segment_sq`.
+- 2026-06-11: Added constraint on matplotlib `<3.10` to avoid fonttools dependency conflict during CI tests with Python 3.10.
