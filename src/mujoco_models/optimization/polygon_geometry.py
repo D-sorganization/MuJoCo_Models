@@ -99,12 +99,12 @@ def _point_to_segment_sq(
         return apx * apx + apy * apy
 
     t = (apx * abx + apy * aby) / ab_sq
-    t = max(0.0, min(1.0, t))
+    if t < 0.0:
+        t = 0.0
+    elif t > 1.0:
+        t = 1.0
 
-    closest_x = ax + t * abx
-    closest_y = ay + t * aby
-
-    dx = px - closest_x
-    dy = py - closest_y
+    dx = px - (ax + t * abx)
+    dy = py - (ay + t * aby)
 
     return dx * dx + dy * dy
