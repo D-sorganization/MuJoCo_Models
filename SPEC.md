@@ -193,3 +193,4 @@ This header is present in every module-level `.py` file as of the SPDX header up
 ## Performance Notes
 - 2026-06-11: Optimized builtin min/max in tight geometry loops. Replaced `max(0, min(1, t))` with faster explicit `if/elif` logic in `_point_to_segment_sq`.
 - 2026-06-11: Added constraint on matplotlib `<3.10` to avoid fonttools dependency conflict during CI tests with Python 3.10.
+- 2026-06-14: Optimized array indexing in trajectory optimizer loops. Converted `polygon` NumPy arrays to native Python lists using `.tolist()` before iterating in `_point_in_polygon` and `_squared_distance_to_polygon` to bypass NumPy's C-API dispatch and scalar casting overhead.
