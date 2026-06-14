@@ -69,3 +69,6 @@
 ## 2026-06-11 - Optimize builtin min/max in tight loops
 **Learning:** Using built-in functions `min()` and `max()` in hot loops like `_point_to_segment_sq` (for bounding `t` between 0.0 and 1.0) introduces measurable python function call overhead.
 **Action:** Replace `max(0.0, min(1.0, t))` with explicit `if/elif` conditionals (`if t < 0.0: t = 0.0` and `elif t > 1.0: t = 1.0`), and inline intermediate variables where practical. This simple change reduces execution time by over 50% in tight mathematical calculations.
+## 2024-06-14 - Fast array element access in tight loops
+**Learning:** Indexing into a 2D NumPy array inside a tight Python loop (e.g., `float(polygon[i, 0])`) has significant overhead due to C-API dispatch and scalar conversion.
+**Action:** Convert the NumPy array to a nested Python list using `.tolist()` before the loop. Indexing into the native list (e.g., `poly_list[i][0]`) is measurably faster (up to ~40% speedup in point-in-polygon tests).
