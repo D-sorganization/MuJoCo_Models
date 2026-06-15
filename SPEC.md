@@ -190,8 +190,13 @@ This header is present in every module-level `.py` file as of the SPDX header up
   GitHub runners.
 
 <!-- Update trigger for CI freshness check -->
+
 ## Performance Notes
+
 - 2026-06-11: Optimized builtin min/max in tight geometry loops. Replaced `max(0, min(1, t))` with faster explicit `if/elif` logic in `_point_to_segment_sq`.
 - 2026-06-11: Added constraint on matplotlib `<3.10` to avoid fonttools dependency conflict during CI tests with Python 3.10.
 - 2026-06-14: Optimized array indexing in trajectory optimizer loops. Converted `polygon` NumPy arrays to native Python lists using `.tolist()` before iterating in `_point_in_polygon` and `_squared_distance_to_polygon` to bypass NumPy's C-API dispatch and scalar casting overhead.
 - 2026-06-15: Optimized point_in_polygon and squared_distance_to_polygon in polygon_geometry.py by converting 2D NumPy arrays to nested Python lists using `.tolist()` before loop iteration, eliminating expensive C-API array dispatch operations.
+- 2026-06-15: Expanded the matplotlib dependency support window to `<3.11` so Python dependency automation can test the current 3.10.x microrelease series while keeping the existing lower bound and NumPy/MuJoCo contracts unchanged.
+- 2026-06-15: The CI test matrix now installs into a per-job virtual environment and invokes pip through the selected interpreter so self-hosted runner site-packages cannot shadow the editable checkout.
+- 2026-06-15: The anti-phantom guard uses the built-in workflow token and treats PR comment writes as best-effort so authentication/comment failures cannot hide the actual guard verdict.

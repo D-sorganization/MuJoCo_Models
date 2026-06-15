@@ -68,16 +68,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade --ignore-installed setuptools wheel
-      - run: pip install ruff==0.14.10 mypy==1.13.0 bandit==1.7.7
+      - run: python -m pip install ruff==0.14.10 mypy==1.13.0 bandit==1.7.7
       - name: Lint
-        run: ruff check src scripts tests
+        run: python -m ruff check src scripts tests
 
       - name: Check Formatting (ruff)
-        run: ruff format --check src scripts tests
+        run: python -m ruff format --check src scripts tests
 
-      - run: pip install mypy types-PyYAML types-requests
-      - run: pip install -e .[dev]
-      - run: mypy src --config-file pyproject.toml
+      - run: python -m pip install mypy types-PyYAML types-requests
+      - run: python -m pip install -e .[dev]
+      - run: python -m mypy src --config-file pyproject.toml
 
       - name: Verify No Placeholders
         run: |
@@ -122,7 +122,7 @@ jobs:
 
       - name: Bandit Security Scan
         run: |
-          bandit -r src/ -ll -ii --format txt
+          python -m bandit -r src/ -ll -ii --format txt
 
       - name: Generate SBOM
         run: |
@@ -190,11 +190,13 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Prepare Python tooling
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade --ignore-installed setuptools wheel
+          python -m venv .test-venv
+          echo "$PWD/.test-venv/bin" >> "$GITHUB_PATH"
+          .test-venv/bin/python -m pip install --upgrade pip
+          .test-venv/bin/python -m pip install --upgrade --ignore-installed setuptools wheel
 
       - name: Install Dependencies
-        run: pip install -e .[dev]
+        run: python -m pip install -e .[dev]
 
       - name: Verify package is importable without PYTHONPATH
         run: python -c "import mujoco_models"
