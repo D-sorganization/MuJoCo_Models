@@ -199,3 +199,4 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-06-15: Optimized point_in_polygon and squared_distance_to_polygon in polygon_geometry.py by converting 2D NumPy arrays to nested Python lists using `.tolist()` before loop iteration, eliminating expensive C-API array dispatch operations.
 - 2026-06-15: Expanded the matplotlib dependency support window to `<3.11` so Python dependency automation can test the current 3.10.x microrelease series while keeping the existing lower bound and NumPy/MuJoCo contracts unchanged.
 - 2026-06-15: The CI test matrix now installs into a per-job virtual environment and invokes pip through the selected interpreter so self-hosted runner site-packages cannot shadow the editable checkout.
+- 2026-06-15: The anti-phantom guard uses the built-in workflow token and treats PR comment writes as best-effort so authentication/comment failures cannot hide the actual guard verdict.
