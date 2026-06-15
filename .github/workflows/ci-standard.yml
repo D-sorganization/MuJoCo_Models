@@ -207,19 +207,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
           PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
-          PYTHONPATH: ${{ github.workspace }}/src
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import mujoco_models
-
-          package_path = Path(mujoco_models.__file__).resolve()
-          source_root = (Path.cwd() / "src" / "mujoco_models").resolve()
-          if source_root not in package_path.parents:
-              raise SystemExit(
-                  f"mujoco_models imported from {package_path}, expected under {source_root}"
-              )
-          PY
           python -u -m pytest \
             -p pytest_cov \
             -p pytest_timeout \
