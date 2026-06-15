@@ -39,10 +39,14 @@ def point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
     inside = False
     px, py = float(point[0]), float(point[1])
 
-    xj, yj = float(polygon[-1, 0]), float(polygon[-1, 1])
+    # OPTIMIZATION: Convert 2D NumPy array to nested list to avoid
+    # expensive array indexing and C-API dispatch in tight Python loop.
+    poly_list = polygon.tolist()
+
+    xj, yj = float(poly_list[-1][0]), float(poly_list[-1][1])
 
     for i in range(n):
-        xi, yi = float(polygon[i, 0]), float(polygon[i, 1])
+        xi, yi = float(poly_list[i][0]), float(poly_list[i][1])
 
         if (yi > py) != (yj > py):
             x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
@@ -68,15 +72,19 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
     n = len(polygon)
     px, py = float(point[0]), float(point[1])
 
+    # OPTIMIZATION: Convert 2D NumPy array to nested list to avoid
+    # expensive array indexing and C-API dispatch in tight Python loop.
+    poly_list = polygon.tolist()
+
     for i in range(n):
         j = i + 1 if i + 1 < n else 0
         dist_sq = _point_to_segment_sq(
             px,
             py,
-            float(polygon[i, 0]),
-            float(polygon[i, 1]),
-            float(polygon[j, 0]),
-            float(polygon[j, 1]),
+            float(poly_list[i][0]),
+            float(poly_list[i][1]),
+            float(poly_list[j][0]),
+            float(poly_list[j][1]),
         )
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
