@@ -190,11 +190,13 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Prepare Python tooling
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade --ignore-installed setuptools wheel
+          python -m venv .test-venv
+          echo "$PWD/.test-venv/bin" >> "$GITHUB_PATH"
+          .test-venv/bin/python -m pip install --upgrade pip
+          .test-venv/bin/python -m pip install --upgrade --ignore-installed setuptools wheel
 
       - name: Install Dependencies
-        run: pip install -e .[dev]
+        run: python -m pip install -e .[dev]
 
       - name: Verify package is importable without PYTHONPATH
         run: python -c "import mujoco_models"
