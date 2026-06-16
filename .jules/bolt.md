@@ -76,3 +76,7 @@
 ## 2024-06-14 - Fast array element access in tight loops
 **Learning:** Indexing into a 2D NumPy array inside a tight Python loop (e.g., `float(polygon[i, 0])`) has significant overhead due to C-API dispatch and scalar conversion.
 **Action:** Convert the NumPy array to a nested Python list using `.tolist()` before the loop. Indexing into the native list (e.g., `poly_list[i][0]`) is measurably faster (up to ~30% speedup in point-in-polygon tests).
+
+## 2026-06-16 - Avoid np.asarray in simple geometry routines
+**Learning:** `np.asarray` overhead dominates small routines like `parallel_axis_shift` when repeated hundreds of thousands of times per build.
+**Action:** When taking an array-like argument for small dimensions (e.g., 3-vectors), use a fast-path explicitly checking for lists or tuples and tuple length before coercing to a NumPy array.

@@ -169,9 +169,26 @@ def parallel_axis_shift(
     tuple of (Ixx', Iyy', Izz') about the new origin.
     """
     require_positive(mass, "mass")
-    d = np.asarray(displacement, dtype=float)
-    require_shape(d, (3,), "displacement")
-    dx, dy, dz = float(d[0]), float(d[1]), float(d[2])
+
+    # ⚡ Bolt Optimization: Fast path to avoid np.asarray overhead for 1D iterables
+    if isinstance(displacement, (list, tuple)):
+        if len(displacement) != 3:
+            require_shape(displacement, (3,), "displacement")
+        dx, dy, dz = (
+            float(displacement[0]),
+            float(displacement[1]),
+            float(displacement[2]),
+        )
+    elif getattr(displacement, "shape", None) == (3,):
+        dx, dy, dz = (
+            float(displacement[0]),
+            float(displacement[1]),
+            float(displacement[2]),
+        )
+    else:
+        d = np.asarray(displacement, dtype=float)
+        require_shape(d, (3,), "displacement")
+        dx, dy, dz = float(d[0]), float(d[1]), float(d[2])
     # OPTIMIZATION: Replaced np.dot with unrolled scalar math for small 3D vectors
     # to avoid function dispatch overhead.
     d_sq = dx * dx + dy * dy + dz * dz
