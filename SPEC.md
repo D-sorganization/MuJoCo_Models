@@ -200,3 +200,6 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-06-15: Expanded the matplotlib dependency support window to `<3.11` so Python dependency automation can test the current 3.10.x microrelease series while keeping the existing lower bound and NumPy/MuJoCo contracts unchanged.
 - 2026-06-15: The CI test matrix now installs into a per-job virtual environment and invokes pip through the selected interpreter so self-hosted runner site-packages cannot shadow the editable checkout.
 - 2026-06-15: The anti-phantom guard uses the built-in workflow token and treats PR comment writes as best-effort so authentication/comment failures cannot hide the actual guard verdict.
+
+
+- 2026-06-16: Added a fast path to `parallel_axis_shift` and `require_shape` that avoids `np.asarray` coercion for 1D iterables (tuples and lists) of small fixed dimensions (like 3-vectors).
