@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import _escape_attrib, _escape_cdata
 
 logger = logging.getLogger(__name__)
 
@@ -230,8 +231,40 @@ def indent_xml(elem: ET.Element, level: int = 0) -> None:
         elem.tail = "\n"
 
 
+def _fast_serialize_node(elem: ET.Element, buffer: list[str]) -> None:
+    """Recursively serialize an ElementTree node into a string buffer.
+
+    This avoids the significant overhead of xml.etree.ElementTree.tostring()
+    while preserving necessary XML escaping for correctness.
+    """
+    tag = elem.tag
+    attrib = elem.attrib
+
+    if attrib:
+        attrs = "".join([f' {k}="{_escape_attrib(v)}"' for k, v in attrib.items()])
+    else:
+        attrs = ""
+
+    if not len(elem) and not elem.text:
+        buffer.append(f"<{tag}{attrs} />")
+    else:
+        buffer.append(f"<{tag}{attrs}>")
+        if elem.text:
+            buffer.append(_escape_cdata(elem.text))
+        for child in elem:
+            _fast_serialize_node(child, buffer)
+        buffer.append(f"</{tag}>")
+
+    if elem.tail:
+        buffer.append(_escape_cdata(elem.tail))
+
+
 def serialize_model(root: ET.Element) -> str:
     """Serialize a MuJoCo MJCF ElementTree to a formatted XML string."""
     logger.debug("Serializing MJCF model with root tag=%s", root.tag)
     indent_xml(root)
-    return ET.tostring(root, encoding="unicode", xml_declaration=True)
+    # ⚡ Bolt Optimization:
+    # Use custom recursive serialization instead of ET.tostring for speed
+    buf: list[str] = ["<?xml version='1.0' encoding='utf-8'?>\n"]
+    _fast_serialize_node(root, buf)
+    return "".join(buf)
