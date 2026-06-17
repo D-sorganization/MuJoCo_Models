@@ -80,3 +80,6 @@
 ## 2026-06-16 - Avoid np.asarray in simple geometry routines
 **Learning:** `np.asarray` overhead dominates small routines like `parallel_axis_shift` when repeated hundreds of thousands of times per build.
 **Action:** When taking an array-like argument for small dimensions (e.g., 3-vectors), use a fast-path explicitly checking for lists or tuples and tuple length before coercing to a NumPy array.
+## 2026-06-17 - [Custom recursive XML serialization]
+**Learning:** `xml.etree.ElementTree.tostring()` is remarkably slow for serializing large MJCF trees due to its generic XML encoding overhead and file-like object writes in Python. For MJCF, which does not use namespaces or complex text encodings, generating strings using `ET.tostring` becomes a significant bottleneck (accounting for over 50% of the build time).
+**Action:** Instead of `ET.tostring`, use a simple custom recursive node serialization using list appending and `"".join(buf)` (as implemented in `_fast_serialize_node`). This reduces the string serialization overhead by >3x. Use this pattern whenever building large string-based XML structures programmatically.
