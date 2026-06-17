@@ -201,5 +201,5 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-06-15: The CI test matrix now installs into a per-job virtual environment and invokes pip through the selected interpreter so self-hosted runner site-packages cannot shadow the editable checkout.
 - 2026-06-15: The anti-phantom guard uses the built-in workflow token and treats PR comment writes as best-effort so authentication/comment failures cannot hide the actual guard verdict.
 
-
 - 2026-06-16: Added a fast path to `parallel_axis_shift` and `require_shape` that avoids `np.asarray` coercion for 1D iterables (tuples and lists) of small fixed dimensions (like 3-vectors).
+- 2026-06-17: Replaced `ElementTree.tostring()` in `serialize_model()` with a focused recursive MJCF serializer that appends escaped XML fragments into a list buffer and joins once, reducing large-tree serialization overhead while preserving XML escaping.
