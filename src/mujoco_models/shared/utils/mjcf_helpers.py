@@ -14,9 +14,24 @@ from __future__ import annotations
 
 import logging
 import xml.etree.ElementTree as ET
-from xml.etree.ElementTree import _escape_attrib, _escape_cdata
+from collections.abc import Callable
+from typing import cast
 
 logger = logging.getLogger(__name__)
+
+_XmlEscape = Callable[[str], str]
+
+
+def _xml_escape_helper(name: str) -> _XmlEscape:
+    helper = vars(ET)[name]
+    if not callable(helper):
+        msg = f"ElementTree helper {name!r} is not callable"
+        raise TypeError(msg)
+    return cast(_XmlEscape, helper)
+
+
+_escape_attrib = _xml_escape_helper("_escape_attrib")
+_escape_cdata = _xml_escape_helper("_escape_cdata")
 
 
 def vec3_str(x: float, y: float, z: float) -> str:
