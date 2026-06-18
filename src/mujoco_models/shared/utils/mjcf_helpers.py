@@ -57,7 +57,7 @@ def _build_geom_attrs(
 ) -> dict[str, str]:
     """Build the attribute dict for an MJCF ``<geom>`` element."""
     attrs: dict[str, str] = {
-        "name": f"{name}_geom",
+        "name": name + "_geom",
         "type": geom_type,
         "rgba": geom_rgba,
     }
@@ -65,31 +65,24 @@ def _build_geom_attrs(
     # ⚡ Bolt Optimization:
     # Hardcode string formatting for common tuple lengths (1, 2, 3)
     # instead of using generator expressions and string joins.
-    # This avoids generator allocation and reduces execution time.
+    # Passing the tuple directly to the % operator avoids tuple allocation.
     # Furthermore, using % formatting is ~30% faster than f-strings for these cases.
+    # We explicitly cast to tuple to ensure compatibility with lists/ndarrays.
     if geom_size is not None:
         l_size = len(geom_size)
-        if l_size == 2:
-            attrs["size"] = "%.6f %.6f" % (geom_size[0], geom_size[1])  # noqa: UP031
+        if l_size == 3:
+            attrs["size"] = "%.6f %.6f %.6f" % tuple(geom_size)  # noqa: UP031
+        elif l_size == 2:
+            attrs["size"] = "%.6f %.6f" % tuple(geom_size)  # noqa: UP031
         elif l_size == 1:
-            attrs["size"] = "%.6f" % geom_size[0]  # noqa: UP031
-        elif l_size == 3:
-            attrs["size"] = "%.6f %.6f %.6f" % (  # noqa: UP031
-                geom_size[0],
-                geom_size[1],
-                geom_size[2],
-            )
+            attrs["size"] = "%.6f" % float(geom_size[0])  # noqa: UP031
         else:
             attrs["size"] = " ".join("%.6f" % s for s in geom_size)  # noqa: UP031
 
     if geom_euler is not None:
         l_euler = len(geom_euler)
         if l_euler == 3:
-            attrs["euler"] = "%.6f %.6f %.6f" % (  # noqa: UP031
-                geom_euler[0],
-                geom_euler[1],
-                geom_euler[2],
-            )
+            attrs["euler"] = "%.6f %.6f %.6f" % tuple(geom_euler)  # noqa: UP031
         else:
             attrs["euler"] = " ".join("%.6f" % e for e in geom_euler)  # noqa: UP031
 
@@ -255,15 +248,15 @@ def _fast_serialize_node(elem: ET.Element, buffer: list[str]) -> None:
     tag = elem.tag
     attrib = elem.attrib
 
+    buffer.append(f"<{tag}")
     if attrib:
-        attrs = "".join([f' {k}="{_escape_attrib(v)}"' for k, v in attrib.items()])
-    else:
-        attrs = ""
+        for k, v in attrib.items():
+            buffer.append(f' {k}="{_escape_attrib(v)}"')
 
     if not len(elem) and not elem.text:
-        buffer.append(f"<{tag}{attrs} />")
+        buffer.append(" />")
     else:
-        buffer.append(f"<{tag}{attrs}>")
+        buffer.append(">")
         if elem.text:
             buffer.append(_escape_cdata(elem.text))
         for child in elem:

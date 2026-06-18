@@ -203,3 +203,4 @@ This header is present in every module-level `.py` file as of the SPDX header up
 
 - 2026-06-16: Added a fast path to `parallel_axis_shift` and `require_shape` that avoids `np.asarray` coercion for 1D iterables (tuples and lists) of small fixed dimensions (like 3-vectors).
 - 2026-06-17: Replaced `ElementTree.tostring()` in `serialize_model()` with a focused recursive MJCF serializer that appends escaped XML fragments into a list buffer and joins once, reducing large-tree serialization overhead while preserving XML escaping.
+- 2026-06-18: Optimized MJCF generation by replacing `"".join` inside `_fast_serialize_node` with sequential `buffer.append()` calls to skip intermediate string allocation, and passed explicit tuples to `%` string interpolation to avoid python tuple instantiation from list indices.
