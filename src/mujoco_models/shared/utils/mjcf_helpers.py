@@ -75,7 +75,7 @@ def _build_geom_attrs(
         elif l_size == 2:
             attrs["size"] = "%.6f %.6f" % tuple(geom_size)  # noqa: UP031
         elif l_size == 1:
-            attrs["size"] = "%.6f" % tuple(geom_size)  # noqa: UP031
+            attrs["size"] = "%.6f" % float(geom_size[0])  # noqa: UP031
         else:
             attrs["size"] = " ".join("%.6f" % s for s in geom_size)  # noqa: UP031
 
