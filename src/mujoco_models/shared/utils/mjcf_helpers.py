@@ -248,20 +248,29 @@ def _fast_serialize_node(elem: ET.Element, buffer: list[str]) -> None:
     tag = elem.tag
     attrib = elem.attrib
 
-    buffer.append(f"<{tag}")
+    buffer.append("<")
+    buffer.append(tag)
     if attrib:
         for k, v in attrib.items():
-            buffer.append(f' {k}="{_escape_attrib(v)}"')
+            buffer.append(" ")
+            buffer.append(k)
+            buffer.append('="')
+            buffer.append(_escape_attrib(v))
+            buffer.append('"')
 
-    if not len(elem) and not elem.text:
+    has_children = bool(len(elem))
+    if not has_children and not elem.text:
         buffer.append(" />")
     else:
         buffer.append(">")
         if elem.text:
             buffer.append(_escape_cdata(elem.text))
-        for child in elem:
-            _fast_serialize_node(child, buffer)
-        buffer.append(f"</{tag}>")
+        if has_children:
+            for child in elem:
+                _fast_serialize_node(child, buffer)
+        buffer.append("</")
+        buffer.append(tag)
+        buffer.append(">")
 
     if elem.tail:
         buffer.append(_escape_cdata(elem.tail))
