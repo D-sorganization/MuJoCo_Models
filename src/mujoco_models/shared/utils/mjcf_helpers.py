@@ -239,6 +239,18 @@ def indent_xml(elem: ET.Element, level: int = 0) -> None:
         elem.tail = "\n"
 
 
+def _fast_escape_attrib(v: str) -> str:
+    if "&" in v or "<" in v or '"' in v or "\n" in v or "\r" in v or "\t" in v:
+        return _escape_attrib(v)
+    return v
+
+
+def _fast_escape_cdata(v: str) -> str:
+    if "&" in v or "<" in v:
+        return _escape_cdata(v)
+    return v
+
+
 def _fast_serialize_node(elem: ET.Element, buffer: list[str]) -> None:
     """Recursively serialize an ElementTree node into a string buffer.
 
@@ -248,15 +260,10 @@ def _fast_serialize_node(elem: ET.Element, buffer: list[str]) -> None:
     tag = elem.tag
     attrib = elem.attrib
 
-    buffer.append("<")
-    buffer.append(tag)
+    buffer.extend(("<", tag))
     if attrib:
         for k, v in attrib.items():
-            buffer.append(" ")
-            buffer.append(k)
-            buffer.append('="')
-            buffer.append(_escape_attrib(v))
-            buffer.append('"')
+            buffer.extend((" ", k, '="', _fast_escape_attrib(v), '"'))
 
     has_children = bool(len(elem))
     if not has_children and not elem.text:
@@ -264,16 +271,14 @@ def _fast_serialize_node(elem: ET.Element, buffer: list[str]) -> None:
     else:
         buffer.append(">")
         if elem.text:
-            buffer.append(_escape_cdata(elem.text))
+            buffer.append(_fast_escape_cdata(elem.text))
         if has_children:
             for child in elem:
                 _fast_serialize_node(child, buffer)
-        buffer.append("</")
-        buffer.append(tag)
-        buffer.append(">")
+        buffer.extend(("</", tag, ">"))
 
     if elem.tail:
-        buffer.append(_escape_cdata(elem.tail))
+        buffer.append(_fast_escape_cdata(elem.tail))
 
 
 def serialize_model(root: ET.Element) -> str:
