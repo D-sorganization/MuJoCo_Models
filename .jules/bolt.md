@@ -90,3 +90,6 @@
 ## 2024-06-19 - XML Serialization Generator Overhead
 **Learning:** In highly recursive standard-library tree structures like ElementTree, the use of `f-strings` for building serialized tags inside tight `"".join(buf)` loops causes unnecessary intermediate string allocations. Moreover, iterating over leaf nodes with `for child in elem:` allocates an iterator for every node, even if the node is empty (which happens frequently in MJCF).
 **Action:** When handwriting fast custom serialization loops, substitute f-strings with multiple successive `list.append()` calls to write raw parts to the buffer. Also, proactively pre-evaluate `bool(len(elem))` to bypass `for child in elem:` iterations on leaf nodes entirely.
+## 2024-06-21 - [Fast 1D Mean Squared Deviation]
+**Learning:** `np.mean(dx * dx + dy * dy)` creates intermediate arrays for element-wise multiplication and addition.
+**Action:** Use dot product `(dx @ dx + dy @ dy) / len(dx)` instead of element-wise arithmetic and `np.mean` to eliminate temporary array allocations and leverage optimized BLAS routines, providing a significant speedup.
