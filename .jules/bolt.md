@@ -137,3 +137,8 @@
 
 **Learning:** During profiling, we found that attribute lookup (e.g. `buffer.extend` and `buffer.append`) inside tightly recursive algorithms like `_fast_serialize_node` accounts for measurable execution time. Furthermore, simple wrapper functions like `_fast_escape_attrib` add unnecessary python call frame overhead.
 **Action:** When implementing custom recursive tree traversal functions, explicitly pass bounded methods (e.g., `buffer.extend` and `buffer.append`) as positional arguments to avoid repeatedly resolving them. Also, inline simple fast-path delegate functions (like early checks for string escaping) directly into the calling logic. This reduces XML serialization time by nearly 30% in highly nested structures.
+
+## 2026-06-24 - Fast-path unpacking in tight array operations
+
+**Learning:** When writing simple algebraic routines over generic array-like structures (e.g. `parallel_axis_shift` taking a 3-vector displacement), validating input types using nested `isinstance` or `getattr(..., "shape")` calls imposes measurable function overhead (~25% slowdown) compared to direct exception handling, especially when such routines are invoked hundreds of thousands of times per build.
+**Action:** Use a `try...except (TypeError, IndexError)` block to directly unpack sequence values and convert them to float. This EAFP (Easier to Ask for Forgiveness than Permission) approach establishes a faster fast-path for valid native lists, tuples, and simple ndarrays in tight inner loops while gracefully falling back to full validation and `np.asarray` conversion only when necessary.
