@@ -209,3 +209,4 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-06-21: Optimized \_fast_serialize_node in mjcf_helpers.py by implementing fast-path wrappers for standard library \_escape_attrib and \_escape_cdata, and utilizing list buffer extend over multiple appends, skipping function overhead for unescaped strings.
 - 2026-06-21: Replaced `np.mean(dx * dx + dy * dy)` with `(dx @ dx + dy @ dy) / len(dx)` in `compute_bar_path_cost` to bypass temporary array allocations during element-wise arithmetic, leveraging optimized BLAS dot product routines.
 - 2026-06-22: Optimized `_fast_serialize_node` in `mjcf_helpers.py` by inlining the string escaping fast path logic and explicitly passing bound list methods (`buffer.extend`, `buffer.append`) as positional arguments to eliminate python wrapper frame overhead and `LOAD_METHOD` lookup time during recursive descent.
+- Optimized _fast_serialize_node tuple allocations in xml serialization
