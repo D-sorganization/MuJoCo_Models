@@ -137,3 +137,7 @@
 
 **Learning:** During profiling, we found that attribute lookup (e.g. `buffer.extend` and `buffer.append`) inside tightly recursive algorithms like `_fast_serialize_node` accounts for measurable execution time. Furthermore, simple wrapper functions like `_fast_escape_attrib` add unnecessary python call frame overhead.
 **Action:** When implementing custom recursive tree traversal functions, explicitly pass bounded methods (e.g., `buffer.extend` and `buffer.append`) as positional arguments to avoid repeatedly resolving them. Also, inline simple fast-path delegate functions (like early checks for string escaping) directly into the calling logic. This reduces XML serialization time by nearly 30% in highly nested structures.
+
+## 2026-06-29 - Fast XML Serialization optimization
+**Learning:** In tight custom recursive serialization loops (like ElementTree MJCF serialization), using `list.extend` with inline tuples (e.g., `buffer.extend(('<', tag))`) incurs significant tuple allocation overhead.
+**Action:** Append elements directly to the list buffer via multiple `list.append()` calls instead of `list.extend` to bypass tuple allocation overhead and improve execution speed.
