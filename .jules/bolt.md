@@ -137,3 +137,8 @@
 
 **Learning:** During profiling, we found that attribute lookup (e.g. `buffer.extend` and `buffer.append`) inside tightly recursive algorithms like `_fast_serialize_node` accounts for measurable execution time. Furthermore, simple wrapper functions like `_fast_escape_attrib` add unnecessary python call frame overhead.
 **Action:** When implementing custom recursive tree traversal functions, explicitly pass bounded methods (e.g., `buffer.extend` and `buffer.append`) as positional arguments to avoid repeatedly resolving them. Also, inline simple fast-path delegate functions (like early checks for string escaping) directly into the calling logic. This reduces XML serialization time by nearly 30% in highly nested structures.
+
+## 2024-06-25 - Avoid standard library _escape_attrib overhead
+
+**Learning:** During profiling, we found that standard library `xml.etree.ElementTree._escape_attrib` and `_escape_cdata` functions account for a disproportionate amount of time during MJCF serialization. Since typical MJCF structures do not frequently contain special characters that require XML escaping (like `<`, `&`, `\n`), unconditionally invoking the standard library escaping function for every string introduces significant unnecessary processing overhead. Even when escaping is needed, using native string `.replace()` sequentially is significantly faster than the built-in function inside a tight loop.
+**Action:** Replace `_escape_attrib` and `_escape_cdata` with explicit inline `.replace()` operations inside `_fast_serialize_node`. Also avoid `isinstance(vec, (tuple, list))` inside tight validation paths (`preconditions.py`) by using `type(vec) is tuple or type(vec) is list` directly, which eliminates tuple checking and dynamic dispatch overheads.
