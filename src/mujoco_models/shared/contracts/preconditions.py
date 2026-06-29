@@ -51,7 +51,8 @@ def require_non_negative(value: float, name: str) -> None:
 def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
     """Require *vec* to have unit norm within *tol*."""
     # ⚡ Bolt Optimization: Fast path for lists and tuples without coercing to ndarray
-    if isinstance(vec, (tuple, list)):
+    t = type(vec)
+    if t is tuple or t is list:
         if len(vec) != 3:
             raise ValidationError(f"{name} must be a 3-vector, got shape ({len(vec)},)")
         try:
@@ -77,13 +78,14 @@ def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
 def require_finite(arr: ArrayLike, name: str) -> None:  # noqa: C901
     """Require all elements of *arr* to be finite (no NaN/Inf)."""
     # ⚡ Bolt Optimization: Fast path for scalars.
-    if isinstance(arr, (int, float)):
+    t = type(arr)
+    if t is int or t is float:
         if not math.isfinite(arr):
             raise ValidationError(f"{name} contains non-finite values")
         return
 
     # ⚡ Bolt Optimization: Fast path for basic iterables like lists and tuples
-    if isinstance(arr, (list, tuple)):
+    if t is list or t is tuple:
         try:
             for x in arr:
                 if not math.isfinite(x):  # type: ignore
@@ -124,10 +126,18 @@ def require_shape(arr: ArrayLike, expected: tuple[int, ...], name: str) -> None:
         return
 
     # Fast path for 1D lists/tuples using len() directly
-    if isinstance(arr, (list, tuple)) and len(expected) == 1:
+    t = type(arr)
+    if (t is list or t is tuple) and len(expected) == 1:
         # Check if it's truly a 1D list (i.e. first element is not another iterable)
-        if len(arr) > 0 and isinstance(arr[0], (list, tuple, np.ndarray)):
-            pass
+        if len(arr) > 0:
+            t0 = type(arr[0])
+            if t0 is list or t0 is tuple or t0 is np.ndarray:
+                pass
+            elif len(arr) != expected[0]:
+                msg = f"{name} must have shape {expected}, got ({len(arr)},)"
+                raise ValidationError(msg)
+            else:
+                return
         elif len(arr) != expected[0]:
             msg = f"{name} must have shape {expected}, got ({len(arr)},)"
             raise ValidationError(msg)
