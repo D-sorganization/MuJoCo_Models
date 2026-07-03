@@ -244,6 +244,7 @@ def _fast_serialize_node(  # noqa: C901
     buffer: list[str],
     buffer_extend: Callable[[tuple[str, ...]], None],
     buffer_append: Callable[[str], None],
+    level: int = 0,
 ) -> None:
     """Recursively serialize an ElementTree node into a string buffer.
 
@@ -251,8 +252,12 @@ def _fast_serialize_node(  # noqa: C901
     while preserving necessary XML escaping for correctness.
     """
     tag = elem.tag
+    indent_str = "  " * level
 
-    buffer_extend(("<", tag))
+    if level > 0:
+        buffer_extend(("\n", indent_str, "<", tag))
+    else:
+        buffer_extend(("<", tag))
 
     attrib = elem.attrib
     if attrib:
@@ -262,11 +267,11 @@ def _fast_serialize_node(  # noqa: C901
             buffer_extend((" ", k, '="', v, '"'))
 
     has_children = bool(len(elem))
-    if not has_children and not elem.text:
+    if not has_children and (not elem.text or not elem.text.strip()):
         buffer_append(" />")
     else:
         buffer_append(">")
-        if elem.text:
+        if elem.text and elem.text.strip():
             text = elem.text
             if "&" in text or "<" in text:
                 text = _escape_cdata(text)
@@ -274,10 +279,14 @@ def _fast_serialize_node(  # noqa: C901
 
         if has_children:
             for child in elem:
-                _fast_serialize_node(child, buffer, buffer_extend, buffer_append)
-        buffer_extend(("</", tag, ">"))
+                _fast_serialize_node(
+                    child, buffer, buffer_extend, buffer_append, level + 1
+                )
+            buffer_extend(("\n", indent_str, "</", tag, ">"))
+        else:
+            buffer_extend(("</", tag, ">"))
 
-    if elem.tail:
+    if elem.tail and elem.tail.strip():
         tail = elem.tail
         if "&" in tail or "<" in tail:
             tail = _escape_cdata(tail)
@@ -287,11 +296,12 @@ def _fast_serialize_node(  # noqa: C901
 def serialize_model(root: ET.Element) -> str:
     """Serialize a MuJoCo MJCF ElementTree to a formatted XML string."""
     logger.debug("Serializing MJCF model with root tag=%s", root.tag)
-    indent_xml(root)
     # ⚡ Bolt Optimization:
-    # Use custom recursive serialization instead of ET.tostring for speed.
+    # Use custom recursive serialization with inline indentation instead of
+    # ET.tostring or a separate ET.indent pass for speed.
     # We pass buffer.extend and buffer.append to avoid attribute lookup overhead
     # in the recursive calls, and inline the fast-path string checks.
     buf: list[str] = ["<?xml version='1.0' encoding='utf-8'?>\n"]
-    _fast_serialize_node(root, buf, buf.extend, buf.append)
+    _fast_serialize_node(root, buf, buf.extend, buf.append, 0)
+    buf.append("\n")
     return "".join(buf)
