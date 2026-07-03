@@ -99,20 +99,22 @@ def _point_to_segment_sq(
     """Squared distance from a point to a line segment."""
     abx = bx - ax
     aby = by - ay
-    apx = px - ax
-    apy = py - ay
 
     ab_sq = abx * abx + aby * aby
     if ab_sq < 1e-12:
+        apx = px - ax
+        apy = py - ay
         return apx * apx + apy * apy
 
-    t = (apx * abx + apy * aby) / ab_sq
+    t = ((px - ax) * abx + (py - ay) * aby) / ab_sq
     if t < 0.0:
-        t = 0.0
+        dx = px - ax
+        dy = py - ay
     elif t > 1.0:
-        t = 1.0
-
-    dx = px - (ax + t * abx)
-    dy = py - (ay + t * aby)
+        dx = px - bx
+        dy = py - by
+    else:
+        dx = px - (ax + t * abx)
+        dy = py - (ay + t * aby)
 
     return dx * dx + dy * dy
