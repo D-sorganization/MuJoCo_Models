@@ -227,23 +227,12 @@ def add_weld_constraint(
     return ET.SubElement(equality, "weld", attrib=attrs)
 
 
-def indent_xml(elem: ET.Element, level: int = 0) -> None:
-    """Add whitespace indentation to an ElementTree in-place.
-
-    Delegates to :func:`xml.etree.ElementTree.indent` (stdlib, Python 3.9+).
-    The *level* parameter is accepted for backward compatibility but ignored;
-    the stdlib implementation always starts from the root indentation level.
-    """
-    ET.indent(elem, space="  ", level=level)
-    if level == 0:
-        elem.tail = "\n"
-
-
 def _fast_serialize_node(  # noqa: C901
     elem: ET.Element,
     buffer: list[str],
     buffer_extend: Callable[[tuple[str, ...]], None],
     buffer_append: Callable[[str], None],
+    level: int = 0,
 ) -> None:
     """Recursively serialize an ElementTree node into a string buffer.
 
@@ -251,6 +240,10 @@ def _fast_serialize_node(  # noqa: C901
     while preserving necessary XML escaping for correctness.
     """
     tag = elem.tag
+
+    indentation = "\n" + "  " * level
+    if level > 0:
+        buffer_append(indentation)
 
     buffer_extend(("<", tag))
 
@@ -262,36 +255,44 @@ def _fast_serialize_node(  # noqa: C901
             buffer_extend((" ", k, '="', v, '"'))
 
     has_children = bool(len(elem))
-    if not has_children and not elem.text:
+    text = elem.text.strip() if elem.text else ""
+
+    if not has_children and not text:
         buffer_append(" />")
     else:
         buffer_append(">")
-        if elem.text:
-            text = elem.text
+        if text:
             if "&" in text or "<" in text:
                 text = _escape_cdata(text)
             buffer_append(text)
 
         if has_children:
             for child in elem:
-                _fast_serialize_node(child, buffer, buffer_extend, buffer_append)
-        buffer_extend(("</", tag, ">"))
+                _fast_serialize_node(
+                    child, buffer, buffer_extend, buffer_append, level + 1
+                )
+            buffer_extend((indentation, "</", tag, ">"))
+        else:
+            buffer_extend(("</", tag, ">"))
 
-    if elem.tail:
-        tail = elem.tail
+    if elem.tail and elem.tail.strip():
+        tail = elem.tail.strip()
         if "&" in tail or "<" in tail:
             tail = _escape_cdata(tail)
         buffer_append(tail)
+
+    if level == 0:
+        buffer_append("\n")
 
 
 def serialize_model(root: ET.Element) -> str:
     """Serialize a MuJoCo MJCF ElementTree to a formatted XML string."""
     logger.debug("Serializing MJCF model with root tag=%s", root.tag)
-    indent_xml(root)
     # ⚡ Bolt Optimization:
     # Use custom recursive serialization instead of ET.tostring for speed.
     # We pass buffer.extend and buffer.append to avoid attribute lookup overhead
     # in the recursive calls, and inline the fast-path string checks.
+    # Indentation is done inline to avoid an O(N) ET.indent() tree traversal.
     buf: list[str] = ["<?xml version='1.0' encoding='utf-8'?>\n"]
-    _fast_serialize_node(root, buf, buf.extend, buf.append)
+    _fast_serialize_node(root, buf, buf.extend, buf.append, 0)
     return "".join(buf)

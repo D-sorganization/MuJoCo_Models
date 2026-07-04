@@ -11,7 +11,6 @@ from mujoco_models.shared.utils.mjcf_helpers import (
     add_hinge_joint,
     add_weld_constraint,
     diag_inertia_str,
-    indent_xml,
     serialize_model,
     vec3_str,
 )
@@ -199,20 +198,6 @@ class TestAddWeldConstraint:
     def test_without_relpose(self, equality: ET.Element) -> None:
         weld = add_weld_constraint(equality, name="w3", body1="a", body2="b")
         assert weld.get("relpose") is None  # type: ignore
-
-
-class TestIndentXml:
-    def test_indents_children(self) -> None:
-        root = ET.Element("mujoco")
-        ET.SubElement(root, "option")
-        indent_xml(root)
-        xml_str = ET.tostring(root, encoding="unicode")
-        assert "\n" in xml_str
-
-    def test_empty_element(self) -> None:
-        root = ET.Element("mujoco")
-        indent_xml(root)
-        assert root.tail == "\n"
 
 
 class TestSerializeModel:

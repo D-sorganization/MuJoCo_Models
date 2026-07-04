@@ -1,3 +1,5 @@
+<!-- Updated after inline indentation optimization -->
+
 # SPEC.md - MuJoCo_Models Repository Specification
 
 ## 1. Identity
