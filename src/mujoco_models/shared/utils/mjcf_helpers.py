@@ -242,7 +242,6 @@ def indent_xml(elem: ET.Element, level: int = 0) -> None:
 def _fast_serialize_node(  # noqa: C901
     elem: ET.Element,
     buffer: list[str],
-    buffer_extend: Callable[[tuple[str, ...]], None],
     buffer_append: Callable[[str], None],
 ) -> None:
     """Recursively serialize an ElementTree node into a string buffer.
@@ -252,14 +251,26 @@ def _fast_serialize_node(  # noqa: C901
     """
     tag = elem.tag
 
-    buffer_extend(("<", tag))
+    buffer_append("<")
+    buffer_append(tag)
 
     attrib = elem.attrib
     if attrib:
         for k, v in attrib.items():
             if "&" in v or "<" in v or '"' in v or "\n" in v or "\r" in v or "\t" in v:
-                v = _escape_attrib(v)
-            buffer_extend((" ", k, '="', v, '"'))
+                v = (
+                    v.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace('"', "&quot;")
+                    .replace("\n", "&#10;")
+                    .replace("\r", "&#13;")
+                    .replace("\t", "&#09;")
+                )
+            buffer_append(" ")
+            buffer_append(k)
+            buffer_append('="')
+            buffer_append(v)
+            buffer_append('"')
 
     has_children = bool(len(elem))
     if not has_children and not elem.text:
@@ -269,18 +280,20 @@ def _fast_serialize_node(  # noqa: C901
         if elem.text:
             text = elem.text
             if "&" in text or "<" in text:
-                text = _escape_cdata(text)
+                text = text.replace("&", "&amp;").replace("<", "&lt;")
             buffer_append(text)
 
         if has_children:
             for child in elem:
-                _fast_serialize_node(child, buffer, buffer_extend, buffer_append)
-        buffer_extend(("</", tag, ">"))
+                _fast_serialize_node(child, buffer, buffer_append)
+        buffer_append("</")
+        buffer_append(tag)
+        buffer_append(">")
 
     if elem.tail:
         tail = elem.tail
         if "&" in tail or "<" in tail:
-            tail = _escape_cdata(tail)
+            tail = tail.replace("&", "&amp;").replace("<", "&lt;")
         buffer_append(tail)
 
 
@@ -290,8 +303,9 @@ def serialize_model(root: ET.Element) -> str:
     indent_xml(root)
     # ⚡ Bolt Optimization:
     # Use custom recursive serialization instead of ET.tostring for speed.
-    # We pass buffer.extend and buffer.append to avoid attribute lookup overhead
-    # in the recursive calls, and inline the fast-path string checks.
+    # Passing buffer.append avoids attribute lookup overhead in recursive calls.
+    # Inlining the fast-path string checks and using multiple appends avoids
+    # tuple and intermediate string allocation overheads.
     buf: list[str] = ["<?xml version='1.0' encoding='utf-8'?>\n"]
-    _fast_serialize_node(root, buf, buf.extend, buf.append)
+    _fast_serialize_node(root, buf, buf.append)
     return "".join(buf)
