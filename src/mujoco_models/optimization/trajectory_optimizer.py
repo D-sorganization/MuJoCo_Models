@@ -402,10 +402,12 @@ def _point_to_segment_sq(
         return apx * apx + apy * apy
 
     t = (apx * abx + apy * aby) / ab_sq
-    if t < 0.0:
-        t = 0.0
-    elif t > 1.0:
-        t = 1.0
+    if t <= 0.0:
+        return apx * apx + apy * apy
+    if t >= 1.0:
+        bpx = px - bx
+        bpy = py - by
+        return bpx * bpx + bpy * bpy
 
     dx = px - (ax + t * abx)
     dy = py - (ay + t * aby)
