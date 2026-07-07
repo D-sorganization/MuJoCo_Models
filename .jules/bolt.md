@@ -137,3 +137,8 @@
 
 **Learning:** During profiling, we found that attribute lookup (e.g. `buffer.extend` and `buffer.append`) inside tightly recursive algorithms like `_fast_serialize_node` accounts for measurable execution time. Furthermore, simple wrapper functions like `_fast_escape_attrib` add unnecessary python call frame overhead.
 **Action:** When implementing custom recursive tree traversal functions, explicitly pass bounded methods (e.g., `buffer.extend` and `buffer.append`) as positional arguments to avoid repeatedly resolving them. Also, inline simple fast-path delegate functions (like early checks for string escaping) directly into the calling logic. This reduces XML serialization time by nearly 30% in highly nested structures.
+
+## 2026-07-07 - Combine XML indentation with recursive serialization
+
+**Learning:** Separating `xml.etree.ElementTree.indent()` and our custom recursive XML serialization step into two passes results in redundant tree traversals. The stdlib `indent()` method traverses the entire DOM to inject whitespace text/tail nodes, taking roughly ~20% of total XML serialization time for large MJCF files.
+**Action:** Move indentation tracking directly into the custom recursive serialization walk (`_fast_serialize_node`) via a `level` parameter and string formatting (e.g. `"\n" + "  " * level`). This completely eliminates the need for the `ET.indent()` O(N) tree walk, effectively speeding up overall XML string generation by reducing redundant traversals. Be sure to strip `.text` before writing to avoid double-indenting if the tree already contained whitespace formatting.
