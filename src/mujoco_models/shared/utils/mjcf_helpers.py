@@ -283,7 +283,9 @@ def _fast_serialize_node(  # noqa: C901
 
         if has_children:
             for child in elem:
-                _fast_serialize_node(child, buffer, buffer_extend, buffer_append, level + 1)
+                _fast_serialize_node(
+                    child, buffer, buffer_extend, buffer_append, level + 1
+                )
 
             # Close indent
             buffer_append("\n" + "  " * level)
