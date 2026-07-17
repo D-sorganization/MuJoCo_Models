@@ -210,3 +210,4 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-06-21: Replaced `np.mean(dx * dx + dy * dy)` with `(dx @ dx + dy @ dy) / len(dx)` in `compute_bar_path_cost` to bypass temporary array allocations during element-wise arithmetic, leveraging optimized BLAS dot product routines.
 - 2026-06-22: Optimized `_fast_serialize_node` in `mjcf_helpers.py` by inlining the string escaping fast path logic and explicitly passing bound list methods (`buffer.extend`, `buffer.append`) as positional arguments to eliminate python wrapper frame overhead and `LOAD_METHOD` lookup time during recursive descent.
 - 2026-06-25: Optimized `serialize_model` and `_fast_serialize_node` in `mjcf_helpers.py` by bypassing `ET.indent` and natively formatting structural indentation strings in a single recursive tree traversal.
+1784266816
