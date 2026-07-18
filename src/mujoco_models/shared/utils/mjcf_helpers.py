@@ -266,7 +266,7 @@ def _fast_serialize_node(  # noqa: C901
             buffer_extend((" ", k, '="', v, '"'))
 
     has_children = bool(len(elem))
-    text = elem.text
+    text = elem.text or ""
     has_text = bool(text and not text.isspace())
 
     if not has_children and not has_text:
@@ -290,7 +290,7 @@ def _fast_serialize_node(  # noqa: C901
 
         buffer_extend(("</", tag, ">"))
 
-    tail = elem.tail
+    tail = elem.tail or ""
     if tail and not tail.isspace():
         if "&" in tail or "<" in tail:
             tail = _escape_cdata(tail)
