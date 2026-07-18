@@ -244,6 +244,7 @@ def _fast_serialize_node(  # noqa: C901
     buffer: list[str],
     buffer_extend: Callable[[tuple[str, ...]], None],
     buffer_append: Callable[[str], None],
+    level: int,
 ) -> None:
     """Recursively serialize an ElementTree node into a string buffer.
 
@@ -252,7 +253,10 @@ def _fast_serialize_node(  # noqa: C901
     """
     tag = elem.tag
 
-    buffer_extend(("<", tag))
+    if level > 0:
+        buffer_extend(("\n", "  " * level, "<", tag))
+    else:
+        buffer_extend(("<", tag))
 
     attrib = elem.attrib
     if attrib:
@@ -268,30 +272,38 @@ def _fast_serialize_node(  # noqa: C901
         buffer_append(">")
         if elem.text:
             text = elem.text
-            if "&" in text or "<" in text:
-                text = _escape_cdata(text)
-            buffer_append(text)
+            if not text.isspace():
+                if "&" in text or "<" in text:
+                    text = _escape_cdata(text)
+                buffer_append(text)
 
         if has_children:
+            next_level = level + 1
             for child in elem:
-                _fast_serialize_node(child, buffer, buffer_extend, buffer_append)
-        buffer_extend(("</", tag, ">"))
+                _fast_serialize_node(
+                    child, buffer, buffer_extend, buffer_append, next_level
+                )
+            buffer_extend(("\n", "  " * level, "</", tag, ">"))
+        else:
+            buffer_extend(("</", tag, ">"))
 
     if elem.tail:
         tail = elem.tail
-        if "&" in tail or "<" in tail:
-            tail = _escape_cdata(tail)
-        buffer_append(tail)
+        if not tail.isspace():
+            if "&" in tail or "<" in tail:
+                tail = _escape_cdata(tail)
+            buffer_append(tail)
 
 
 def serialize_model(root: ET.Element) -> str:
     """Serialize a MuJoCo MJCF ElementTree to a formatted XML string."""
     logger.debug("Serializing MJCF model with root tag=%s", root.tag)
-    indent_xml(root)
     # ⚡ Bolt Optimization:
-    # Use custom recursive serialization instead of ET.tostring for speed.
-    # We pass buffer.extend and buffer.append to avoid attribute lookup overhead
-    # in the recursive calls, and inline the fast-path string checks.
+    # We use custom recursive serialization instead of ET.tostring() or ET.indent().
+    # By tracking 'level' and handling indentation manually, we avoid the
+    # O(N) tree traversal of ET.indent() that allocates countless redundant
+    # whitespace strings to the .tail and .text attributes.
     buf: list[str] = ["<?xml version='1.0' encoding='utf-8'?>\n"]
-    _fast_serialize_node(root, buf, buf.extend, buf.append)
+    _fast_serialize_node(root, buf, buf.extend, buf.append, 0)
+    buf.append("\n")
     return "".join(buf)
