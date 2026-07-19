@@ -137,3 +137,8 @@
 
 **Learning:** During profiling, we found that attribute lookup (e.g. `buffer.extend` and `buffer.append`) inside tightly recursive algorithms like `_fast_serialize_node` accounts for measurable execution time. Furthermore, simple wrapper functions like `_fast_escape_attrib` add unnecessary python call frame overhead.
 **Action:** When implementing custom recursive tree traversal functions, explicitly pass bounded methods (e.g., `buffer.extend` and `buffer.append`) as positional arguments to avoid repeatedly resolving them. Also, inline simple fast-path delegate functions (like early checks for string escaping) directly into the calling logic. This reduces XML serialization time by nearly 30% in highly nested structures.
+
+## 2024-07-20 - Fast array element access in tight loops without `float()`
+
+**Learning:** When a 2D NumPy array (of floats) is converted to a nested Python list using `.tolist()` to optimize iteration speed, the resulting inner elements are already native Python floats. Calling `float()` on them redundantly (e.g., `float(poly_list[i][0])`) adds measurable function call overhead in tight loops.
+**Action:** Remove redundant `float()` casts when accessing elements from a list that was created via `.tolist()` from a float array. Direct access is significantly faster and preserves correctness.
