@@ -258,7 +258,14 @@ def _fast_serialize_node(  # noqa: C901
     if attrib:
         for k, v in attrib.items():
             if "&" in v or "<" in v or '"' in v or "\n" in v or "\r" in v or "\t" in v:
-                v = _escape_attrib(v)
+                v = (
+                    v.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace('"', "&quot;")
+                    .replace("\n", "&#10;")
+                    .replace("\r", "&#13;")
+                    .replace("\t", "&#09;")
+                )
             buffer_extend((" ", k, '="', v, '"'))
 
     has_children = bool(len(elem))
@@ -269,7 +276,7 @@ def _fast_serialize_node(  # noqa: C901
         if elem.text:
             text = elem.text
             if "&" in text or "<" in text:
-                text = _escape_cdata(text)
+                text = text.replace("&", "&amp;").replace("<", "&lt;")
             buffer_append(text)
 
         if has_children:
@@ -280,7 +287,7 @@ def _fast_serialize_node(  # noqa: C901
     if elem.tail:
         tail = elem.tail
         if "&" in tail or "<" in tail:
-            tail = _escape_cdata(tail)
+            tail = tail.replace("&", "&amp;").replace("<", "&lt;")
         buffer_append(tail)
 
 
