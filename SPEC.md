@@ -217,3 +217,4 @@ To keep this overhead to a minimum:
 - Escaping logic for attributes and CDATA relies on fast inline checks (e.g. `if "&" in v or "<" in v:`) followed by unrolled `.replace` chains.
 - Dynamic built-ins like `len(elem)` are evaluated exactly once before conditional blocks and loop iterations.
 - Bounded list methods (`buffer.extend`, `buffer.append`) are passed explicitly to descendant function frames rather than passing the parent list object and repeatedly resolving the method reference inside deep loops.
+- 2026-07-20: Bumped mypy python_version from 3.10 to 3.12 in pyproject.toml to match numpy 2.5 type hint syntax and prevent `__init__.pyi:737: error: Type statement is only supported in Python 3.12 and greater` errors in CI.

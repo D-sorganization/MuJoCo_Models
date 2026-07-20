@@ -147,3 +147,7 @@
 
 **Learning:** In tight recursive tree serialization functions, passing extra arguments (like the `buffer` itself) downwards only to access methods on it (like `buffer_extend`) adds measurable overhead to every recursive function call frame.
 **Action:** Remove unused variables from recursive loop signatures, passing only the bound methods (e.g., `buffer.extend` and `buffer.append`) downwards, to minimize stack overhead in `_fast_serialize_node`. Pre-evaluate `len()` where beneficial on generic iterables to avoid re-evaluating it for downstream conditionals.
+
+## 2026-07-20 - Mypy Python Version and Numpy Type Hints
+**Learning:** Numpy 2.5 introduced type hints using the `type` keyword (`Type statement`), which is only supported in Python 3.12 and greater. If `mypy`'s configured `python_version` in `pyproject.toml` is set lower than 3.12 (e.g., 3.10), it will fail to parse these type stubs even if the runtime environment is 3.12+.
+**Action:** When bumping Numpy versions or setting up modern type hints, ensure the `python_version` in the mypy configuration (`[tool.mypy]`) reflects the minimum version required to parse the latest library type stubs, which is 3.12 for numpy>=2.5.
