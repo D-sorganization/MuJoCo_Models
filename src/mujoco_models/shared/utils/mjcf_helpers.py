@@ -241,7 +241,6 @@ def indent_xml(elem: ET.Element, level: int = 0) -> None:
 
 def _fast_serialize_node(  # noqa: C901
     elem: ET.Element,
-    buffer: list[str],
     buffer_extend: Callable[[tuple[str, ...]], None],
     buffer_append: Callable[[str], None],
 ) -> None:
@@ -258,10 +257,11 @@ def _fast_serialize_node(  # noqa: C901
     if attrib:
         for k, v in attrib.items():
             if "&" in v or "<" in v or '"' in v or "\n" in v or "\r" in v or "\t" in v:
-                v = _escape_attrib(v)
+                v = v.replace("&", "&amp;").replace("<", "&lt;").replace('"', "&quot;").replace("\n", "&#10;").replace("\r", "&#13;").replace("\t", "&#9;")
             buffer_extend((" ", k, '="', v, '"'))
 
-    has_children = bool(len(elem))
+    l_elem = len(elem)
+    has_children = l_elem > 0
     if not has_children and not elem.text:
         buffer_append(" />")
     else:
@@ -269,18 +269,18 @@ def _fast_serialize_node(  # noqa: C901
         if elem.text:
             text = elem.text
             if "&" in text or "<" in text:
-                text = _escape_cdata(text)
+                text = text.replace("&", "&amp;").replace("<", "&lt;")
             buffer_append(text)
 
         if has_children:
             for child in elem:
-                _fast_serialize_node(child, buffer, buffer_extend, buffer_append)
+                _fast_serialize_node(child, buffer_extend, buffer_append)
         buffer_extend(("</", tag, ">"))
 
     if elem.tail:
         tail = elem.tail
         if "&" in tail or "<" in tail:
-            tail = _escape_cdata(tail)
+            tail = tail.replace("&", "&amp;").replace("<", "&lt;")
         buffer_append(tail)
 
 
@@ -293,5 +293,5 @@ def serialize_model(root: ET.Element) -> str:
     # We pass buffer.extend and buffer.append to avoid attribute lookup overhead
     # in the recursive calls, and inline the fast-path string checks.
     buf: list[str] = ["<?xml version='1.0' encoding='utf-8'?>\n"]
-    _fast_serialize_node(root, buf, buf.extend, buf.append)
+    _fast_serialize_node(root, buf.extend, buf.append)
     return "".join(buf)

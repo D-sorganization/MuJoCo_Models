@@ -137,3 +137,13 @@
 
 **Learning:** During profiling, we found that attribute lookup (e.g. `buffer.extend` and `buffer.append`) inside tightly recursive algorithms like `_fast_serialize_node` accounts for measurable execution time. Furthermore, simple wrapper functions like `_fast_escape_attrib` add unnecessary python call frame overhead.
 **Action:** When implementing custom recursive tree traversal functions, explicitly pass bounded methods (e.g., `buffer.extend` and `buffer.append`) as positional arguments to avoid repeatedly resolving them. Also, inline simple fast-path delegate functions (like early checks for string escaping) directly into the calling logic. This reduces XML serialization time by nearly 30% in highly nested structures.
+
+## 2026-06-21 - XML ElementTree escaping fast path in serialization
+
+**Learning:** During profiling, we found that standard library `xml.etree.ElementTree._escape_attrib` and `_escape_cdata` functions account for a disproportionate amount of time during MJCF serialization. Since typical MJCF structures do not frequently contain special characters that require XML escaping (like `<`, `&`, `\n`), unconditionally invoking the standard library escaping function for every string introduces significant unnecessary processing overhead.
+**Action:** When manually implementing fast custom recursive serialization loops for XML, wrap standard escaping functions with a simple python fast path (e.g., `if "&" in v or "<" in v:`). This early return pattern bypasses the standard library call overhead for clean strings and drastically improves serialization performance. Also, using inline `.replace` is slightly faster than delegating to the standard library wrapper if escaping is required.
+
+## 2026-06-22 - Fast path recursive XML serialization signatures
+
+**Learning:** In tight recursive tree serialization functions, passing extra arguments (like the `buffer` itself) downwards only to access methods on it (like `buffer_extend`) adds measurable overhead to every recursive function call frame.
+**Action:** Remove unused variables from recursive loop signatures, passing only the bound methods (e.g., `buffer.extend` and `buffer.append`) downwards, to minimize stack overhead in `_fast_serialize_node`. Pre-evaluate `len()` where beneficial on generic iterables to avoid re-evaluating it for downstream conditionals.
