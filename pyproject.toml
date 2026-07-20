@@ -93,7 +93,7 @@ max-complexity = 10
 "src/mujoco_models/exercises/base.py" = ["B027"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 ignore_missing_imports = true
 check_untyped_defs = true
 disallow_untyped_defs = true
