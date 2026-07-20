@@ -257,7 +257,14 @@ def _fast_serialize_node(  # noqa: C901
     if attrib:
         for k, v in attrib.items():
             if "&" in v or "<" in v or '"' in v or "\n" in v or "\r" in v or "\t" in v:
-                v = v.replace("&", "&amp;").replace("<", "&lt;").replace('"', "&quot;").replace("\n", "&#10;").replace("\r", "&#13;").replace("\t", "&#9;")
+                v = (
+                    v.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace('"', "&quot;")
+                    .replace("\n", "&#10;")
+                    .replace("\r", "&#13;")
+                    .replace("\t", "&#9;")
+                )
             buffer_extend((" ", k, '="', v, '"'))
 
     l_elem = len(elem)
