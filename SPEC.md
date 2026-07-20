@@ -209,3 +209,11 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-06-21: Optimized \_fast_serialize_node in mjcf_helpers.py by implementing fast-path wrappers for standard library \_escape_attrib and \_escape_cdata, and utilizing list buffer extend over multiple appends, skipping function overhead for unescaped strings.
 - 2026-06-21: Replaced `np.mean(dx * dx + dy * dy)` with `(dx @ dx + dy @ dy) / len(dx)` in `compute_bar_path_cost` to bypass temporary array allocations during element-wise arithmetic, leveraging optimized BLAS dot product routines.
 - 2026-06-22: Optimized `_fast_serialize_node` in `mjcf_helpers.py` by inlining the string escaping fast path logic and explicitly passing bound list methods (`buffer.extend`, `buffer.append`) as positional arguments to eliminate python wrapper frame overhead and `LOAD_METHOD` lookup time during recursive descent.
+
+## Performance Notes (XML Serialization)
+To reduce initialization time for large MJCF trees, the XML serialization pipeline (`mjcf_helpers.py`) uses a custom recursive `_fast_serialize_node` function.
+In highly complex structures, python overhead (especially argument passing and delegation to standard library string `.replace` and XML escaping) scales drastically with node depth.
+To keep this overhead to a minimum:
+- Escaping logic for attributes and CDATA relies on fast inline checks (e.g. `if "&" in v or "<" in v:`) followed by unrolled `.replace` chains.
+- Dynamic built-ins like `len(elem)` are evaluated exactly once before conditional blocks and loop iterations.
+- Bounded list methods (`buffer.extend`, `buffer.append`) are passed explicitly to descendant function frames rather than passing the parent list object and repeatedly resolving the method reference inside deep loops.
