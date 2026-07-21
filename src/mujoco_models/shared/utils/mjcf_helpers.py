@@ -246,7 +246,14 @@ def _fast_serialize_node(  # noqa: C901
             # Using inline replace() calls is faster than calling ET._escape_attrib
             # in this tight loop. Order matters: replace '&' first.
             if "&" in v or "<" in v or '"' in v or "\n" in v or "\r" in v or "\t" in v:
-                v = v.replace("&", "&amp;").replace("<", "&lt;").replace('"', "&quot;").replace("\n", "&#10;").replace("\r", "&#13;").replace("\t", "&#9;")
+                v = (
+                    v.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace('"', "&quot;")
+                    .replace("\n", "&#10;")
+                    .replace("\r", "&#13;")
+                    .replace("\t", "&#9;")
+                )
             buffer_append(" ")
             buffer_append(k)
             buffer_append('="')
