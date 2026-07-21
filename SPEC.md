@@ -1,3 +1,4 @@
+- Removed `ET.indent` from `mjcf_helpers.serialize_model` and integrated manual indentation directly into `_fast_serialize_node` to avoid redundant O(N) tree traversals.
 # SPEC.md - MuJoCo_Models Repository Specification
 
 ## 1. Identity
@@ -192,6 +193,8 @@ This header is present in every module-level `.py` file as of the SPDX header up
 <!-- Update trigger for CI freshness check -->
 
 ## Performance Notes
+
+- 2026-06-25: Removed `ET.indent` from `mjcf_helpers.serialize_model` and integrated manual indentation directly into `_fast_serialize_node` to avoid redundant O(N) tree traversals.
 
 - 2026-06-11: Optimized builtin min/max in tight geometry loops. Replaced `max(0, min(1, t))` with faster explicit `if/elif` logic in `_point_to_segment_sq`.
 - 2026-06-11: Added constraint on matplotlib `<3.10` to avoid fonttools dependency conflict during CI tests with Python 3.10.
