@@ -1,4 +1,3 @@
-- Removed `ET.indent` from `mjcf_helpers.serialize_model` and integrated manual indentation directly into `_fast_serialize_node` to avoid redundant O(N) tree traversals.
 # SPEC.md - MuJoCo_Models Repository Specification
 
 ## 1. Identity
