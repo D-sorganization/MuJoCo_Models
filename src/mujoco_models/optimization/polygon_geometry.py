@@ -43,10 +43,10 @@ def point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
     # expensive array indexing and C-API dispatch in tight Python loop.
     poly_list = polygon.tolist()
 
-    xj, yj = float(poly_list[-1][0]), float(poly_list[-1][1])
+    xj, yj = poly_list[-1][0], poly_list[-1][1]
 
     for i in range(n):
-        xi, yi = float(poly_list[i][0]), float(poly_list[i][1])
+        xi, yi = poly_list[i][0], poly_list[i][1]
 
         if (yi > py) != (yj > py):
             x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
@@ -81,10 +81,10 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
         dist_sq = _point_to_segment_sq(
             px,
             py,
-            float(poly_list[i][0]),
-            float(poly_list[i][1]),
-            float(poly_list[j][0]),
-            float(poly_list[j][1]),
+            poly_list[i][0],
+            poly_list[i][1],
+            poly_list[j][0],
+            poly_list[j][1],
         )
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
@@ -99,20 +99,22 @@ def _point_to_segment_sq(
     """Squared distance from a point to a line segment."""
     abx = bx - ax
     aby = by - ay
-    apx = px - ax
-    apy = py - ay
 
     ab_sq = abx * abx + aby * aby
     if ab_sq < 1e-12:
+        apx = px - ax
+        apy = py - ay
         return apx * apx + apy * apy
 
-    t = (apx * abx + apy * aby) / ab_sq
+    t = ((px - ax) * abx + (py - ay) * aby) / ab_sq
     if t < 0.0:
-        t = 0.0
+        dx = px - ax
+        dy = py - ay
     elif t > 1.0:
-        t = 1.0
-
-    dx = px - (ax + t * abx)
-    dy = py - (ay + t * aby)
+        dx = px - bx
+        dy = py - by
+    else:
+        dx = px - (ax + t * abx)
+        dy = py - (ay + t * aby)
 
     return dx * dx + dy * dy

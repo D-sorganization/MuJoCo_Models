@@ -140,3 +140,18 @@
 ## 2024-07-14 - Optimized XML escaping and recursive serialization
 **Learning:** Standard library escaping functions and tuple allocation for `list.extend` create significant overhead inside highly recursive XML serialization loops.
 **Action:** Replace `buffer.extend` with sequential `buffer.append()` calls and use chained string `.replace()` instead of Python's standard `xml.etree.ElementTree` escaping utilities to bypass unnecessary overhead and function call frames.
+
+## 2026-06-24 - Fast-path unpacking in tight array operations
+
+**Learning:** When writing simple algebraic routines over generic array-like structures (e.g. `parallel_axis_shift` taking a 3-vector displacement), validating input types using nested `isinstance` or `getattr(..., "shape")` calls imposes measurable function overhead (~25% slowdown) compared to direct exception handling, especially when such routines are invoked hundreds of thousands of times per build.
+**Action:** Use a `try...except (TypeError, IndexError)` block to directly unpack sequence values and convert them to float. This EAFP (Easier to Ask for Forgiveness than Permission) approach establishes a faster fast-path for valid native lists, tuples, and simple ndarrays in tight inner loops while gracefully falling back to full validation and `np.asarray` conversion only when necessary.
+
+## 2026-06-25 - Delay variable allocations in tight mathematical loops
+
+**Learning:** During profiling of tight mathematical loops (e.g. `_point_to_segment_sq`), we found that early variable allocations and redundant mathematical operations inside branching logic added unnecessary overhead.
+**Action:** Replace early variable allocations with lazily computed operations inside conditionals. Additionally, update the clamping conditionals (`if t < 0.0`) to avoid extra math when the value is known. This eliminates redundant computations when checking boundary segments and speeds up the point-to-polygon computation.
+
+## 2024-07-07 - Avoid redundant float() on tolist() lists
+
+**Learning:** When a NumPy array of float type is converted to a nested list via `.tolist()`, it yields native Python floats. Casting these elements to `float()` again inside a tight loop introduces measurable function call overhead.
+**Action:** When working with `.tolist()` on numeric arrays, do not redundantly wrap list access with `float()`. Just use the list element directly.
