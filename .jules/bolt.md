@@ -140,3 +140,8 @@
 ## 2024-07-14 - Optimized XML escaping and recursive serialization
 **Learning:** Standard library escaping functions and tuple allocation for `list.extend` create significant overhead inside highly recursive XML serialization loops.
 **Action:** Replace `buffer.extend` with sequential `buffer.append()` calls and use chained string `.replace()` instead of Python's standard `xml.etree.ElementTree` escaping utilities to bypass unnecessary overhead and function call frames.
+
+## 2026-06-24 - Fast-path unpacking in tight array operations
+
+**Learning:** When writing simple algebraic routines over generic array-like structures (e.g. `parallel_axis_shift` taking a 3-vector displacement), validating input types using nested `isinstance` or `getattr(..., "shape")` calls imposes measurable function overhead (~25% slowdown) compared to direct exception handling, especially when such routines are invoked hundreds of thousands of times per build.
+**Action:** Use a `try...except (TypeError, IndexError)` block to directly unpack sequence values and convert them to float. This EAFP (Easier to Ask for Forgiveness than Permission) approach establishes a faster fast-path for valid native lists, tuples, and simple ndarrays in tight inner loops while gracefully falling back to full validation and `np.asarray` conversion only when necessary.

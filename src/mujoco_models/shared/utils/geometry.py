@@ -171,21 +171,15 @@ def parallel_axis_shift(
     require_positive(mass, "mass")
 
     # ⚡ Bolt Optimization: Fast path to avoid np.asarray overhead for 1D iterables
-    if isinstance(displacement, (list, tuple)):
-        if len(displacement) != 3:
-            require_shape(displacement, (3,), "displacement")
-        dx, dy, dz = (
-            float(displacement[0]),
-            float(displacement[1]),
-            float(displacement[2]),
-        )
-    elif getattr(displacement, "shape", None) == (3,):
-        dx, dy, dz = (
-            float(displacement[0]),
-            float(displacement[1]),
-            float(displacement[2]),
-        )
-    else:
+    if isinstance(displacement, str):
+        # Strings are technically iterable, but shouldn't be silently parsed into floats
+        raise TypeError("displacement must not be a string")
+
+    try:
+        # Strict unpacking to ensure exactly 3 elements
+        dx, dy, dz = displacement
+        dx, dy, dz = float(dx), float(dy), float(dz)
+    except (TypeError, ValueError):
         d = np.asarray(displacement, dtype=float)
         require_shape(d, (3,), "displacement")
         dx, dy, dz = float(d[0]), float(d[1]), float(d[2])
