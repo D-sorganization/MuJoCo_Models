@@ -244,6 +244,7 @@ def _fast_serialize_node(  # noqa: C901
     buffer: list[str],
     buffer_extend: Callable[[tuple[str, ...]], None],
     buffer_append: Callable[[str], None],
+    level: int = 0,
 ) -> None:
     """Recursively serialize an ElementTree node into a string buffer.
 
@@ -262,23 +263,38 @@ def _fast_serialize_node(  # noqa: C901
             buffer_extend((" ", k, '="', v, '"'))
 
     has_children = bool(len(elem))
-    if not has_children and not elem.text:
+
+    # ⚡ Bolt Optimization:
+    # Treat purely whitespace text as None. This avoids double-indenting nodes
+    # that already have whitespace padding if the tree was pre-formatted,
+    # but more importantly, allows us to handle our own indentation safely.
+    text = elem.text
+    if text is not None and text.isspace():
+        text = None
+
+    if not has_children and not text:
         buffer_append(" />")
     else:
         buffer_append(">")
-        if elem.text:
-            text = elem.text
+        if text:
             if "&" in text or "<" in text:
                 text = _escape_cdata(text)
             buffer_append(text)
 
         if has_children:
             for child in elem:
-                _fast_serialize_node(child, buffer, buffer_extend, buffer_append)
+                # ⚡ Bolt Optimization: Inline indentation instead of ET.indent
+                buffer_extend(("\n", "  " * (level + 1)))
+                _fast_serialize_node(
+                    child, buffer, buffer_extend, buffer_append, level + 1
+                )
+            buffer_extend(("\n", "  " * level))
         buffer_extend(("</", tag, ">"))
 
-    if elem.tail:
-        tail = elem.tail
+    # When implementing our own indentation, we only output tail content
+    # if it's not purely whitespace, to avoid double-indenting.
+    tail = elem.tail
+    if tail is not None and not tail.isspace():
         if "&" in tail or "<" in tail:
             tail = _escape_cdata(tail)
         buffer_append(tail)
@@ -287,11 +303,13 @@ def _fast_serialize_node(  # noqa: C901
 def serialize_model(root: ET.Element) -> str:
     """Serialize a MuJoCo MJCF ElementTree to a formatted XML string."""
     logger.debug("Serializing MJCF model with root tag=%s", root.tag)
-    indent_xml(root)
     # ⚡ Bolt Optimization:
     # Use custom recursive serialization instead of ET.tostring for speed.
     # We pass buffer.extend and buffer.append to avoid attribute lookup overhead
     # in the recursive calls, and inline the fast-path string checks.
+    # We also pass level=0 to inline the indentation during serialization,
+    # which avoids the O(N) tree traversal required by ET.indent.
     buf: list[str] = ["<?xml version='1.0' encoding='utf-8'?>\n"]
-    _fast_serialize_node(root, buf, buf.extend, buf.append)
+    _fast_serialize_node(root, buf, buf.extend, buf.append, 0)
+    buf.append("\n")
     return "".join(buf)
