@@ -145,3 +145,8 @@
 
 **Learning:** When writing simple algebraic routines over generic array-like structures (e.g. `parallel_axis_shift` taking a 3-vector displacement), validating input types using nested `isinstance` or `getattr(..., "shape")` calls imposes measurable function overhead (~25% slowdown) compared to direct exception handling, especially when such routines are invoked hundreds of thousands of times per build.
 **Action:** Use a `try...except (TypeError, IndexError)` block to directly unpack sequence values and convert them to float. This EAFP (Easier to Ask for Forgiveness than Permission) approach establishes a faster fast-path for valid native lists, tuples, and simple ndarrays in tight inner loops while gracefully falling back to full validation and `np.asarray` conversion only when necessary.
+
+## 2026-06-25 - Delay variable allocations in tight mathematical loops
+
+**Learning:** During profiling of tight mathematical loops (e.g. `_point_to_segment_sq`), we found that early variable allocations and redundant mathematical operations inside branching logic added unnecessary overhead.
+**Action:** Replace early variable allocations with lazily computed operations inside conditionals. Additionally, update the clamping conditionals (`if t < 0.0`) to avoid extra math when the value is known. This eliminates redundant computations when checking boundary segments and speeds up the point-to-polygon computation.
