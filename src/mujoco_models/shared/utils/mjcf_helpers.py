@@ -267,7 +267,7 @@ def _fast_serialize_node(  # noqa: C901
     else:
         buffer_append(">")
 
-        if has_text:
+        if has_text and text is not None:
             if "&" in text or "<" in text:
                 text = text.replace("&", "&amp;").replace("<", "&lt;")
             buffer_append(text)
