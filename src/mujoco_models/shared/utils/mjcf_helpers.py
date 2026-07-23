@@ -227,6 +227,7 @@ def indent_xml(elem: ET.Element, level: int = 0) -> None:
 def _fast_serialize_node(  # noqa: C901
     elem: ET.Element,
     buffer_append: Callable[[str], None],
+    level: int = 0,
 ) -> None:
     """Recursively serialize an ElementTree node into a string buffer.
 
@@ -257,25 +258,36 @@ def _fast_serialize_node(  # noqa: C901
             buffer_append('"')
 
     has_children = bool(len(elem))
-    if not has_children and not elem.text:
+
+    text = elem.text
+    has_text = text is not None and not text.isspace()
+
+    if not has_children and not has_text:
         buffer_append(" />")
     else:
         buffer_append(">")
-        if elem.text:
-            text = elem.text
+
+        if has_text:
             if "&" in text or "<" in text:
                 text = text.replace("&", "&amp;").replace("<", "&lt;")
             buffer_append(text)
 
         if has_children:
+            buffer_append("\n")
+            next_level = level + 1
+            indent_next = "  " * next_level
             for child in elem:
-                _fast_serialize_node(child, buffer_append)
+                buffer_append(indent_next)
+                _fast_serialize_node(child, buffer_append, next_level)
+                buffer_append("\n")
+            buffer_append("  " * level)
+
         buffer_append("</")
         buffer_append(tag)
         buffer_append(">")
 
-    if elem.tail:
-        tail = elem.tail
+    tail = elem.tail
+    if tail is not None and not tail.isspace():
         if "&" in tail or "<" in tail:
             tail = tail.replace("&", "&amp;").replace("<", "&lt;")
         buffer_append(tail)
@@ -284,12 +296,13 @@ def _fast_serialize_node(  # noqa: C901
 def serialize_model(root: ET.Element) -> str:
     """Serialize a MuJoCo MJCF ElementTree to a formatted XML string."""
     logger.debug("Serializing MJCF model with root tag=%s", root.tag)
-    indent_xml(root)
     # ⚡ Bolt Optimization:
     # Use custom recursive serialization instead of ET.tostring for speed.
+    # Avoiding ET.indent() saves a full O(N) tree traversal pass just to add whitespace.
     # We pass buffer.append to avoid attribute lookup overhead
     # in the recursive calls, and inline the fast-path string checks and escaping
     # avoiding the overhead of list.extend with tuple creation and Python call frames.
     buf: list[str] = ["<?xml version='1.0' encoding='utf-8'?>\n"]
-    _fast_serialize_node(root, buf.append)
+    _fast_serialize_node(root, buf.append, 0)
+    buf.append("\n")
     return "".join(buf)

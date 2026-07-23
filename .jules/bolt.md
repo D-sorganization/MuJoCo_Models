@@ -155,3 +155,8 @@
 
 **Learning:** When a NumPy array of float type is converted to a nested list via `.tolist()`, it yields native Python floats. Casting these elements to `float()` again inside a tight loop introduces measurable function call overhead.
 **Action:** When working with `.tolist()` on numeric arrays, do not redundantly wrap list access with `float()`. Just use the list element directly.
+
+## 2024-07-25 - Avoid O(N) tree traversal for XML indentation
+
+**Learning:** `xml.etree.ElementTree.indent()` performs a full O(N) tree traversal purely to inject whitespace strings into `.text` and `.tail` attributes. When building large XML models from scratch, calling this prior to serialization adds a redundant tree pass and string allocations that significantly degrade serialization performance.
+**Action:** When manually writing a recursive custom fast XML serialization function, inline the indentation generation directly into the single-pass serialization logic by tracking a `level` parameter, and outputting whitespace sequences directly to the string buffer. Be careful to check `elem.text.isspace()` to ignore any pre-existing whitespace indentation. This halves the traversal overhead and speeds up the entire build process.
