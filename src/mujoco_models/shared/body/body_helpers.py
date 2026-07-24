@@ -216,21 +216,42 @@ def add_bilateral_limb(
     inertia = capsule_inertia(mass, radius, length)
     parent_is_bilateral = f"{parent_name}_l" in parent_bodies
     created: dict[str, ET.Element] = {}
-    for side, sign in [("l", -1.0), ("r", 1.0)]:
-        key = f"{parent_name}_{side}" if parent_is_bilateral else parent_name
-        side_spec = _LimbSideSpec(
-            parent_el=parent_bodies[key],
-            body_name=f"{seg_name}_{side}",
-            pos=(sign * parent_lateral_x, 0, parent_offset_z),
-            mass=mass,
-            inertia=inertia,
-            radius=radius,
-            length=length,
-            coord_prefix=coord_prefix,
-            side=side,
-            range_min=range_min,
-            range_max=range_max,
-            extra_joints=extra_joints,
-        )
-        created[side_spec.body_name] = _create_limb_side_body(side_spec)
+    # ⚡ Bolt Optimization:
+    # Unrolled loop to avoid temporary list and tuple allocation in tight paths.
+
+    # Left side
+    key_l = f"{parent_name}_l" if parent_is_bilateral else parent_name
+    spec_l = _LimbSideSpec(
+        parent_el=parent_bodies[key_l],
+        body_name=f"{seg_name}_l",
+        pos=(-1.0 * parent_lateral_x, 0, parent_offset_z),
+        mass=mass,
+        inertia=inertia,
+        radius=radius,
+        length=length,
+        coord_prefix=coord_prefix,
+        side="l",
+        range_min=range_min,
+        range_max=range_max,
+        extra_joints=extra_joints,
+    )
+    created[spec_l.body_name] = _create_limb_side_body(spec_l)
+
+    # Right side
+    key_r = f"{parent_name}_r" if parent_is_bilateral else parent_name
+    spec_r = _LimbSideSpec(
+        parent_el=parent_bodies[key_r],
+        body_name=f"{seg_name}_r",
+        pos=(1.0 * parent_lateral_x, 0, parent_offset_z),
+        mass=mass,
+        inertia=inertia,
+        radius=radius,
+        length=length,
+        coord_prefix=coord_prefix,
+        side="r",
+        range_min=range_min,
+        range_max=range_max,
+        extra_joints=extra_joints,
+    )
+    created[spec_r.body_name] = _create_limb_side_body(spec_r)
     return created

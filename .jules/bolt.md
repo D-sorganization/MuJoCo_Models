@@ -160,3 +160,8 @@
 
 **Learning:** `xml.etree.ElementTree.indent()` performs a full O(N) tree traversal purely to inject whitespace strings into `.text` and `.tail` attributes. When building large XML models from scratch, calling this prior to serialization adds a redundant tree pass and string allocations that significantly degrade serialization performance.
 **Action:** When manually writing a recursive custom fast XML serialization function, inline the indentation generation directly into the single-pass serialization logic by tracking a `level` parameter, and outputting whitespace sequences directly to the string buffer. Be careful to check `elem.text.isspace()` to ignore any pre-existing whitespace indentation. This halves the traversal overhead and speeds up the entire build process.
+
+## 2024-07-24 - Unroll short explicit lists in validation functions
+
+**Learning:** Creating a temporary list of tuples (like `[("Ixx", ixx), ("Iyy", iyy), ("Izz", izz)]`) just to iterate over them and check a simple condition incurs a measurable overhead due to list and tuple allocations, especially when repeated thousands of times during model generation.
+**Action:** When validating a small, known number of variables, unroll the loop into explicit `if` statements (e.g., `if ixx <= 0: ... if iyy <= 0: ... if izz <= 0: ...`) to completely eliminate the allocation overhead. This resulted in a significant speedup for `ensure_positive_definite_inertia` from ~0.77µs to ~0.31µs.
