@@ -213,3 +213,6 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-07-22: Removed redundant `float()` casting on `.tolist()` elements already returned as native Python floats in `point_in_polygon` and `squared_distance_to_polygon` (`polygon_geometry.py` and the mirrored helpers in `trajectory_optimizer.py`), and deferred `apx`/`apy` computation in `_point_to_segment_sq` to only the branches that need them. `parallel_axis_shift` in `shared/utils/geometry.py` now uses strict tuple unpacking with an explicit string-rejection guard instead of `isinstance`/`shape` branching to reach the numpy fallback.
 - 2026-07-25: Optimized `serialize_model` in `mjcf_helpers.py` by removing `ET.indent()` prior to serialization to avoid a redundant O(N) tree traversal, instead calculating and outputting whitespace formatting directly inside the single-pass recursive `_fast_serialize_node` call.
 - 2026-07-26: Fixed mypy typing error for optional text in `_fast_serialize_node` XML serialization.
+
+## Changelog
+- 2024-07-24: Unrolled explicit lists in core mathematical functions in `src/mujoco_models/shared/body/body_helpers.py` and `src/mujoco_models/shared/contracts/postconditions.py` for performance.
