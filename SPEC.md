@@ -216,3 +216,5 @@ This header is present in every module-level `.py` file as of the SPDX header up
 
 ## Changelog
 - 2024-07-24: Unrolled explicit lists in core mathematical functions in `src/mujoco_models/shared/body/body_helpers.py` and `src/mujoco_models/shared/contracts/postconditions.py` for performance.
+
+- 2026-07-25: Inlined `_point_to_segment_sq` into `squared_distance_to_polygon` and `_squared_distance_to_polygon` to avoid function call overhead during iterative geometry calculations.
