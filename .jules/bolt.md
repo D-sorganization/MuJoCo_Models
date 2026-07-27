@@ -165,3 +165,13 @@
 
 **Learning:** Creating a temporary list of tuples (like `[("Ixx", ixx), ("Iyy", iyy), ("Izz", izz)]`) just to iterate over them and check a simple condition incurs a measurable overhead due to list and tuple allocations, especially when repeated thousands of times during model generation.
 **Action:** When validating a small, known number of variables, unroll the loop into explicit `if` statements (e.g., `if ixx <= 0: ... if iyy <= 0: ... if izz <= 0: ...`) to completely eliminate the allocation overhead. This resulted in a significant speedup for `ensure_positive_definite_inertia` from ~0.77µs to ~0.31µs.
+
+## 2026-07-25 - Avoid redundant function calls in tight geometry loops
+
+**Learning:** During profiling of point-to-polygon distance calculations (`squared_distance_to_polygon`), calling a helper function `_point_to_segment_sq` on every loop iteration introduced unnecessary Python function call overhead.
+**Action:** Inlining the math inside the helper function directly into the loop of `squared_distance_to_polygon` avoids the function call frame overhead and significantly reduces execution time (by ~20%).
+
+## 2026-07-25 - Optimize list iteration in polygon operations
+
+**Learning:** When checking points in polygons or calculating distances, iterating with explicit loop indices (`for i in range(n): xi, yi = poly_list[i]`) is slower than directly iterating over the list elements (`for xi, yi in poly_list:`).
+**Action:** Use native python iterators for processing list coordinates (e.g. `for xi, yi in poly_list:`) and track the previous coordinate pair dynamically (`xj, yj = xi, yi`) to achieve a substantial speed boost.

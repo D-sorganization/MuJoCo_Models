@@ -112,21 +112,42 @@ class TestSquaredDistanceToPolygon:
         d2 = squared_distance_to_polygon(np.array([-1.0, 0.5]), sq)
         assert d1 == pytest.approx(d2)
 
-    def test_point_to_segment_clamping(self) -> None:
-        """Test explicit clamping coverage in _point_to_segment_sq."""
-        from mujoco_models.optimization.polygon_geometry import _point_to_segment_sq
 
-        # Test t < 0.0 branch
-        assert _point_to_segment_sq(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0) == 1.0
+    def test_point_to_segment_clamping(self) -> None:
+        """Test explicit clamping coverage (inlined)."""
+        from mujoco_models.optimization.polygon_geometry import squared_distance_to_polygon
+        import numpy as np
+
+        # We can test the branch t < 0.0 using squared_distance_to_polygon
+        dist = squared_distance_to_polygon(np.array([-1.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]))
+        assert dist == pytest.approx(1.0)
 
         # Test t > 1.0 branch
-        assert _point_to_segment_sq(2.0, 0.0, 0.0, 0.0, 1.0, 0.0) == 1.0
-
-        # Test 0.0 <= t <= 1.0 branch
-        assert _point_to_segment_sq(0.5, 0.5, 0.0, 0.0, 1.0, 0.0) == 0.25
+        dist = squared_distance_to_polygon(np.array([2.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]))
+        # Distance to [1.0, 0.0] is 1^2 = 1.0
+        assert dist == pytest.approx(1.0)
 
     def test_point_to_segment_clamping_zero(self) -> None:
-        """Test explicit clamping coverage for ab_sq < 1e-12 in _point_to_segment_sq."""
-        from mujoco_models.optimization.polygon_geometry import _point_to_segment_sq
+        """Test explicit clamping coverage for ab_sq < 1e-12."""
+        from mujoco_models.optimization.polygon_geometry import squared_distance_to_polygon
+        import numpy as np
 
-        assert _point_to_segment_sq(1.0, 1.0, 0.0, 0.0, 0.0, 0.0) == 2.0
+        # Polygon with a very short edge (effectively zero length)
+        dist = squared_distance_to_polygon(np.array([2.0, 0.0]), np.array([[0.0, 0.0], [1e-13, 0.0], [0.0, 1.0]]))
+        assert dist == pytest.approx(4.0)
+
+    def test_point_to_segment_clamping_zero_branch_between(self) -> None:
+        """Test explicit clamping coverage (inlined) where 0.0 <= t <= 1.0"""
+        from mujoco_models.optimization.polygon_geometry import squared_distance_to_polygon
+        import numpy as np
+
+        # For triangle [0,0], [1,0], [0.5,1]
+        # Edge 1 is (0,0) to (1,0). The point is (0.5, 0.5)
+        # The projection of (0.5, 0.5) onto edge (0,0)->(1,0) is (0.5, 0)
+        # Distance squared = 0.5^2 = 0.25
+        # The distance to edges (1,0)->(0.5,1) and (0.5,1)->(0,0) might be smaller.
+        # Let's use a simpler polygon: a unit square.
+        # Point (0.5, 0.5) is distance 0.5 from all edges of unit square [0,0], [1,0], [1,1], [0,1].
+        # Distance squared = 0.25.
+        dist = squared_distance_to_polygon(np.array([0.5, 0.5]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
+        assert dist == pytest.approx(0.25)
