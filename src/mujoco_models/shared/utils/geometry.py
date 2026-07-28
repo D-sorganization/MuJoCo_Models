@@ -44,9 +44,10 @@ def cylinder_inertia(
     require_positive(length, "length")
 
     # Axial (about Z)
-    izz = 0.5 * mass * radius**2
+    r2 = radius * radius
+    izz = 0.5 * mass * r2
     # Transverse (about X and Y)
-    ixx = iyy = (1.0 / 12.0) * mass * (3.0 * radius**2 + length**2)
+    ixx = iyy = (1.0 / 12.0) * mass * (3.0 * r2 + length * length)
 
     ensure_positive_definite_inertia(ixx, iyy, izz, "cylinder")
     return (ixx, iyy, izz)
@@ -77,9 +78,9 @@ def hollow_cylinder_inertia(
             f"inner_radius ({inner_radius:.4f}) must be less than "
             f"outer_radius ({outer_radius:.4f})"
         )
-    r_sq_sum = inner_radius**2 + outer_radius**2
+    r_sq_sum = inner_radius * inner_radius + outer_radius * outer_radius
     izz = 0.5 * mass * r_sq_sum  # axial
-    ixx = iyy = (1.0 / 12.0) * mass * (3.0 * r_sq_sum + length**2)  # transverse
+    ixx = iyy = (1.0 / 12.0) * mass * (3.0 * r_sq_sum + length * length)  # transverse
 
     ensure_positive_definite_inertia(ixx, iyy, izz, "hollow_cylinder")
     return ixx, iyy, izz
@@ -97,9 +98,13 @@ def rectangular_prism_inertia(
     require_positive(height, "height")
     require_positive(depth, "depth")
 
-    ixx = (1.0 / 12.0) * mass * (height**2 + depth**2)
-    iyy = (1.0 / 12.0) * mass * (width**2 + depth**2)
-    izz = (1.0 / 12.0) * mass * (width**2 + height**2)
+    w2 = width * width
+    h2 = height * height
+    d2 = depth * depth
+    m_12 = mass / 12.0
+    ixx = m_12 * (h2 + d2)
+    iyy = m_12 * (w2 + d2)
+    izz = m_12 * (w2 + h2)
 
     ensure_positive_definite_inertia(ixx, iyy, izz, "rectangular_prism")
     return (ixx, iyy, izz)
@@ -117,18 +122,17 @@ def capsule_inertia(
     require_positive(radius, "radius")
     require_positive(length, "length")
 
-    v_cyl = math.pi * radius**2 * length
-    v_sph = (4.0 / 3.0) * math.pi * radius**3
+    r2 = radius * radius
+    v_cyl = math.pi * r2 * length
+    v_sph = (4.0 / 3.0) * math.pi * r2 * radius
     v_total = v_cyl + v_sph
 
     m_cyl = mass * (v_cyl / v_total)
     m_sph = mass * (v_sph / v_total)
 
-    izz = 0.5 * m_cyl * radius**2 + 0.4 * m_sph * radius**2
-    ixx_cyl = m_cyl * (3.0 * radius**2 + length**2) / 12.0
-    ixx_sph = m_sph * (
-        0.4 * radius**2 + (length / 2.0) ** 2
-    )  # simplified parallel axis
+    izz = r2 * (0.5 * m_cyl + 0.4 * m_sph)
+    ixx_cyl = m_cyl * (3.0 * r2 + length * length) / 12.0
+    ixx_sph = m_sph * (0.4 * r2 + (length * 0.5) ** 2)  # simplified parallel axis
 
     ixx = iyy = ixx_cyl + ixx_sph
     ensure_positive_definite_inertia(ixx, iyy, izz, "capsule")
@@ -140,7 +144,7 @@ def sphere_inertia(mass: float, radius: float) -> tuple[float, float, float]:
     require_positive(mass, "mass")
     require_positive(radius, "radius")
 
-    i = (2.0 / 5.0) * mass * radius**2
+    i = 0.4 * mass * (radius * radius)
     ensure_positive_definite_inertia(i, i, i, "sphere")
     return (i, i, i)
 

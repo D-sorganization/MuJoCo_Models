@@ -175,3 +175,7 @@
 
 **Learning:** When checking points in polygons or calculating distances, iterating with explicit loop indices (`for i in range(n): xi, yi = poly_list[i]`) is slower than directly iterating over the list elements (`for xi, yi in poly_list:`).
 **Action:** Use native python iterators for processing list coordinates (e.g. `for xi, yi in poly_list:`) and track the previous coordinate pair dynamically (`xj, yj = xi, yi`) to achieve a substantial speed boost.
+
+## 2026-08-01 - Avoid repeated exponentiation and variables in mathematical logic
+**Learning:** During profiling of geometric properties (like inertia calculations), we observed that calculating mathematical exponentiations (`**2`) directly, especially when used multiple times in simple expressions, incurs overhead. The bytecode for standard float multiplications and pre-extracted scalar local variables performs noticeably better.
+**Action:** Extract repeating basic calculations, like radius squared or width squared, into explicit local variables (`r2 = radius * radius`). Furthermore, simplify constants and formulas before runtime execution (e.g., computing `mass / 12.0` once instead of three times).
