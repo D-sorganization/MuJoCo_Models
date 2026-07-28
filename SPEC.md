@@ -181,6 +181,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - Vectorized array operations like `np.interp` over all frames at once are preferred over Python `for` loops evaluating piecewise functions frame-by-frame during trajectory generation.
 - Checking for finiteness of NumPy arrays using `np.isfinite(arr).all()` is preferred over `np.all(np.isfinite(arr))` to avoid Python function dispatch overhead in tight loops.
 - Inlining array finiteness checks directly inside validation guards using `np.isfinite(arr).all()` rather than delegating them to helper functions avoids function call overhead in tight optimization loops.
+- Geometry inertia helpers cache squared radii and dimensions before assembling cylinder, hollow-cylinder, rectangular-prism, capsule, and sphere inertia tensors to avoid repeated exponentiation in hot scalar paths.
 
 ### CI Runner Routing
 
@@ -215,6 +216,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-07-26: Fixed mypy typing error for optional text in `_fast_serialize_node` XML serialization.
 
 ## Changelog
+
 - 2024-07-24: Unrolled explicit lists in core mathematical functions in `src/mujoco_models/shared/body/body_helpers.py` and `src/mujoco_models/shared/contracts/postconditions.py` for performance.
 
 - 2026-07-25: Inlined `_point_to_segment_sq` into `squared_distance_to_polygon` and `_squared_distance_to_polygon` to avoid function call overhead during iterative geometry calculations.
