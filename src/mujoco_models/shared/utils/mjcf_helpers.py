@@ -137,16 +137,17 @@ def add_hinge_joint(
     ET.Element
         The created ``<joint>`` element.
     """
-    joint = ET.SubElement(
+    # ⚡ Bolt Optimization: Pass attributes as kwargs directly to ET.SubElement
+    # to avoid Python function call frame overhead from multiple .set() calls.
+    # We also inline the string formatting here.
+    return ET.SubElement(
         body,
         "joint",
         name=name,
         type="hinge",
         axis=vec3_str(*axis),
+        range="%.4f %.4f" % (range_min, range_max),  # noqa: UP031
     )
-    # ⚡ Bolt Optimization: Use % formatting for speed.
-    joint.set("range", "%.4f %.4f" % (range_min, range_max))  # noqa: UP031
-    return joint
 
 
 def add_free_joint(body: ET.Element, *, name: str) -> ET.Element:
