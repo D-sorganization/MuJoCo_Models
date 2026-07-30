@@ -137,8 +137,8 @@ def add_hinge_joint(
     ET.Element
         The created ``<joint>`` element.
     """
-    # ⚡ Bolt Optimization: Pass attributes as kwargs directly to ET.SubElement
-    # to avoid Python function call frame overhead from multiple .set() calls.
+    # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
+    # to avoid Python call frame overhead from multiple .set() calls.
     # We also inline the string formatting here.
     return ET.SubElement(
         body,

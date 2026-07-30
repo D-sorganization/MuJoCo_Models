@@ -73,8 +73,8 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         bench = ET.SubElement(
             worldbody, "body", name="bench", pos=f"0 0 {BENCH_HEIGHT - 0.02:.6f}"
         )
-        # ⚡ Bolt Optimization: Pass attributes as kwargs directly to ET.SubElement
-        # to avoid Python function call frame overhead from multiple .set() calls.
+        # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
+        # to avoid Python call frame overhead from multiple .set() calls.
         ET.SubElement(
             bench,
             "geom",

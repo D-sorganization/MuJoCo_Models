@@ -67,8 +67,8 @@ def _add_single_foot_contact_geom(foot_body: ET.Element, side: str) -> None:
         foot_body: The ``<body name="foot_{side}">`` element.
         side: One of ``"l"`` or ``"r"``.
     """
-    # ⚡ Bolt Optimization: Pass attributes as kwargs directly to ET.SubElement
-    # to avoid Python function call frame overhead from multiple .set() calls.
+    # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
+    # to avoid Python call frame overhead from multiple .set() calls.
     ET.SubElement(
         foot_body,
         "geom",

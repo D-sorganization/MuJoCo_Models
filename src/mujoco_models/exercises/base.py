@@ -312,8 +312,8 @@ class ExerciseModelBuilder(ABC):
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
             if name:
-                # ⚡ Bolt Optimization: Pass attributes as kwargs directly to ET.SubElement
-                # to avoid Python function call frame overhead from multiple .set() calls.
+                # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
+                # to avoid Python call frame overhead from multiple .set() calls.
                 ET.SubElement(
                     actuator, "position", name=f"act_{name}", joint=name, kp="100"
                 )
