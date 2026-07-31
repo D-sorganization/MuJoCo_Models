@@ -312,14 +312,13 @@ class ExerciseModelBuilder(ABC):
         for joint in worldbody.iter("joint"):
             name = joint.get("name", "")
             if name:
-                act = ET.SubElement(actuator, "position")
-                act.set("name", f"act_{name}")
-                act.set("joint", name)
-                act.set("kp", "100")
+                # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
+                # to avoid Python call frame overhead from multiple .set() calls.
+                ET.SubElement(
+                    actuator, "position", name=f"act_{name}", joint=name, kp="100"
+                )
 
-                s = ET.SubElement(sensor, "jointpos")
-                s.set("name", f"pos_{name}")
-                s.set("joint", name)
+                ET.SubElement(sensor, "jointpos", name=f"pos_{name}", joint=name)
 
     def _build_keyframe(self, root: ET.Element, worldbody: ET.Element) -> None:
         """Build a named keyframe from joint ref values set by set_initial_pose()."""
@@ -339,9 +338,14 @@ class ExerciseModelBuilder(ABC):
 
         if qpos_values:
             keyframe = ET.SubElement(root, "keyframe")
-            key = ET.SubElement(keyframe, "key")
-            key.set("name", f"{self.exercise_name}_start")
-            key.set("qpos", " ".join(qpos_values))
+            # ⚡ Bolt Optimization: Pass attributes as kwargs directly to ET.SubElement
+            # to avoid Python function call frame overhead from multiple .set() calls.
+            ET.SubElement(
+                keyframe,
+                "key",
+                name=f"{self.exercise_name}_start",
+                qpos=" ".join(qpos_values),
+            )
 
     def _build_bodies_and_barbell(
         self, worldbody: ET.Element, equality: ET.Element

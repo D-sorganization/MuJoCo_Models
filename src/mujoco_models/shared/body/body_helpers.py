@@ -67,17 +67,22 @@ def _add_single_foot_contact_geom(foot_body: ET.Element, side: str) -> None:
         foot_body: The ``<body name="foot_{side}">`` element.
         side: One of ``"l"`` or ``"r"``.
     """
-    contact_geom = ET.SubElement(foot_body, "geom")
-    contact_geom.set("name", f"foot_{side}_contact")
-    contact_geom.set("type", "box")
-    contact_geom.set("size", _FOOT_CONTACT_SIZE)
-    contact_geom.set("pos", _FOOT_CONTACT_POS)
-    contact_geom.set("contype", "1")
-    contact_geom.set("conaffinity", "1")
-    contact_geom.set("condim", "3")
-    contact_geom.set("friction", _FOOT_CONTACT_FRICTION)
-    contact_geom.set("group", "1")
-    contact_geom.set("rgba", _FOOT_CONTACT_RGBA)
+    # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
+    # to avoid Python call frame overhead from multiple .set() calls.
+    ET.SubElement(
+        foot_body,
+        "geom",
+        name=f"foot_{side}_contact",
+        type="box",
+        size=_FOOT_CONTACT_SIZE,
+        pos=_FOOT_CONTACT_POS,
+        contype="1",
+        conaffinity="1",
+        condim="3",
+        friction=_FOOT_CONTACT_FRICTION,
+        group="1",
+        rgba=_FOOT_CONTACT_RGBA,
+    )
 
 
 def _iter_foot_bodies(

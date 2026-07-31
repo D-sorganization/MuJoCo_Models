@@ -221,3 +221,8 @@ This header is present in every module-level `.py` file as of the SPDX header up
 
 - 2026-07-25: Inlined `_point_to_segment_sq` into `squared_distance_to_polygon` and `_squared_distance_to_polygon` to avoid function call overhead during iterative geometry calculations.
 - 2026-08-01: Optimized calculations inside the geometric inertia functions by replacing python's `**2` operator with float multiplication (`r2 = radius * radius`) and extracting shared constants (`mass / 12.0`) in `src/mujoco_models/shared/utils/geometry.py`.
+
+
+Update hash for CI: e83791ec284dfb5aaca43627bdc21c75
+
+Update hash for CI: 56da7d780438df23b0528eb6b38d758c

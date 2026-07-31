@@ -179,3 +179,8 @@
 ## 2026-08-01 - Avoid repeated exponentiation and variables in mathematical logic
 **Learning:** During profiling of geometric properties (like inertia calculations), we observed that calculating mathematical exponentiations (`**2`) directly, especially when used multiple times in simple expressions, incurs overhead. The bytecode for standard float multiplications and pre-extracted scalar local variables performs noticeably better.
 **Action:** Extract repeating basic calculations, like radius squared or width squared, into explicit local variables (`r2 = radius * radius`). Furthermore, simplify constants and formulas before runtime execution (e.g., computing `mass / 12.0` once instead of three times).
+
+## 2024-06-21 - Pass kwargs to ET.SubElement instead of using .set()
+
+**Learning:** When generating XML elements with `xml.etree.ElementTree`, calling `.set()` repeatedly on the created element introduces significant Python function call overhead.
+**Action:** Always pass attributes as kwargs directly to `ET.SubElement(parent, tag, **kwargs)` to eliminate the `.set()` function call overhead. This speeds up model construction noticeably, especially for models with many geoms, joints, and actuators.
