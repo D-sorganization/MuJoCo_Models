@@ -184,3 +184,6 @@
 
 **Learning:** When generating XML elements with `xml.etree.ElementTree`, calling `.set()` repeatedly on the created element introduces significant Python function call overhead.
 **Action:** Always pass attributes as kwargs directly to `ET.SubElement(parent, tag, **kwargs)` to eliminate the `.set()` function call overhead. This speeds up model construction noticeably, especially for models with many geoms, joints, and actuators.
+## 2026-08-02 - [Fix Weld Constraint Relpose String Formatting]
+**Learning:** Found a function `add_weld_constraint` where the documentation explicitly mentioned using `%` formatting for performance, but the actual implementation was still using f-strings for the 7-element `relpose`.
+**Action:** Replaced f-strings with `%` formatting in `add_weld_constraint` when unpacking the 7-element `relpose` tuple, providing a measurable performance improvement and ensuring the code matches its own documentation and the specific performance conventions for `mjcf_helpers.py`.
