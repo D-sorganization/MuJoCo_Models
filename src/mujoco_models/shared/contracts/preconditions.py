@@ -12,6 +12,8 @@ accept invalid geometry or physics parameters.
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
+from typing import cast
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -53,9 +55,13 @@ def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
     if isinstance(vec, str):
         raise ValidationError(f"{name} must be a 3-vector of numbers")
     try:
-        vx, vy, vz = float(vec[0]), float(vec[1]), float(vec[2])
-        if len(vec) != 3:
-            msg = f"{name} must be a 3-vector, got shape ({len(vec)},)"
+        # ArrayLike is intentionally broad and does not expose sequence
+        # indexing to the type checker. The runtime fast path below already
+        # catches non-sequence values, so narrow only for static analysis.
+        values = cast(Sequence[float], vec)
+        vx, vy, vz = float(values[0]), float(values[1]), float(values[2])
+        if len(values) != 3:
+            msg = f"{name} must be a 3-vector, got shape ({len(values)},)"
             raise ValidationError(msg)
     except (TypeError, ValueError, IndexError):
         try:
