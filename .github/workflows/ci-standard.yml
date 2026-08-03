@@ -92,7 +92,7 @@ jobs:
           fi
 
       - name: Security Audit
-        timeout-minutes: 15
+        timeout-minutes: 20
         run: |
           rm -rf .audit-venv
           python -m venv .audit-venv
@@ -158,6 +158,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust_core
+          prefix-key: v1-rust
       - name: Run Rust tests
         run: |
           cd rust_core
