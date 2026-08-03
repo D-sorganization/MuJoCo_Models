@@ -185,10 +185,11 @@ This header is present in every module-level `.py` file as of the SPDX header up
 
 ### CI Runner Routing
 
-- CI workflows must route to local self-hosted runners. The standard CI runner
-  selector retries transient runner inventory failures, but it must keep
-  `d-sorg-fleet` as the selected runner instead of falling back to hosted
-  GitHub runners.
+- Lightweight public CI selects GitHub-hosted Linux when `CI_RUNNER_MODE=hosted`
+  by default for public repositories and returns to `d-sorg-fleet` when the
+  variable is set to `local`; private repositories remain local.
+  The selector is zero-polling and does not query runner or repository inventory.
+  Rust remains on the local fleet; restoring local-only routing is a variable change.
 
 <!-- Update trigger for CI freshness check -->
 
@@ -221,7 +222,6 @@ This header is present in every module-level `.py` file as of the SPDX header up
 
 - 2026-07-25: Inlined `_point_to_segment_sq` into `squared_distance_to_polygon` and `_squared_distance_to_polygon` to avoid function call overhead during iterative geometry calculations.
 - 2026-08-01: Optimized calculations inside the geometric inertia functions by replacing python's `**2` operator with float multiplication (`r2 = radius * radius`) and extracting shared constants (`mass / 12.0`) in `src/mujoco_models/shared/utils/geometry.py`.
-
 
 Update hash for CI: e83791ec284dfb5aaca43627bdc21c75
 
