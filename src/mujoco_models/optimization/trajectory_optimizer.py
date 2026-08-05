@@ -15,6 +15,7 @@ Design by Contract:
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -192,12 +193,16 @@ def _validate_balance_inputs(
     # rather than delegating to a helper function, eliminating function call frame
     # overhead in tight optimization loops.
     try:
-        if not np.isfinite(com_position).all():
+        x, y, z = com_position[0], com_position[1], com_position[2]
+        if not (math.isfinite(x) and math.isfinite(y) and math.isfinite(z)):
             raise ValidationError("com_position contains non-finite values")
         if not np.isfinite(base_of_support).all():
             raise ValidationError("base_of_support contains non-finite values")
-    except TypeError as exc:
+    except (TypeError, ValueError) as exc:
         raise ValidationError("Inputs contain non-finite values") from exc
+    except IndexError:
+        # Fallback to general shape validation if we can't unpack 3 elements
+        pass
 
     if com_position.shape != (3,):
         msg = f"com_position must have shape (3,), got {com_position.shape}"

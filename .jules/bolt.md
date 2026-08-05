@@ -184,3 +184,8 @@
 
 **Learning:** When generating XML elements with `xml.etree.ElementTree`, calling `.set()` repeatedly on the created element introduces significant Python function call overhead.
 **Action:** Always pass attributes as kwargs directly to `ET.SubElement(parent, tag, **kwargs)` to eliminate the `.set()` function call overhead. This speeds up model construction noticeably, especially for models with many geoms, joints, and actuators.
+
+## 2026-08-05 - Avoid np.isfinite on small arrays
+
+**Learning:** Using `np.isfinite(arr).all()` on very small arrays (e.g. 3-vectors) incurs significant overhead due to C-API dispatch and scalar conversion, compared to checking unpacked elements natively.
+**Action:** Unroll fixed-length vector arrays and check their scalar elements with `math.isfinite()` directly (e.g., `x, y, z = arr; math.isfinite(x)`). Handle `TypeError` and `IndexError` gracefully for duck-typing support. This reduces validation overhead significantly inside tight loops like `compute_balance_cost`.
