@@ -137,7 +137,9 @@
 
 **Learning:** During profiling, we found that attribute lookup (e.g. `buffer.extend` and `buffer.append`) inside tightly recursive algorithms like `_fast_serialize_node` accounts for measurable execution time. Furthermore, simple wrapper functions like `_fast_escape_attrib` add unnecessary python call frame overhead.
 **Action:** When implementing custom recursive tree traversal functions, explicitly pass bounded methods (e.g., `buffer.extend` and `buffer.append`) as positional arguments to avoid repeatedly resolving them. Also, inline simple fast-path delegate functions (like early checks for string escaping) directly into the calling logic. This reduces XML serialization time by nearly 30% in highly nested structures.
+
 ## 2024-07-14 - Optimized XML escaping and recursive serialization
+
 **Learning:** Standard library escaping functions and tuple allocation for `list.extend` create significant overhead inside highly recursive XML serialization loops.
 **Action:** Replace `buffer.extend` with sequential `buffer.append()` calls and use chained string `.replace()` instead of Python's standard `xml.etree.ElementTree` escaping utilities to bypass unnecessary overhead and function call frames.
 
@@ -177,6 +179,7 @@
 **Action:** Use native python iterators for processing list coordinates (e.g. `for xi, yi in poly_list:`) and track the previous coordinate pair dynamically (`xj, yj = xi, yi`) to achieve a substantial speed boost.
 
 ## 2026-08-01 - Avoid repeated exponentiation and variables in mathematical logic
+
 **Learning:** During profiling of geometric properties (like inertia calculations), we observed that calculating mathematical exponentiations (`**2`) directly, especially when used multiple times in simple expressions, incurs overhead. The bytecode for standard float multiplications and pre-extracted scalar local variables performs noticeably better.
 **Action:** Extract repeating basic calculations, like radius squared or width squared, into explicit local variables (`r2 = radius * radius`). Furthermore, simplify constants and formulas before runtime execution (e.g., computing `mass / 12.0` once instead of three times).
 
