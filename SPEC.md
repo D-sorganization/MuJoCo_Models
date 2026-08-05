@@ -181,6 +181,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - Vectorized array operations like `np.interp` over all frames at once are preferred over Python `for` loops evaluating piecewise functions frame-by-frame during trajectory generation.
 - Checking for finiteness of NumPy arrays using `np.isfinite(arr).all()` is preferred over `np.all(np.isfinite(arr))` to avoid Python function dispatch overhead in tight loops.
 - Inlining array finiteness checks directly inside validation guards using `np.isfinite(arr).all()` rather than delegating them to helper functions avoids function call overhead in tight optimization loops.
+- Unroll repeated `math.isfinite()` checks for fixed-size `com_position` vectors in trajectory-optimizer hot paths instead of looping or delegating through array-wide helpers.
 - Geometry inertia helpers cache squared radii and dimensions before assembling cylinder, hollow-cylinder, rectangular-prism, capsule, and sphere inertia tensors to avoid repeated exponentiation in hot scalar paths.
 
 ### CI Runner Routing
@@ -215,6 +216,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-07-22: Removed redundant `float()` casting on `.tolist()` elements already returned as native Python floats in `point_in_polygon` and `squared_distance_to_polygon` (`polygon_geometry.py` and the mirrored helpers in `trajectory_optimizer.py`), and deferred `apx`/`apy` computation in `_point_to_segment_sq` to only the branches that need them. `parallel_axis_shift` in `shared/utils/geometry.py` now uses strict tuple unpacking with an explicit string-rejection guard instead of `isinstance`/`shape` branching to reach the numpy fallback.
 - 2026-07-25: Optimized `serialize_model` in `mjcf_helpers.py` by removing `ET.indent()` prior to serialization to avoid a redundant O(N) tree traversal, instead calculating and outputting whitespace formatting directly inside the single-pass recursive `_fast_serialize_node` call.
 - 2026-07-26: Fixed mypy typing error for optional text in `_fast_serialize_node` XML serialization.
+- 2026-08-05: Optimized `compute_balance_cost` validation in `trajectory_optimizer.py` by unrolling fixed-size `math.isfinite` checks for `com_position`, avoiding iterator/helper overhead in the balance-cost hot path.
 
 ## Changelog
 
@@ -222,6 +224,7 @@ This header is present in every module-level `.py` file as of the SPDX header up
 
 - 2026-07-25: Inlined `_point_to_segment_sq` into `squared_distance_to_polygon` and `_squared_distance_to_polygon` to avoid function call overhead during iterative geometry calculations.
 - 2026-08-01: Optimized calculations inside the geometric inertia functions by replacing python's `**2` operator with float multiplication (`r2 = radius * radius`) and extracting shared constants (`mass / 12.0`) in `src/mujoco_models/shared/utils/geometry.py`.
+- 2026-08-05: Unrolled `com_position` finiteness checks in `src/mujoco_models/optimization/trajectory_optimizer.py` for the balance-cost optimization path.
 
 Update hash for CI: e83791ec284dfb5aaca43627bdc21c75
 
