@@ -206,12 +206,9 @@ def add_weld_constraint(
     # Also use % formatting over f-strings for measurable speed improvements.
     if relpose is not None:
         if len(relpose) == 7:
-            attrs["relpose"] = (
-                f"{relpose[0]:.6f} {relpose[1]:.6f} {relpose[2]:.6f} "
-                f"{relpose[3]:.6f} {relpose[4]:.6f} {relpose[5]:.6f} {relpose[6]:.6f}"
-            )
+            attrs["relpose"] = "%.6f %.6f %.6f %.6f %.6f %.6f %.6f" % tuple(relpose)  # noqa: UP031
         else:
-            attrs["relpose"] = " ".join(f"{v:.6f}" for v in relpose)
+            attrs["relpose"] = " ".join("%.6f" % v for v in relpose)  # noqa: UP031
 
     return ET.SubElement(equality, "weld", attrib=attrs)
 

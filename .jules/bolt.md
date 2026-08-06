@@ -192,3 +192,8 @@
 
 **Learning:** Using `np.isfinite(arr).all()` on very small arrays (e.g. 3-vectors) incurs significant overhead due to C-API dispatch and scalar conversion, compared to checking unpacked elements natively.
 **Action:** Unroll fixed-length vector arrays and check their scalar elements with `math.isfinite()` directly (e.g., `x, y, z = arr; math.isfinite(x)`). Handle `TypeError` and `IndexError` gracefully for duck-typing support. This reduces validation overhead significantly inside tight loops like `compute_balance_cost`.
+
+## 2024-08-06 - Avoid f-strings for formatting large tuples
+
+**Learning:** Using f-strings to format long fixed-length tuples (e.g. 7-element `relpose`) is slower than `%` formatting and generator allocation overhead inside tight serialization generation.
+**Action:** When manually formatting fixed-size tuples into strings for MJCF XML generation, use `%` formatting (e.g., `"%.6f %.6f %.6f" % tuple(relpose)`) instead of f-strings or `.join()` comprehensions.
