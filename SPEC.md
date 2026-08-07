@@ -229,3 +229,4 @@ This header is present in every module-level `.py` file as of the SPDX header up
 Update hash for CI: e83791ec284dfb5aaca43627bdc21c75
 
 Update hash for CI: 56da7d780438df23b0528eb6b38d758c
+- 2026-08-07: Eliminated redundant subtractions inside the point-to-polygon loop in `squared_distance_to_polygon` by hoisting them.
