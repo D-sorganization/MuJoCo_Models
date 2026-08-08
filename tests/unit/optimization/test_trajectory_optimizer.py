@@ -200,29 +200,29 @@ class TestComputeBarPathCost:
 
     def test_point_to_segment_clamping(self) -> None:
         """Test explicit clamping coverage (inlined)."""
-        from mujoco_models.optimization.trajectory_optimizer import _squared_distance_to_polygon
+        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
         import numpy as np
 
         # Test t < 0.0 branch
-        dist = _squared_distance_to_polygon(np.array([-1.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]))
+        dist = compute_balance_cost(np.array([-1.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]))
         assert dist == pytest.approx(1.0)
 
         # Test t > 1.0 branch
-        dist = _squared_distance_to_polygon(np.array([2.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]))
+        dist = compute_balance_cost(np.array([2.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]))
         assert dist == pytest.approx(1.0)
 
     def test_point_to_segment_clamping_zero(self) -> None:
         """Test explicit clamping coverage for ab_sq < 1e-12."""
-        from mujoco_models.optimization.trajectory_optimizer import _squared_distance_to_polygon
+        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
         import numpy as np
 
-        dist = _squared_distance_to_polygon(np.array([2.0, 0.0]), np.array([[0.0, 0.0], [1e-13, 0.0], [0.0, 1.0]]))
+        dist = compute_balance_cost(np.array([2.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1e-13, 0.0], [0.0, 1.0]]))
         assert dist == pytest.approx(4.0)
 
     def test_point_to_segment_clamping_zero_branch_between(self) -> None:
         """Test explicit clamping coverage (inlined) where 0.0 <= t <= 1.0"""
-        from mujoco_models.optimization.trajectory_optimizer import _squared_distance_to_polygon
+        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
         import numpy as np
 
-        dist = _squared_distance_to_polygon(np.array([0.5, 0.5]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
+        dist = compute_balance_cost(np.array([1.5, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
         assert dist == pytest.approx(0.25)
