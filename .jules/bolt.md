@@ -192,3 +192,6 @@
 
 **Learning:** Using `np.isfinite(arr).all()` on very small arrays (e.g. 3-vectors) incurs significant overhead due to C-API dispatch and scalar conversion, compared to checking unpacked elements natively.
 **Action:** Unroll fixed-length vector arrays and check their scalar elements with `math.isfinite()` directly (e.g., `x, y, z = arr; math.isfinite(x)`). Handle `TypeError` and `IndexError` gracefully for duck-typing support. This reduces validation overhead significantly inside tight loops like `compute_balance_cost`.
+## 2026-08-08 - Use f-strings in recursive functions instead of multiple function calls
+**Learning:** Using multiple function calls to append strings iteratively is slow due to function frame creation overhead. f-strings inside a single append function dramatically improve performance while adhering to native list append convention (avoiding `"".join` overheads).
+**Action:** Use f-strings inside tight custom recursive loops to combine multiple inline strings into one function argument when passing to appenders like `buffer.append`, effectively bypassing function call overheads.

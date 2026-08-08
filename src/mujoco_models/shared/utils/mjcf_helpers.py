@@ -240,8 +240,9 @@ def _fast_serialize_node(  # noqa: C901
     """
     tag = elem.tag
 
-    buffer_append("<")
-    buffer_append(tag)
+    # ⚡ Bolt Optimization:
+    # Combine formatting strings using f-strings into a single append call.
+    buffer_append(f"<{tag}")
 
     attrib = elem.attrib
     if attrib:
@@ -255,11 +256,10 @@ def _fast_serialize_node(  # noqa: C901
                     .replace("\r", "&#13;")
                     .replace("\t", "&#9;")
                 )
-            buffer_append(" ")
-            buffer_append(k)
-            buffer_append('="')
-            buffer_append(v)
-            buffer_append('"')
+            # ⚡ Bolt Optimization:
+            # Combine formatting strings using f-strings into a single append call.
+            # This is significantly faster than calling buffer_append 5 times.
+            buffer_append(f' {k}="{v}"')
 
     has_children = bool(len(elem))
 
@@ -286,9 +286,9 @@ def _fast_serialize_node(  # noqa: C901
                 buffer_append("\n")
             buffer_append("  " * level)
 
-        buffer_append("</")
-        buffer_append(tag)
-        buffer_append(">")
+        # ⚡ Bolt Optimization:
+        # Reduce buffer_append calls for closing tags
+        buffer_append(f"</{tag}>")
 
     tail = elem.tail
     if tail is not None and not tail.isspace():
