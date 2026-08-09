@@ -192,3 +192,6 @@
 
 **Learning:** Using `np.isfinite(arr).all()` on very small arrays (e.g. 3-vectors) incurs significant overhead due to C-API dispatch and scalar conversion, compared to checking unpacked elements natively.
 **Action:** Unroll fixed-length vector arrays and check their scalar elements with `math.isfinite()` directly (e.g., `x, y, z = arr; math.isfinite(x)`). Handle `TypeError` and `IndexError` gracefully for duck-typing support. This reduces validation overhead significantly inside tight loops like `compute_balance_cost`.
+## 2025-03-05 - Inlining Polygon Geometry Functions
+**Learning:** Sequential calls to `_point_in_polygon` and `_squared_distance_to_polygon` on the same `base_of_support` NumPy array cause redundant `float(point[0])` parsing and `.tolist()` array allocations.
+**Action:** When sequentially executing polygon geometry tests, inline the logic to share a single `.tolist()` allocation and avoid function call overhead. Crucially, preserve early returns (e.g., returning early if the point is inside) rather than unconditionally combining both algorithms into a single loop, which would pessimize the happy path.
