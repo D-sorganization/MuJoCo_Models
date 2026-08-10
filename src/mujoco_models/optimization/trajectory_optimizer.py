@@ -362,5 +362,3 @@ def compute_bar_path_cost(
     dx = bar_position[:, 0] - target_path[:, 0]
     dy = bar_position[:, 1] - target_path[:, 1]
     return float((dx @ dx + dy @ dy) / len(dx))
-
-
