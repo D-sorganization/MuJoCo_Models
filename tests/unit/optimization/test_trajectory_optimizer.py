@@ -224,5 +224,5 @@ class TestComputeBarPathCost:
         from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
         import numpy as np
 
-        dist = compute_balance_cost(np.array([0.5, 1.5, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
+        dist = compute_balance_cost(np.array([1.5, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
         assert dist == pytest.approx(0.25)

@@ -233,3 +233,5 @@ Update hash for CI: 56da7d780438df23b0528eb6b38d758c
 - 2026-08-06: Optimized `add_weld_constraint` in `mjcf_helpers.py` by replacing f-strings for formatting the 7-element `relpose` tuples with `%` formatting to reduce generator overhead.
 - 2026-08-07: Eliminated redundant subtractions inside the point-to-polygon loop in `squared_distance_to_polygon` by hoisting them.
 <!-- Updated string formatting and fast-path unpacking in preconditions for Bolt optimization -->
+
+Update hash for CI: 15f087d50a53a15731753a7c61dad8d1
