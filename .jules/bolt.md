@@ -192,3 +192,8 @@
 
 **Learning:** Using `np.isfinite(arr).all()` on very small arrays (e.g. 3-vectors) incurs significant overhead due to C-API dispatch and scalar conversion, compared to checking unpacked elements natively.
 **Action:** Unroll fixed-length vector arrays and check their scalar elements with `math.isfinite()` directly (e.g., `x, y, z = arr; math.isfinite(x)`). Handle `TypeError` and `IndexError` gracefully for duck-typing support. This reduces validation overhead significantly inside tight loops like `compute_balance_cost`.
+
+## 2024-07-26 - Avoid generator expressions for small tuples
+
+**Learning:** Using a generator expression wrapped in `tuple()` to filter or map a small number of items (like iterating over left and right sides of a body) has a significant generator allocation overhead.
+**Action:** Use an explicit loop and tuple concatenation (e.g., `t += (item,)`) for very small collections. This eliminates generator overhead and speeds up the function substantially.

@@ -227,6 +227,4 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-08-05: Unrolled `com_position` finiteness checks in `src/mujoco_models/optimization/trajectory_optimizer.py` for the balance-cost optimization path.
 
 Update hash for CI: e83791ec284dfb5aaca43627bdc21c75
-
-Update hash for CI: 56da7d780438df23b0528eb6b38d758c
 Mon Aug 10 05:53:23 UTC 2026
