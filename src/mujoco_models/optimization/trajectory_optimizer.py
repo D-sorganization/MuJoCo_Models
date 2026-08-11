@@ -242,14 +242,22 @@ def compute_balance_cost(
             values.
     """
     _validate_balance_inputs(com_position, base_of_support)
-    com_xy = com_position[:2]
 
-    px, py = float(com_xy[0]), float(com_xy[1])
+    # OPTIMIZATION: Inline the point-in-polygon and distance checks directly
+    # here to avoid multiple redundant conversions via `base_of_support.tolist()`
+    # and to eliminate Python function call frame overhead for helper functions.
     poly_list = base_of_support.tolist()
 
     inside = False
     xj, yj = poly_list[-1]
-
+    # OPTIMIZATION: Convert the polygon array to a python list of lists
+    # before iterating. Share the allocation for both point-in-polygon
+    # and squared-distance checks.
+    # OPTIMIZATION: Combine point-in-polygon and point-to-polygon distance
+    # calculations to share a single `.tolist()` conversion and avoid
+    # function call overhead, while preserving early return for inside points.
+    px, py = float(com_position[0]), float(com_position[1])
+    # Ray-casting test for point-in-polygon
     for xi, yi in poly_list:
         if (yi > py) != (yj > py):
             x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
@@ -257,12 +265,13 @@ def compute_balance_cost(
                 inside = not inside
         xj, yj = xi, yi
 
+    # Return early if inside to avoid expensive distance calculation
     if inside:
         return 0.0
 
     min_dist_sq = float("inf")
     xj, yj = poly_list[-1]
-
+    # Minimum squared distance to polygon boundary
     for xi, yi in poly_list:
         abx = xi - xj
         aby = yi - yj
@@ -288,6 +297,7 @@ def compute_balance_cost(
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
         xj, yj = xi, yi
+
     return min_dist_sq
 
 

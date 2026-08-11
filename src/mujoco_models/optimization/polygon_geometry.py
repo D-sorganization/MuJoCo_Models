@@ -77,22 +77,23 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
         abx = xi - xj
         aby = yi - yj
 
+        apx = px - xj
+        apy = py - yj
+
         ab_sq = abx * abx + aby * aby
         if ab_sq < 1e-12:
-            apx = px - xj
-            apy = py - yj
             dist_sq = apx * apx + apy * apy
         else:
-            t = ((px - xj) * abx + (py - yj) * aby) / ab_sq
+            t = (apx * abx + apy * aby) / ab_sq
             if t < 0.0:
-                dx = px - xj
-                dy = py - yj
+                dx = apx
+                dy = apy
             elif t > 1.0:
                 dx = px - xi
                 dy = py - yi
             else:
-                dx = px - (xj + t * abx)
-                dy = py - (yj + t * aby)
+                dx = apx - t * abx
+                dy = apy - t * aby
             dist_sq = dx * dx + dy * dy
 
         if dist_sq < min_dist_sq:

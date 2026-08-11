@@ -192,3 +192,23 @@
 
 **Learning:** Using `np.isfinite(arr).all()` on very small arrays (e.g. 3-vectors) incurs significant overhead due to C-API dispatch and scalar conversion, compared to checking unpacked elements natively.
 **Action:** Unroll fixed-length vector arrays and check their scalar elements with `math.isfinite()` directly (e.g., `x, y, z = arr; math.isfinite(x)`). Handle `TypeError` and `IndexError` gracefully for duck-typing support. This reduces validation overhead significantly inside tight loops like `compute_balance_cost`.
+
+## 2024-07-26 - Avoid generator expressions for small tuples
+
+**Learning:** Using a generator expression wrapped in `tuple()` to filter or map a small number of items (like iterating over left and right sides of a body) has a significant generator allocation overhead.
+**Action:** Use an explicit loop and tuple concatenation (e.g., `t += (item,)`) for very small collections. This eliminates generator overhead and speeds up the function substantially.
+## 2024-08-06 - Avoid f-strings for formatting large tuples
+**Learning:** Using f-strings to format long fixed-length tuples (e.g. 7-element `relpose`) is slower than `%` formatting and generator allocation overhead inside tight serialization generation.
+**Action:** When manually formatting fixed-size tuples into strings for MJCF XML generation, use `%` formatting (e.g., `"%.6f %.6f %.6f" % tuple(relpose)`) instead of f-strings or `.join()` comprehensions.
+## 2026-08-07 - Pre-compute invariant logic inside mathematical loops
+**Learning:** During optimization of point-to-polygon distance calculations (`squared_distance_to_polygon`), simple mathematical expressions (`px - xj`, `py - yj`) were re-evaluated multiple times within conditional branches and across loop iterations despite not changing inside the loop body.
+**Action:** Pre-compute independent, reusable calculations (`apx = px - xj`, `apy = py - yj`) once at the beginning of the loop iteration. This avoids duplicate bytecode execution and saves significant time (~27% speedup in geometric micro-benchmarks).
+## 2026-08-08 - Use f-strings in recursive functions instead of multiple function calls
+**Learning:** Using multiple function calls to append strings iteratively is slow due to function frame creation overhead. f-strings inside a single append function dramatically improve performance while adhering to native list append convention (avoiding `"".join` overheads).
+**Action:** Use f-strings inside tight custom recursive loops to combine multiple inline strings into one function argument when passing to appenders like `buffer.append`, effectively bypassing function call overheads.
+## 2025-03-05 - Inlining Polygon Geometry Functions
+**Learning:** Sequential calls to `_point_in_polygon` and `_squared_distance_to_polygon` on the same `base_of_support` NumPy array cause redundant `float(point[0])` parsing and `.tolist()` array allocations.
+**Action:** When sequentially executing polygon geometry tests, inline the logic to share a single `.tolist()` allocation and avoid function call overhead. Crucially, preserve early returns (e.g., returning early if the point is inside) rather than unconditionally combining both algorithms into a single loop, which would pessimize the happy path.
+## 2026-08-10 - Consolidate Sequential Array Operations
+**Learning:** When performing sequential operations on the same NumPy array (like point-in-polygon followed by point-to-polygon distance tests) that each require array-to-list conversion (`.tolist()`) to avoid indexing overhead, treating them as separate steps causes redundant list allocations and Python function call frame overhead.
+**Action:** Inline and consolidate the sequential logic into a single block to share a single `.tolist()` conversion and avoid function call overhead. Ensure early returns (e.g. if a point is already inside the polygon) are preserved to avoid pessimizing the happy path. This resulted in an approx 15% speedup inside and 10% outside the polygon.

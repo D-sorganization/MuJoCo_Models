@@ -206,12 +206,9 @@ def add_weld_constraint(
     # Also use % formatting over f-strings for measurable speed improvements.
     if relpose is not None:
         if len(relpose) == 7:
-            attrs["relpose"] = (
-                f"{relpose[0]:.6f} {relpose[1]:.6f} {relpose[2]:.6f} "
-                f"{relpose[3]:.6f} {relpose[4]:.6f} {relpose[5]:.6f} {relpose[6]:.6f}"
-            )
+            attrs["relpose"] = "%.6f %.6f %.6f %.6f %.6f %.6f %.6f" % tuple(relpose)  # noqa: UP031
         else:
-            attrs["relpose"] = " ".join(f"{v:.6f}" for v in relpose)
+            attrs["relpose"] = " ".join("%.6f" % v for v in relpose)  # noqa: UP031
 
     return ET.SubElement(equality, "weld", attrib=attrs)
 
@@ -240,8 +237,9 @@ def _fast_serialize_node(  # noqa: C901
     """
     tag = elem.tag
 
-    buffer_append("<")
-    buffer_append(tag)
+    # ⚡ Bolt Optimization:
+    # Combine formatting strings using f-strings into a single append call.
+    buffer_append(f"<{tag}")
 
     attrib = elem.attrib
     if attrib:
@@ -255,11 +253,10 @@ def _fast_serialize_node(  # noqa: C901
                     .replace("\r", "&#13;")
                     .replace("\t", "&#9;")
                 )
-            buffer_append(" ")
-            buffer_append(k)
-            buffer_append('="')
-            buffer_append(v)
-            buffer_append('"')
+            # ⚡ Bolt Optimization:
+            # Combine formatting strings using f-strings into a single append call.
+            # This is significantly faster than calling buffer_append 5 times.
+            buffer_append(f' {k}="{v}"')
 
     has_children = bool(len(elem))
 
@@ -286,9 +283,9 @@ def _fast_serialize_node(  # noqa: C901
                 buffer_append("\n")
             buffer_append("  " * level)
 
-        buffer_append("</")
-        buffer_append(tag)
-        buffer_append(">")
+        # ⚡ Bolt Optimization:
+        # Reduce buffer_append calls for closing tags
+        buffer_append(f"</{tag}>")
 
     tail = elem.tail
     if tail is not None and not tail.isspace():
