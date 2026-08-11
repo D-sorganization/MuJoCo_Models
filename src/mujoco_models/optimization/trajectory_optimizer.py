@@ -244,10 +244,51 @@ def compute_balance_cost(
     _validate_balance_inputs(com_position, base_of_support)
     com_xy = com_position[:2]
 
-    if _point_in_polygon(com_xy, base_of_support):
+    px, py = float(com_xy[0]), float(com_xy[1])
+    poly_list = base_of_support.tolist()
+
+    inside = False
+    xj, yj = poly_list[-1]
+
+    for xi, yi in poly_list:
+        if (yi > py) != (yj > py):
+            x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
+            if px < x_intersect:
+                inside = not inside
+        xj, yj = xi, yi
+
+    if inside:
         return 0.0
 
-    return _squared_distance_to_polygon(com_xy, base_of_support)
+    min_dist_sq = float("inf")
+    xj, yj = poly_list[-1]
+
+    for xi, yi in poly_list:
+        abx = xi - xj
+        aby = yi - yj
+
+        ab_sq = abx * abx + aby * aby
+        if ab_sq < 1e-12:
+            apx = px - xj
+            apy = py - yj
+            dist_sq = apx * apx + apy * apy
+        else:
+            t = ((px - xj) * abx + (py - yj) * aby) / ab_sq
+            if t < 0.0:
+                dx = px - xj
+                dy = py - yj
+            elif t > 1.0:
+                dx = px - xi
+                dy = py - yi
+            else:
+                dx = px - (xj + t * abx)
+                dy = py - (yj + t * aby)
+            dist_sq = dx * dx + dy * dy
+
+        if dist_sq < min_dist_sq:
+            min_dist_sq = dist_sq
+        xj, yj = xi, yi
+    return min_dist_sq
 
 
 def _validate_bar_path_inputs(
@@ -321,81 +362,3 @@ def compute_bar_path_cost(
     dx = bar_position[:, 0] - target_path[:, 0]
     dy = bar_position[:, 1] - target_path[:, 1]
     return float((dx @ dx + dy @ dy) / len(dx))
-
-
-def _point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
-    """Ray-casting test for point-in-polygon on the 2D plane.
-
-    Args:
-        point: 2D point, shape (2,).
-        polygon: Convex polygon vertices, shape (n, 2).
-
-    Returns:
-        True if the point is inside the polygon.
-    """
-    inside = False
-    px, py = float(point[0]), float(point[1])
-
-    # OPTIMIZATION: Convert the polygon array to a python list of lists
-    # before iterating. Indexing `poly_list[i][0]` is significantly faster
-    # than `float(polygon[i, 0])` in a tight loop.
-    poly_list = polygon.tolist()
-
-    xj, yj = poly_list[-1]
-
-    for xi, yi in poly_list:
-        if (yi > py) != (yj > py):
-            x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
-            if px < x_intersect:
-                inside = not inside
-        xj, yj = xi, yi
-
-    return inside
-
-
-def _squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float:
-    """Minimum squared distance from a point to a polygon boundary.
-
-    Args:
-        point: 2D point, shape (2,).
-        polygon: Polygon vertices, shape (n, 2).
-
-    Returns:
-        Minimum squared distance to any polygon edge.
-    """
-    min_dist_sq = float("inf")
-    px, py = float(point[0]), float(point[1])
-
-    # OPTIMIZATION: Convert the polygon array to a python list of lists
-    # before iterating. Indexing `poly_list[i][0]` is significantly faster
-    # than `float(polygon[i, 0])` in a tight loop.
-    poly_list = polygon.tolist()
-
-    xj, yj = poly_list[-1]
-
-    for xi, yi in poly_list:
-        abx = xi - xj
-        aby = yi - yj
-
-        ab_sq = abx * abx + aby * aby
-        if ab_sq < 1e-12:
-            apx = px - xj
-            apy = py - yj
-            dist_sq = apx * apx + apy * apy
-        else:
-            t = ((px - xj) * abx + (py - yj) * aby) / ab_sq
-            if t < 0.0:
-                dx = px - xj
-                dy = py - yj
-            elif t > 1.0:
-                dx = px - xi
-                dy = py - yi
-            else:
-                dx = px - (xj + t * abx)
-                dy = py - (yj + t * aby)
-            dist_sq = dx * dx + dy * dy
-
-        if dist_sq < min_dist_sq:
-            min_dist_sq = dist_sq
-        xj, yj = xi, yi
-    return min_dist_sq
