@@ -248,19 +248,25 @@ def compute_balance_cost(
     poly_list = base_of_support.tolist()
 
     inside = False
-    min_dist_sq = float("inf")
-
     xj, yj = poly_list[-1]
+
     for xi, yi in poly_list:
-        # Check point in polygon
         if (yi > py) != (yj > py):
             x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
             if px < x_intersect:
                 inside = not inside
+        xj, yj = xi, yi
 
-        # Calculate distance
+    if inside:
+        return 0.0
+
+    min_dist_sq = float("inf")
+    xj, yj = poly_list[-1]
+
+    for xi, yi in poly_list:
         abx = xi - xj
         aby = yi - yj
+
         ab_sq = abx * abx + aby * aby
         if ab_sq < 1e-12:
             apx = px - xj
@@ -281,11 +287,7 @@ def compute_balance_cost(
 
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
-
         xj, yj = xi, yi
-
-    if inside:
-        return 0.0
     return min_dist_sq
 
 
