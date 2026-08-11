@@ -246,7 +246,6 @@ def compute_balance_cost(
     # OPTIMIZATION: Inline the point-in-polygon and distance checks directly
     # here to avoid multiple redundant conversions via `base_of_support.tolist()`
     # and to eliminate Python function call frame overhead for helper functions.
-    px, py = float(com_xy[0]), float(com_xy[1])
     poly_list = base_of_support.tolist()
 
     inside = False
@@ -276,7 +275,6 @@ def compute_balance_cost(
     for xi, yi in poly_list:
         abx = xi - xj
         aby = yi - yj
-
 
         ab_sq = abx * abx + aby * aby
         if ab_sq < 1e-12:
