@@ -235,3 +235,4 @@ Update hash for CI: 56da7d780438df23b0528eb6b38d758c
 <!-- Updated string formatting and fast-path unpacking in preconditions for Bolt optimization -->
 
 Update hash for CI: 15f087d50a53a15731753a7c61dad8d1
+Update hash for CI: bolt-optimization-mjcf

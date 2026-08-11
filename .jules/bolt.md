@@ -203,3 +203,6 @@
 ## 2026-08-07 - Pre-compute invariant logic inside mathematical loops
 **Learning:** During optimization of point-to-polygon distance calculations (`squared_distance_to_polygon`), simple mathematical expressions (`px - xj`, `py - yj`) were re-evaluated multiple times within conditional branches and across loop iterations despite not changing inside the loop body.
 **Action:** Pre-compute independent, reusable calculations (`apx = px - xj`, `apy = py - yj`) once at the beginning of the loop iteration. This avoids duplicate bytecode execution and saves significant time (~27% speedup in geometric micro-benchmarks).
+## 2026-08-08 - Use f-strings in recursive functions instead of multiple function calls
+**Learning:** Using multiple function calls to append strings iteratively is slow due to function frame creation overhead. f-strings inside a single append function dramatically improve performance while adhering to native list append convention (avoiding `"".join` overheads).
+**Action:** Use f-strings inside tight custom recursive loops to combine multiple inline strings into one function argument when passing to appenders like `buffer.append`, effectively bypassing function call overheads.
