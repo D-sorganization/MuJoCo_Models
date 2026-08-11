@@ -197,3 +197,6 @@
 
 **Learning:** Using a generator expression wrapped in `tuple()` to filter or map a small number of items (like iterating over left and right sides of a body) has a significant generator allocation overhead.
 **Action:** Use an explicit loop and tuple concatenation (e.g., `t += (item,)`) for very small collections. This eliminates generator overhead and speeds up the function substantially.
+## 2024-08-06 - Avoid f-strings for formatting large tuples
+**Learning:** Using f-strings to format long fixed-length tuples (e.g. 7-element `relpose`) is slower than `%` formatting and generator allocation overhead inside tight serialization generation.
+**Action:** When manually formatting fixed-size tuples into strings for MJCF XML generation, use `%` formatting (e.g., `"%.6f %.6f %.6f" % tuple(relpose)`) instead of f-strings or `.join()` comprehensions.

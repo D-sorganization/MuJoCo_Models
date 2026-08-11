@@ -228,3 +228,6 @@ This header is present in every module-level `.py` file as of the SPDX header up
 
 Update hash for CI: e83791ec284dfb5aaca43627bdc21c75
 Mon Aug 10 05:53:23 UTC 2026
+
+Update hash for CI: 56da7d780438df23b0528eb6b38d758c
+- 2026-08-06: Optimized `add_weld_constraint` in `mjcf_helpers.py` by replacing f-strings for formatting the 7-element `relpose` tuples with `%` formatting to reduce generator overhead.
