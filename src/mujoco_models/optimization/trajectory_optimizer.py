@@ -244,12 +244,14 @@ def compute_balance_cost(
     _validate_balance_inputs(com_position, base_of_support)
     com_xy = com_position[:2]
 
+    # OPTIMIZATION: Inline the point-in-polygon and distance checks directly
+    # here to avoid multiple redundant conversions via `base_of_support.tolist()`
+    # and to eliminate Python function call frame overhead for helper functions.
     px, py = float(com_xy[0]), float(com_xy[1])
     poly_list = base_of_support.tolist()
 
     inside = False
     xj, yj = poly_list[-1]
-
     for xi, yi in poly_list:
         if (yi > py) != (yj > py):
             x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
@@ -257,16 +259,15 @@ def compute_balance_cost(
                 inside = not inside
         xj, yj = xi, yi
 
+    # Return early if inside to avoid expensive distance calculation
     if inside:
         return 0.0
 
     min_dist_sq = float("inf")
     xj, yj = poly_list[-1]
-
     for xi, yi in poly_list:
         abx = xi - xj
         aby = yi - yj
-
         ab_sq = abx * abx + aby * aby
         if ab_sq < 1e-12:
             apx = px - xj
@@ -288,6 +289,7 @@ def compute_balance_cost(
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
         xj, yj = xi, yi
+
     return min_dist_sq
 
 

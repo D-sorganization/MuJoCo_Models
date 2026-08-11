@@ -192,8 +192,3 @@
 
 **Learning:** Using `np.isfinite(arr).all()` on very small arrays (e.g. 3-vectors) incurs significant overhead due to C-API dispatch and scalar conversion, compared to checking unpacked elements natively.
 **Action:** Unroll fixed-length vector arrays and check their scalar elements with `math.isfinite()` directly (e.g., `x, y, z = arr; math.isfinite(x)`). Handle `TypeError` and `IndexError` gracefully for duck-typing support. This reduces validation overhead significantly inside tight loops like `compute_balance_cost`.
-
-## 2024-08-10 - Combine multiple polygon operations into a single loop
-
-**Learning:** When calculating both `point_in_polygon` and `squared_distance_to_polygon` on the same polygon, it requires allocating `polygon.tolist()` multiple times and doing redundant iterations. This happens often during unstable pose validations.
-**Action:** In `compute_balance_cost`, combine the two checks into a single loop over the polygon vertices, saving Python iteration overhead and avoiding multiple redundant C-API unpackings via `.tolist()`.
