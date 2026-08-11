@@ -12,7 +12,6 @@ accept invalid geometry or physics parameters.
 from __future__ import annotations
 
 import math
-from typing import cast
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -51,21 +50,22 @@ def require_non_negative(value: float, name: str) -> None:
 def require_unit_vector(vec: ArrayLike, name: str, tol: float = 1e-6) -> None:
     """Require *vec* to have unit norm within *tol*."""
     # ⚡ Bolt Optimization: Fast path for lists and tuples without coercing to ndarray
-    if isinstance(vec, (tuple, list)):
+    if isinstance(vec, str):
+        raise ValidationError(f"{name} must be a 3-vector of numbers")
+    try:
+        vx, vy, vz = float(vec[0]), float(vec[1]), float(vec[2])
         if len(vec) != 3:
-            raise ValidationError(f"{name} must be a 3-vector, got shape ({len(vec)},)")
+            msg = f"{name} must be a 3-vector, got shape ({len(vec)},)"
+            raise ValidationError(msg)
+    except (TypeError, ValueError, IndexError):
         try:
-            vx, vy, vz = float(vec[0]), float(vec[1]), float(vec[2])
+            arr = np.asarray(vec, dtype=float)
+            if arr.shape != (3,):
+                msg = f"{name} must be a 3-vector, got shape {arr.shape}"
+                raise ValidationError(msg) from None
+            vx, vy, vz = float(arr[0]), float(arr[1]), float(arr[2])
         except (TypeError, ValueError):
             raise ValidationError(f"{name} must be a 3-vector of numbers") from None
-    elif getattr(vec, "shape", None) == (3,):
-        arr = cast("np.ndarray", vec)
-        vx, vy, vz = float(arr[0]), float(arr[1]), float(arr[2])
-    else:
-        arr = np.asarray(vec, dtype=float)
-        if arr.shape != (3,):
-            raise ValidationError(f"{name} must be a 3-vector, got shape {arr.shape}")
-        vx, vy, vz = float(arr[0]), float(arr[1]), float(arr[2])
 
     # OPTIMIZATION: Unrolled scalar math instead of np.linalg.norm
     # to avoid allocation and dispatch overhead.
