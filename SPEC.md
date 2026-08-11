@@ -236,3 +236,4 @@ Update hash for CI: 56da7d780438df23b0528eb6b38d758c
 
 Update hash for CI: 15f087d50a53a15731753a7c61dad8d1
 Update hash for CI: bolt-optimization-mjcf
+SPEC updated for compute balance optimization

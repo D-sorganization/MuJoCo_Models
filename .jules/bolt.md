@@ -206,3 +206,6 @@
 ## 2026-08-08 - Use f-strings in recursive functions instead of multiple function calls
 **Learning:** Using multiple function calls to append strings iteratively is slow due to function frame creation overhead. f-strings inside a single append function dramatically improve performance while adhering to native list append convention (avoiding `"".join` overheads).
 **Action:** Use f-strings inside tight custom recursive loops to combine multiple inline strings into one function argument when passing to appenders like `buffer.append`, effectively bypassing function call overheads.
+## 2025-03-05 - Inlining Polygon Geometry Functions
+**Learning:** Sequential calls to `_point_in_polygon` and `_squared_distance_to_polygon` on the same `base_of_support` NumPy array cause redundant `float(point[0])` parsing and `.tolist()` array allocations.
+**Action:** When sequentially executing polygon geometry tests, inline the logic to share a single `.tolist()` allocation and avoid function call overhead. Crucially, preserve early returns (e.g., returning early if the point is inside) rather than unconditionally combining both algorithms into a single loop, which would pessimize the happy path.

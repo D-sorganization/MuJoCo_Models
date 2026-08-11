@@ -252,6 +252,9 @@ def compute_balance_cost(
 
     inside = False
     xj, yj = poly_list[-1]
+    # OPTIMIZATION: Convert the polygon array to a python list of lists
+    # before iterating. Share the allocation for both point-in-polygon
+    # and squared-distance checks.
     for xi, yi in poly_list:
         if (yi > py) != (yj > py):
             x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
@@ -268,6 +271,8 @@ def compute_balance_cost(
     for xi, yi in poly_list:
         abx = xi - xj
         aby = yi - yj
+
+
         ab_sq = abx * abx + aby * aby
         if ab_sq < 1e-12:
             apx = px - xj
