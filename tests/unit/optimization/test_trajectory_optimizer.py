@@ -225,6 +225,10 @@ class TestComputeBarPathCost:
         import numpy as np
 
         dist = compute_balance_cost(np.array([1.5, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
+        # Test a point outside the polygon but whose closest point is on an edge (0 < t < 1)
+        # Point is (0.5, -0.5, 0.0), closest edge is bottom edge (0,0) to (1,0)
+        # distance squared = 0.25
+        dist = compute_balance_cost(np.array([0.5, -0.5, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
         assert dist == pytest.approx(0.25)
         # Test 0.5, 2.0 with a polygon that ensures t between 0 and 1
         dist = compute_balance_cost(np.array([0.5, 2.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
