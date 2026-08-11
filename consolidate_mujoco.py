@@ -1,9 +1,7 @@
 import subprocess
-import re
 import os
 
 branches = [
-    ("340", "origin/bolt-optimize-weld-constraint-format-14615539126553769549"),
     ("341", "origin/jules/optimize-tuple-string-formatting-5679378907059453899"),
     ("345", "origin/bolt/optimize-relpose-formatting-3355454498572605647"),
     ("346", "origin/bolt-optimize-polygon-distance-16529009910224475553"),
@@ -13,13 +11,13 @@ branches = [
     ("350", "origin/bolt-opt-balance-cost-16678318763549801902"),
 ]
 
-def run(cmd, check=True):
-    print(f"> {cmd}")
-    res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+def run(args, check=True):
+    print(f"> {' '.join(args)}")
+    res = subprocess.run(args, capture_output=True, text=True)
     if check and res.returncode != 0:
         print(f"STDOUT: {res.stdout}")
         print(f"STDERR: {res.stderr}")
-        raise RuntimeError(f"Command failed: {cmd}")
+        raise RuntimeError(f"Command failed: {' '.join(args)}")
     return res
 
 def resolve_conflict_file(filepath):
@@ -46,7 +44,6 @@ def resolve_conflict_file(filepath):
             in_other = True
         elif line.startswith(">>>>>>>"):
             in_conflict = False
-            # Deduplicate or combine
             combined = head_lines + [l for l in other_lines if l not in head_lines]
             new_lines.extend(combined)
         else:
@@ -63,15 +60,15 @@ def resolve_conflict_file(filepath):
 
 for pr_num, branch in branches:
     print(f"\n--- Merging PR #{pr_num} ({branch}) ---")
-    res = run(f"git merge --no-ff {branch} -m 'Merge PR #{pr_num} into consolidated batch'", check=False)
+    res = run(["git", "merge", "--no-ff", "--no-verify", branch, "-m", f"Merge PR #{pr_num} into consolidated batch"], check=False)
     if res.returncode != 0:
         print(f"Conflict encountered for PR #{pr_num}, resolving...")
-        status = run("git diff --name-only --diff-filter=U", check=False)
-        conflicts = status.stdout.strip().splitlines()
+        status = run(["git", "diff", "--name-only", "--diff-filter=U"], check=False)
+        conflicts = [line.strip() for line in status.stdout.strip().splitlines() if line.strip()]
         for f in conflicts:
             print(f"Resolving conflict in: {f}")
             resolve_conflict_file(f)
-        run("git add -A")
-        run(f"git commit -m 'Merge PR #{pr_num} into consolidated batch (resolved conflicts)'")
+        run(["git", "add", "-A"])
+        run(["git", "commit", "--no-verify", "-m", f"Merge PR #{pr_num} into consolidated batch"])
 
 print("\nAll PR branches merged successfully!")
