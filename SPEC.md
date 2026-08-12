@@ -237,3 +237,4 @@ Update hash for CI: 56da7d780438df23b0528eb6b38d758c
 Update hash for CI: 15f087d50a53a15731753a7c61dad8d1
 Update hash for CI: bolt-optimization-mjcf
 SPEC updated for compute balance optimization
+- 2026-08-11: Optimized sequential vertex loops in `polygon_geometry.py` and `trajectory_optimizer.py` by caching current vertex calculations (`px - xi`, `yi > py`) to be reused as the previous vertex's state (`px - xj`, `yj > py`) in the subsequent iteration, eliminating redundant mathematical operations.
