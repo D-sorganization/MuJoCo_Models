@@ -43,13 +43,16 @@ def point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
     poly_list = polygon.tolist()
 
     xj, yj = poly_list[-1]
+    yj_gt_py = yj > py
 
     for xi, yi in poly_list:
-        if (yi > py) != (yj > py):
+        yi_gt_py = yi > py
+        if yi_gt_py != yj_gt_py:
             x_intersect = (xj - xi) * (py - yi) / (yj - yi) + xi
             if px < x_intersect:
                 inside = not inside
         xj, yj = xi, yi
+        yj_gt_py = yi_gt_py
 
     return inside
 
@@ -72,13 +75,14 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
     poly_list = polygon.tolist()
 
     xj, yj = poly_list[-1]
+    apx = px - xj
+    apy = py - yj
 
     for xi, yi in poly_list:
+        bpx = px - xi
+        bpy = py - yi
         abx = xi - xj
         aby = yi - yj
-
-        apx = px - xj
-        apy = py - yj
 
         ab_sq = abx * abx + aby * aby
         if ab_sq < 1e-12:
@@ -89,8 +93,8 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
                 dx = apx
                 dy = apy
             elif t > 1.0:
-                dx = px - xi
-                dy = py - yi
+                dx = bpx
+                dy = bpy
             else:
                 dx = apx - t * abx
                 dy = apy - t * aby
@@ -99,4 +103,5 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
         xj, yj = xi, yi
+        apx, apy = bpx, bpy
     return min_dist_sq
