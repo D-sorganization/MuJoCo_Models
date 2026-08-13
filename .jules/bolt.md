@@ -215,3 +215,7 @@
 ## 2026-08-11 - Reuse mathematical operations across loop boundaries in sequential geometry
 **Learning:** During profiling of geometric loops (like `squared_distance_to_polygon` and `point_in_polygon`), values like `px - xi` and `yi > py` were computed for the current vertex. In the next iteration, these exact same logical operations were recomputed for the previous vertex (as `px - xj` and `yj > py`), resulting in redundant work.
 **Action:** In tight loops iterating over sequential items, cache calculations for the current item into local variables at the end of the loop. Reuse these cached values in the next iteration as the previous item's state to eliminate redundant mathematical operations across loop boundaries.
+
+## 2024-05-30 - Inlining Algebraic Calculations in Tight Loops
+**Learning:** In tight mathematical Python loops computing geometric quantities (like point-to-polygon distance), allocating intermediate variables (`dx`, `dy`) across multiple conditional branches before computing the final value (`dist_sq = dx*dx + dy*dy`) incurs noticeable overhead.
+**Action:** Inline algebraically simplified calculations directly inside the conditional branches (e.g., if `dx == apx`, compute `apx*apx + apy*apy` directly). This avoids redundant assignment instructions and leverages pre-computed values, yielding measurable speedups.
