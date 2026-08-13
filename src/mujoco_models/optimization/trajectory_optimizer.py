@@ -290,13 +290,15 @@ def compute_balance_cost(
         else:
             t = (apx * abx + apy * aby) / ab_sq
             if t < 0.0:
-                dist_sq = apx * apx + apy * apy
+                dx = apx
+                dy = apy
             elif t > 1.0:
-                dist_sq = bpx * bpx + bpy * bpy
+                dx = bpx
+                dy = bpy
             else:
                 dx = apx - t * abx
                 dy = apy - t * aby
-                dist_sq = dx * dx + dy * dy
+            dist_sq = dx * dx + dy * dy
 
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
