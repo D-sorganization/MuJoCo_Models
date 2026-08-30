@@ -230,6 +230,7 @@ Update hash for CI: e83791ec284dfb5aaca43627bdc21c75
 Mon Aug 10 05:53:23 UTC 2026
 
 Update hash for CI: 56da7d780438df23b0528eb6b38d758c
+
 - 2026-08-06: Optimized `add_weld_constraint` in `mjcf_helpers.py` by replacing f-strings for formatting the 7-element `relpose` tuples with `%` formatting to reduce generator overhead.
 - 2026-08-07: Eliminated redundant subtractions inside the point-to-polygon loop in `squared_distance_to_polygon` by hoisting them.
 <!-- Updated string formatting and fast-path unpacking in preconditions for Bolt optimization -->
@@ -237,6 +238,8 @@ Update hash for CI: 56da7d780438df23b0528eb6b38d758c
 Update hash for CI: 15f087d50a53a15731753a7c61dad8d1
 Update hash for CI: bolt-optimization-mjcf
 SPEC updated for compute balance optimization
+
 - 2026-08-11: Optimized sequential vertex loops in `polygon_geometry.py` and `trajectory_optimizer.py` by caching current vertex calculations (`px - xi`, `yi > py`) to be reused as the previous vertex's state (`px - xj`, `yj > py`) in the subsequent iteration, eliminating redundant mathematical operations.
 
 - 2024-05-30: Inlined squared distance calculation for boundary branches in polygon geometry loops.
+- 2026-08-29: CI: pinned the `rust` job to Python 3.12 via `actions/setup-python` and an explicit `PYO3_PYTHON`, because the self-hosted runners default to Python 3.14 and `pyo3-ffi` 0.22.6 supports at most 3.13 (issue #359).
