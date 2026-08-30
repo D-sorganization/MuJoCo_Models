@@ -145,6 +145,16 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+      # PyO3 0.22.6 supports Python up to 3.13. The self-hosted runners' default
+      # python3 is 3.14, so pyo3-ffi's build script aborts before any Rust code
+      # is compiled. Pin the interpreter the extension is built against to the
+      # newest version the tests matrix actually uses, and point PyO3 at it
+      # explicitly rather than relying on PATH order.
+      - name: Set up Python for PyO3
+        id: pyo3-python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Rust dependencies
@@ -153,10 +163,14 @@ jobs:
           workspaces: rust_core
           prefix-key: v2-rust
       - name: Run Rust tests
+        env:
+          PYO3_PYTHON: ${{ steps.pyo3-python.outputs.python-path }}
         run: |
           cd rust_core
           cargo test --verbose
       - name: Build Rust extension
+        env:
+          PYO3_PYTHON: ${{ steps.pyo3-python.outputs.python-path }}
         run: |
           cd rust_core
           cargo build --verbose --release
