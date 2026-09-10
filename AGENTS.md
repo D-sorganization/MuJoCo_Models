@@ -40,11 +40,10 @@
 - Unit tests for all public functions
 - Integration tests for model building
 
-## Git Workflow
+## Architecture Maps
 
-- Conventional Commits (feat:, fix:, docs:, test:, refactor:, chore:)
-- Branch naming: feat/description, fix/description
-- PRs must pass CI before merge
+- Maintain `docs/architecture/C4.md` as the authoritative C4 architecture map contract.
+- Enforced locally via `python scripts/architecture_map_contract.py --path docs/architecture/C4.md` and in CI via `.github/workflows/architecture-map-contract.yml`.
 
 ---
 

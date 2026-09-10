@@ -197,39 +197,56 @@ class TestComputeBarPathCost:
                 np.array([[0.0, 0, 0]]),
             )
 
-
     def test_point_to_segment_clamping(self) -> None:
         """Test explicit clamping coverage (inlined)."""
-        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
         import numpy as np
 
+        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
+
         # Test t < 0.0 branch
-        dist = compute_balance_cost(np.array([-1.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]))
+        dist = compute_balance_cost(
+            np.array([-1.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]])
+        )
         assert dist == pytest.approx(1.0)
 
         # Test t > 1.0 branch
-        dist = compute_balance_cost(np.array([2.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]))
+        dist = compute_balance_cost(
+            np.array([2.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]])
+        )
         assert dist == pytest.approx(1.0)
 
     def test_point_to_segment_clamping_zero(self) -> None:
         """Test explicit clamping coverage for ab_sq < 1e-12."""
-        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
         import numpy as np
 
-        dist = compute_balance_cost(np.array([2.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1e-13, 0.0], [0.0, 1.0]]))
+        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
+
+        dist = compute_balance_cost(
+            np.array([2.0, 0.0, 0.0]), np.array([[0.0, 0.0], [1e-13, 0.0], [0.0, 1.0]])
+        )
         assert dist == pytest.approx(4.0)
 
     def test_point_to_segment_clamping_zero_branch_between(self) -> None:
         """Test explicit clamping coverage (inlined) where 0.0 <= t <= 1.0"""
-        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
         import numpy as np
 
-        dist = compute_balance_cost(np.array([1.5, 0.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
+        from mujoco_models.optimization.trajectory_optimizer import compute_balance_cost
+
+        dist = compute_balance_cost(
+            np.array([1.5, 0.0, 0.0]),
+            np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]),
+        )
         # Test a point outside the polygon but whose closest point is on an edge (0 < t < 1)
         # Point is (0.5, -0.5, 0.0), closest edge is bottom edge (0,0) to (1,0)
         # distance squared = 0.25
-        dist = compute_balance_cost(np.array([0.5, -0.5, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
+        dist = compute_balance_cost(
+            np.array([0.5, -0.5, 0.0]),
+            np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]),
+        )
         assert dist == pytest.approx(0.25)
         # Test 0.5, 2.0 with a polygon that ensures t between 0 and 1
-        dist = compute_balance_cost(np.array([0.5, 2.0, 0.0]), np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]))
+        dist = compute_balance_cost(
+            np.array([0.5, 2.0, 0.0]),
+            np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]),
+        )
         assert dist == pytest.approx(1.0)

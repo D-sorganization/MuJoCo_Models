@@ -27,6 +27,7 @@ LEGACY_HOSTED_RUNNER_ALLOWLIST = {
 HYBRID_WORKFLOW_ALLOWLIST = {
     ".github/workflows/Verify-Issue-Closure.yml",
     ".github/workflows/anti-phantom-merge.yml",
+    ".github/workflows/architecture-map-contract.yml",
     ".github/workflows/ci-standard.yml",
     ".github/workflows/cve-monitoring.yml",
     ".github/workflows/lint-workflow-files.yml",

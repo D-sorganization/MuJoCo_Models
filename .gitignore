@@ -38,6 +38,6 @@ dist/
 .audit-venv/
 .sbom-venv/
 sbom.json
-profile_*.py
-test_*.py
+/profile_*.py
+/test_*.py
 stats
