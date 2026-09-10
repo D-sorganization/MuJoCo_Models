@@ -76,6 +76,7 @@ select = [
     "PERF", "RET", "C90",
 ]
 ignore = [
+    "E501",
     "RET504",
     "PERF203",
     "PERF401",
