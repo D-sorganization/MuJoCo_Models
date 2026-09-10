@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from scripts.architecture_map_contract import (
     ArchitectureMapContractError,
     validate_architecture_map,
