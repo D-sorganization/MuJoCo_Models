@@ -50,11 +50,11 @@ jobs:
     runs-on: ${{ needs.pick-runner.outputs.runner }}
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Prepare Python tooling
@@ -132,7 +132,7 @@ jobs:
           for i in 1 2 3 4 5; do "$PWD/.sbom-venv/bin/cyclonedx-py" environment "$SBOM_PYTHON" --pyproject pyproject.toml -o sbom.json --output-format JSON && break || sleep 5; done
 
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom.json
@@ -144,7 +144,7 @@ jobs:
     runs-on: [self-hosted, Linux, X64, d-sorg-fleet]
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # PyO3 0.22.6 supports Python up to 3.13. The self-hosted runners' default
       # python3 is 3.14, so pyo3-ffi's build script aborts before any Rust code
       # is compiled. Pin the interpreter the extension is built against to the
@@ -152,7 +152,7 @@ jobs:
       # explicitly rather than relying on PATH order.
       - name: Set up Python for PyO3
         id: pyo3-python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install Rust toolchain
@@ -175,7 +175,7 @@ jobs:
           cd rust_core
           cargo build --verbose --release
       - name: Upload Rust artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rust-core-${{ github.sha }}
           path: rust_core/target/release/libmujoco_models_core.so
@@ -194,11 +194,11 @@ jobs:
       matrix:
         python: ["3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
       - name: Prepare Python tooling
@@ -269,7 +269,7 @@ jobs:
             -v
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results-py${{ matrix.python }}
           path: benchmark-results.json
