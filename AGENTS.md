@@ -158,6 +158,10 @@ The workflow checks the PR timeline for cross-referenced merged PRs with closing
 
 Use repo-local context before broad exploration:
 
+- When `docs/agent_context/catalog.json` exists, use `agent-context --root . search` and focused `context` requests. Read public interfaces, provider and consumer relationships, integration contracts and relevant tests before changing a boundary.
+- Require current source hashes, checkout identity and pinned provider verification. A timestamp, a successful registry lookup or a peer note is not proof of current implementation. If the tool is unavailable or evidence is stale, read source directly and report the gap.
+- Update semantic contracts with implementation changes, run their integration tests, record a specific review rationale and regenerate views. `agent-context --root . check` must pass in the required quality gate. Never automatically renew reviews just to clear a freshness failure.
+- Keep mechanical inventories generated from existing registries and retrieve only relevant context. Use the existing presence/mailbox, handoff and development log for coordination; do not introduce a second message store. See the [adoption guide](https://github.com/D-sorganization/Repository_Management/blob/main/docs/agent-context.md).
 - Read `AGENTS.md` first, then check `docs/codemap.md` or `docs/operations/codemap_freshness_runbook.md` when present.
 - If `.codemap/` exists, treat it as a generated local cache for navigation; verify important claims against source files before editing.
 - If `.codemap/` is missing or stale, use source search (`rg`), focused file reads, and tests as the fallback. Report the missing/stale index as a rollout gap instead of blocking unrelated work.
@@ -306,6 +310,15 @@ reason.
 fleet hooks as `development-log`. Run it directly with
 `python shared_scripts/development_log.py --repo-root .`.
 
+### The Fail-Open vs. Fail-Closed Split
+
+- **Coordination stays fail-open.** A lease-check API error should let the agent proceed and risk duplication rather than halt the fleet. Duplicated work is reclaimed by the redundant-PR closer.
+- **Documentation enforcement is fail-closed.** A validator that skips on error trains agents to produce output that trips it. Orphaned work is reclaimed by nobody.
+
+### Escape Hatch
+
+If implementation files changed but no material development-log update is required, stage the log with `No material development-log change — <reason>` recorded in it. Note that **staging** is what satisfies the check — an earlier commit's phrase must not.
+
 <!-- END FLEET-MANAGED: development-logs -->
 
 ---
@@ -315,7 +328,7 @@ fleet hooks as `development-log`. Run it directly with
 > This section is managed centrally by Repository_Management and synced fleet-wide.
 > Do NOT edit it directly in individual repositories — edit the source in Repository_Management/AGENTS.md.
 
-### Change-log rows are keyed by pull request
+### Change-Log Rows Are Keyed by Pull Request
 
 Binding fleet-wide from
 [Repository_Management#1520](https://github.com/D-sorganization/Repository_Management/issues/1520)
@@ -325,7 +338,7 @@ Binding fleet-wide from
   log: `| YYYY-MM-DD | #<your PR or issue> | one-line summary |`.
 - **Never put a serial spec version in a row**, and **never bump the
   `Spec Version` field**. That field is release-derived — set by
-  `scripts/bump_spec_version.py` when a release is cut.
+  Repository_Management's `scripts/bump_spec_version.py` when a release is cut.
 - **Never renumber, reorder, or reword another contributor's row**, including
   while resolving a rebase. If a rebase conflicts inside the table, keep both
   rows; that is always the correct resolution.
@@ -340,3 +353,71 @@ the only resolution was a mechanical renumber — twelve of them in one day
 across four repositories. A pull request number cannot collide.
 
 <!-- END FLEET-MANAGED: spec-changelog-rows -->
+
+---
+
+<!-- BEGIN FLEET-MANAGED: agent-lanes -->
+
+## Agent Lanes and Collision Prevention
+
+`Agent Redundant PR Closer` exists because Claude, Codex, and Antigravity can collide when uncoordinated. Collision resolution is a backstop; every redundant PR it closes has already consumed CI minutes and agent credit. Lanes prevent collisions before they happen instead of cleaning up after them.
+
+### Lane Matrix
+
+| Platform           | Lane                                                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Codex**          | High-frequency sweeps: PR queue, red CI, issue triage, dependency bumps. Wired as hourly crons in `config/codex_fleet_automations.json`. |
+| **Claude**         | Multi-file refactors, spec and plan work, PR review response, cross-repo migrations.                                                     |
+| **Antigravity**    | Local interactive work, browser and UI verification, MATLAB and notebook work.                                                           |
+| **Local / Ollama** | Offline drafting, bulk mechanical edits.                                                                                                 |
+
+### Policies
+
+1. **Defer out-of-lane work**: An agent asked to do work assigned to another lane should defer rather than race.
+2. **Unattended execution boundary**: Unattended agents only act in portfolios explicitly configured in `config/fleet_manifest.yaml` under `portfolios.<name>.unattended_agents`. Portfolios with empty lists (e.g. `personal`) require interactive human direction.
+3. **Lease before edit**: Every agent must check for active claims or leases on an issue before starting implementation and post its own claim/lease to prevent concurrent duplicate work.
+
+<!-- END FLEET-MANAGED: agent-lanes -->
+
+---
+
+<!-- BEGIN FLEET-MANAGED: headless-execution -->
+
+## 🖥️ Headless Execution: Never Launch GUI Processes
+
+> This section is managed centrally by Repository_Management and synced fleet-wide.
+> Do NOT edit it directly in individual repositories — edit the source in Repository_Management/AGENTS.md.
+
+Agents run unattended on shared workstations and runners. A window opened by an
+agent has no one to close it, blocks the process that spawned it, and — on
+Windows — can bind against a mismatched OpenSSL that the launching app placed on
+`PATH` (Codex's runtime bundles poppler with OpenSSL 3.6; Python ships 3.5; the
+result is a `CRYPTO_calloc` "Entry Point Not Found" dialog that hangs the
+session). These rules apply to every agent and every automation.
+
+- **Never launch `pythonw.exe`, `*.pyw`, `Start-Process` on a GUI script, a
+  `.lnk` shortcut, or a bare GUI entry point.** Always use `python.exe` /
+  `python3` with the module or script invoked explicitly.
+- **Qt is always offscreen.** Set `QT_QPA_PLATFORM=offscreen` (and
+  `PYTEST_QT_API=pyqt6` where the repo uses pytest-qt) before importing PyQt6
+  or PySide6, whether under pytest or a direct script.
+- **Matplotlib is always `Agg`.** Set `MPLBACKEND=Agg` and a writable
+  `MPLCONFIGDIR` for any run that imports matplotlib.
+- **Exercise GUI code through tests and probes, not by launching the app.** A
+  launcher's `main()` with a real `QApplication` is not a valid smoke test; use
+  the repo's offscreen test lane, or the `core.py`/`gui.py` split the repo
+  convention mandates, and skip cleanly when PyQt6 cannot load.
+- **Never modify the DLL search path or the launching app's runtime** to work
+  around a GUI failure. Report the failure with the exact dialog text and stop.
+- **Native/CUDA/OpenGL windows count as GUI.** MuJoCo viewers, `mjviewer`,
+  pygame windows and OpenGL contexts must be driven with their headless
+  backends (`MUJOCO_GL=egl`/`osmesa`, `SDL_VIDEODRIVER=dummy`) or not at all.
+
+Canonical headless prefix (PowerShell):
+
+```powershell
+$env:QT_QPA_PLATFORM='offscreen'; $env:MPLBACKEND='Agg'; $env:PYTEST_QT_API='pyqt6'
+python -m pytest -q <tests>
+```
+
+<!-- END FLEET-MANAGED: headless-execution -->
