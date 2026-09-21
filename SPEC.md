@@ -245,3 +245,6 @@ SPEC updated for compute balance optimization
 - 2026-08-29: CI: pinned the `rust` job to Python 3.12 via `actions/setup-python` and an explicit `PYO3_PYTHON`, because the self-hosted runners default to Python 3.14 and `pyo3-ffi` 0.22.6 supports at most 3.13 (issue #359).
 - 2026-09-10: Adopted Mermaid C4 architecture-map contract in `docs/architecture/C4.md` with C4Context, C4Container, and Feature Map, validated by `scripts/architecture_map_contract.py` and enforced in CI (issue #1605).
 - 2026-09-14: Downgraded non-existent workflow action versions to @v4/@v5 and renewed active CVE exception expirations to 2026-12-31 in docs/security/pip_audit_ignores.yml (#364).
+
+
+- 2026-09-21: Optimized point-to-polygon distance calculation in trajectory optimizer and polygon geometry modules by using algebraically simplified squared distance formulas.

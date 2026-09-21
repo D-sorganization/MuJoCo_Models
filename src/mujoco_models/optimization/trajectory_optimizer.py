@@ -288,15 +288,16 @@ def compute_balance_cost(
         if ab_sq < 1e-12:
             dist_sq = apx * apx + apy * apy
         else:
-            t = (apx * abx + apy * aby) / ab_sq
-            if t < 0.0:
+            # ⚡ Bolt Optimization:
+            # Simplified algebraic calculation of point-to-segment distance.
+            # Avoids computing t, dx, and dy in the tight loop.
+            dot = apx * abx + apy * aby
+            if dot <= 0.0:
                 dist_sq = apx * apx + apy * apy
-            elif t > 1.0:
+            elif dot >= ab_sq:
                 dist_sq = bpx * bpx + bpy * bpy
             else:
-                dx = apx - t * abx
-                dy = apy - t * aby
-                dist_sq = dx * dx + dy * dy
+                dist_sq = apx * apx + apy * apy - (dot * dot) / ab_sq
 
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
