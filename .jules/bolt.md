@@ -220,6 +220,6 @@
 **Learning:** In tight mathematical Python loops computing geometric quantities (like point-to-polygon distance), allocating intermediate variables (`dx`, `dy`) across multiple conditional branches before computing the final value (`dist_sq = dx*dx + dy*dy`) incurs noticeable overhead.
 **Action:** Inline algebraically simplified calculations directly inside the conditional branches (e.g., if `dx == apx`, compute `apx*apx + apy*apy` directly). This avoids redundant assignment instructions and leverages pre-computed values, yielding measurable speedups.
 
-## $(date +%Y-%m-%d) - [Optimize Point-to-Segment Distance]
+## 2026-09-21 - [Optimize Point-to-Segment Distance]
 **Learning:** In tight computational loops doing point-to-polygon distance calculations, calculating intermediate variables based on interpolations like `dx = apx - t * abx`, `dy = apy - t * aby` introduces unnecessary mathematical operations.
 **Action:** When computing point-to-segment distance in tight loops, use the algebraically simplified squared distance: `dist_sq = apx * apx + apy * apy - (dot * dot) / ab_sq`. This eliminates intermediate variable allocations and yields measurable performance gains.
