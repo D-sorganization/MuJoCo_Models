@@ -248,3 +248,6 @@ SPEC updated for compute balance optimization
 
 
 - 2026-09-21: Optimized point-to-polygon distance calculation in trajectory optimizer and polygon geometry modules by using algebraically simplified squared distance formulas.
+
+
+- 2026-09-26: Combined multiple worldbody.iter() calls in MJCF construction into a single traversal for performance optimization.
