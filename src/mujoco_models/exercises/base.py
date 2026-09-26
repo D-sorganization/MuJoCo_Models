@@ -301,52 +301,6 @@ class ExerciseModelBuilder(ABC):
         )
         return worldbody
 
-    def _add_actuators_and_sensors(
-        self, root: ET.Element, worldbody: ET.Element
-    ) -> None:
-        """Add position actuators and joint-position sensors for all hinge joints."""
-        actuator = ET.SubElement(root, "actuator")
-        sensor = ET.SubElement(root, "sensor")
-
-        # OPTIMIZATION: Combine actuator and sensor creation into a single pass
-        for joint in worldbody.iter("joint"):
-            name = joint.get("name", "")
-            if name:
-                # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
-                # to avoid Python call frame overhead from multiple .set() calls.
-                ET.SubElement(
-                    actuator, "position", name=f"act_{name}", joint=name, kp="100"
-                )
-
-                ET.SubElement(sensor, "jointpos", name=f"pos_{name}", joint=name)
-
-    def _build_keyframe(self, root: ET.Element, worldbody: ET.Element) -> None:
-        """Build a named keyframe from joint ref values set by set_initial_pose()."""
-        qpos_values: list[str] = []
-        for joint_el in worldbody.iter("joint"):
-            ref_val = joint_el.get("ref", "0")
-            qpos_values.append(ref_val)
-
-        # OPTIMIZATION: Avoided nested O(N*M) iter() calls by iterating over bodies once
-        # to find freejoints, preserving document order and improving performance.
-        for body_el in worldbody.iter("body"):
-            if body_el.find("freejoint") is not None:
-                pos_str = body_el.get("pos", "0 0 0")
-                pos_parts = pos_str.split()
-                fj_qpos = pos_parts + ["1", "0", "0", "0"]
-                qpos_values = fj_qpos + qpos_values
-
-        if qpos_values:
-            keyframe = ET.SubElement(root, "keyframe")
-            # ⚡ Bolt Optimization: Pass attributes as kwargs directly to ET.SubElement
-            # to avoid Python function call frame overhead from multiple .set() calls.
-            ET.SubElement(
-                keyframe,
-                "key",
-                name=f"{self.exercise_name}_start",
-                qpos=" ".join(qpos_values),
-            )
-
     def _build_bodies_and_barbell(
         self, worldbody: ET.Element, equality: ET.Element
     ) -> tuple[dict[str, ET.Element], dict[str, ET.Element]]:
@@ -377,8 +331,42 @@ class ExerciseModelBuilder(ABC):
     def _add_state_sections(self, root: ET.Element, worldbody: ET.Element) -> None:
         """Apply initial pose metadata, actuators, sensors, and keyframe data."""
         self.set_initial_pose(worldbody)
-        self._add_actuators_and_sensors(root, worldbody)
-        self._build_keyframe(root, worldbody)
+
+        actuator = ET.SubElement(root, "actuator")
+        sensor = ET.SubElement(root, "sensor")
+
+        qpos_values: list[str] = []
+        fj_qpos_values: list[str] = []
+
+        # ⚡ Bolt Optimization: Combine actuator, sensor, and keyframe building
+        # into a single .iter() traversal over the worldbody to avoid redundant
+        # O(N) full-tree passes.
+        for el in worldbody.iter():
+            tag = el.tag
+            if tag == "joint":
+                name = el.get("name", "")
+                if name:
+                    ET.SubElement(
+                        actuator, "position", name=f"act_{name}", joint=name, kp="100"
+                    )
+                    ET.SubElement(sensor, "jointpos", name=f"pos_{name}", joint=name)
+                qpos_values.append(el.get("ref", "0"))
+            elif tag == "body":
+                if el.find("freejoint") is not None:
+                    pos_str = el.get("pos", "0 0 0")
+                    pos_parts = pos_str.split()
+                    fj_qpos = pos_parts + ["1", "0", "0", "0"]
+                    fj_qpos_values = fj_qpos + fj_qpos_values
+
+        qpos_values = fj_qpos_values + qpos_values
+        if qpos_values:
+            keyframe = ET.SubElement(root, "keyframe")
+            ET.SubElement(
+                keyframe,
+                "key",
+                name=f"{self.exercise_name}_start",
+                qpos=" ".join(qpos_values),
+            )
 
     def _finalize_model(self, root: ET.Element) -> str:
         """Serialize *root* and verify MJCF postconditions.
