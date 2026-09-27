@@ -263,7 +263,8 @@ jobs:
             # ---- enforcement -------------------------------------------------
             ESCALATED=no
             if [ "$ARMED" = "yes" ]; then
-              if gh pr merge "$PR" --repo "$REPO" --disable-auto; then
+              NODE_ID="$(printf '%s' "$PR_JSON" | jq -r '.node_id')"
+              if gh api graphql -f query='mutation($id: ID!) { disablePullRequestAutoMerge(input: {pullRequestId: $id}) { clientMutationId } }' -f id="$NODE_ID" >/dev/null; then
                 revoked_total=$((revoked_total + 1))
                 PRIOR_REVOCATIONS=$((PRIOR_REVOCATIONS + 1))
                 echo "::error title=Auto-merge revoked::PR #$PR had auto-merge armed while held — revoked (revocation $PRIOR_REVOCATIONS at this head commit)."
@@ -277,7 +278,8 @@ jobs:
             # reacts in seconds. A draft PR cannot have auto-merge enabled at
             # all, so converting is the enforceable end of the ladder.
             if [ "$DRAFT" != "true" ] && [ "$PRIOR_REVOCATIONS" -ge "$ESCALATE_AFTER_REVOCATIONS" ]; then
-              if gh pr ready "$PR" --repo "$REPO" --undo; then
+              NODE_ID="$(printf '%s' "$PR_JSON" | jq -r '.node_id')"
+              if gh api graphql -f query='mutation($id: ID!) { convertPullRequestToDraft(input: {pullRequestId: $id}) { clientMutationId } }' -f id="$NODE_ID" >/dev/null; then
                 ESCALATED=yes
                 escalated_total=$((escalated_total + 1))
                 echo "::error title=Converted to draft::PR #$PR was re-armed $PRIOR_REVOCATIONS time(s) while held — converted to draft so auto-merge cannot be armed again."
@@ -289,7 +291,7 @@ jobs:
             # A deletion hold gets a durable, human-visible marker so that
             # automation which only reads labels also refuses to arm it.
             if [ "$DELETIONS_UNACKED" = "yes" ] && ! has_label "$HOLD_LABEL"; then
-              gh pr edit "$PR" --repo "$REPO" --add-label "$HOLD_LABEL" \
+              gh api -X POST "repos/$REPO/issues/$PR/labels" -f "labels[]=$HOLD_LABEL" >/dev/null \
                 && echo "Applied the $HOLD_LABEL label to PR #$PR (unacknowledged deletions)." \
                 || echo "::warning::Could not label PR #$PR."
             fi
