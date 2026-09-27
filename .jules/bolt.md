@@ -223,3 +223,6 @@
 ## 2026-09-21 - [Optimize Point-to-Segment Distance]
 **Learning:** In tight computational loops doing point-to-polygon distance calculations, calculating intermediate variables based on interpolations like `dx = apx - t * abx`, `dy = apy - t * aby` introduces unnecessary mathematical operations.
 **Action:** When computing point-to-segment distance in tight loops, use the algebraically simplified squared distance: `dist_sq = apx * apx + apy * apy - (dot * dot) / ab_sq`. This eliminates intermediate variable allocations and yields measurable performance gains.
+## 2023-10-24 - Single Pass XML Element Traversal
+**Learning:** Combining multiple `xml.etree.ElementTree.iter()` calls over different tags (e.g. `iter("joint")`, `iter("body")`) into a single full-tree `iter()` traversal that checks the `el.tag` property eliminates redundant O(N) full-tree iterations. When doing this, care must be taken to reconstruct the original list element orders correctly to preserve functional backward compatibility.
+**Action:** When working on ElementTree objects inside a function, always look for opportunities to combine multiple sequential `.iter()` loops over the same root node into a single traversal.
