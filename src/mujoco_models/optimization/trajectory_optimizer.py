@@ -375,6 +375,9 @@ def compute_bar_path_cost(
     # and the reduction overhead of axis=1, yielding a ~25-30% speedup.
     # ⚡ Bolt Optimization: Use dot product for sum of squares to avoid
     # temporary array allocations and leverage BLAS, yielding ~2x speedup.
-    dx = bar_position[:, 0] - target_path[:, 0]
-    dy = bar_position[:, 1] - target_path[:, 1]
+    # ⚡ Bolt Optimization: Perform a single 2D array subtraction first before
+    # extracting 1D slices to eliminate redundant C-API indexing overhead.
+    diff = bar_position - target_path
+    dx = diff[:, 0]
+    dy = diff[:, 1]
     return float((dx @ dx + dy @ dy) / len(dx))

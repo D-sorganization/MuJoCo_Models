@@ -226,3 +226,7 @@
 ## 2023-10-24 - Single Pass XML Element Traversal
 **Learning:** Combining multiple `xml.etree.ElementTree.iter()` calls over different tags (e.g. `iter("joint")`, `iter("body")`) into a single full-tree `iter()` traversal that checks the `el.tag` property eliminates redundant O(N) full-tree iterations. When doing this, care must be taken to reconstruct the original list element orders correctly to preserve functional backward compatibility.
 **Action:** When working on ElementTree objects inside a function, always look for opportunities to combine multiple sequential `.iter()` loops over the same root node into a single traversal.
+
+## 2024-05-20 - [Optimize Array Slicing]
+**Learning:** When subtracting corresponding columns from two 2D numpy arrays, performing a single 2D array subtraction (`diff = a - b`) first and then extracting the 1D slices (e.g., `diff[:, 0]`) eliminates redundant array slicing/indexing allocations and reduces Python/NumPy C-API overhead compared to extracting slices and then subtracting (`a[:, 0] - b[:, 0]`).
+**Action:** Pre-calculate the difference matrix when needing multiple sliced differences.
