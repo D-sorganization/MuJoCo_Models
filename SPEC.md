@@ -251,3 +251,4 @@ SPEC updated for compute balance optimization
 
 
 - 2026-09-26: Combined multiple worldbody.iter() calls in MJCF construction into a single traversal for performance optimization.
+- 2026-09-29: Pre-calculated a 2D array difference before extracting 1D slices in trajectory optimizer to eliminate redundant Python C-API overhead.
