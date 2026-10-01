@@ -251,3 +251,4 @@ SPEC updated for compute balance optimization
 
 
 - 2026-09-26: Combined multiple worldbody.iter() calls in MJCF construction into a single traversal for performance optimization.
+- 2026-09-22: Cached bp_sq calculation across loop boundaries to avoid redundantly calculating the same squared distance per vertex.
