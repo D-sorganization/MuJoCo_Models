@@ -77,6 +77,7 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
     xj, yj = poly_list[-1]
     apx = px - xj
     apy = py - yj
+    ap_sq = apx * apx + apy * apy
 
     for xi, yi in poly_list:
         bpx = px - xi
@@ -84,23 +85,25 @@ def squared_distance_to_polygon(point: np.ndarray, polygon: np.ndarray) -> float
         abx = xi - xj
         aby = yi - yj
 
+        bp_sq = bpx * bpx + bpy * bpy
         ab_sq = abx * abx + aby * aby
         if ab_sq < 1e-12:
-            dist_sq = apx * apx + apy * apy
+            dist_sq = ap_sq
         else:
             # ⚡ Bolt Optimization:
             # Simplified algebraic calculation of point-to-segment distance.
             # Avoids computing t, dx, and dy in the tight loop.
             dot = apx * abx + apy * aby
             if dot <= 0.0:
-                dist_sq = apx * apx + apy * apy
+                dist_sq = ap_sq
             elif dot >= ab_sq:
-                dist_sq = bpx * bpx + bpy * bpy
+                dist_sq = bp_sq
             else:
-                dist_sq = apx * apx + apy * apy - (dot * dot) / ab_sq
+                dist_sq = ap_sq - (dot * dot) / ab_sq
 
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
         xj, yj = xi, yi
         apx, apy = bpx, bpy
+        ap_sq = bp_sq
     return min_dist_sq
