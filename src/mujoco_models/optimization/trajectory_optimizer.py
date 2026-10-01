@@ -276,7 +276,6 @@ def compute_balance_cost(
     xj, yj = poly_list[-1]
     apx = px - xj
     apy = py - yj
-    ap_sq = apx * apx + apy * apy
 
     # Minimum squared distance to polygon boundary
     for xi, yi in poly_list:
@@ -285,27 +284,25 @@ def compute_balance_cost(
         abx = xi - xj
         aby = yi - yj
 
-        bp_sq = bpx * bpx + bpy * bpy
         ab_sq = abx * abx + aby * aby
         if ab_sq < 1e-12:
-            dist_sq = ap_sq
+            dist_sq = apx * apx + apy * apy
         else:
             # ⚡ Bolt Optimization:
             # Simplified algebraic calculation of point-to-segment distance.
             # Avoids computing t, dx, and dy in the tight loop.
             dot = apx * abx + apy * aby
             if dot <= 0.0:
-                dist_sq = ap_sq
+                dist_sq = apx * apx + apy * apy
             elif dot >= ab_sq:
-                dist_sq = bp_sq
+                dist_sq = bpx * bpx + bpy * bpy
             else:
-                dist_sq = ap_sq - (dot * dot) / ab_sq
+                dist_sq = apx * apx + apy * apy - (dot * dot) / ab_sq
 
         if dist_sq < min_dist_sq:
             min_dist_sq = dist_sq
         xj, yj = xi, yi
         apx, apy = bpx, bpy
-        ap_sq = bp_sq
 
     return min_dist_sq
 

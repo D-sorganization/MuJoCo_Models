@@ -226,6 +226,3 @@
 ## 2023-10-24 - Single Pass XML Element Traversal
 **Learning:** Combining multiple `xml.etree.ElementTree.iter()` calls over different tags (e.g. `iter("joint")`, `iter("body")`) into a single full-tree `iter()` traversal that checks the `el.tag` property eliminates redundant O(N) full-tree iterations. When doing this, care must be taken to reconstruct the original list element orders correctly to preserve functional backward compatibility.
 **Action:** When working on ElementTree objects inside a function, always look for opportunities to combine multiple sequential `.iter()` loops over the same root node into a single traversal.
-## 2026-09-22 - [Cache variables across loop boundaries]
-**Learning:** In sequential geometry loops (like polygon edge distance tests) where a vertex's properties (like its squared distance `bp_sq`) are calculated conditionally, that same variable becomes the starting state (`ap_sq`) for the next iteration. Re-calculating it in the next loop wastes execution time.
-**Action:** Pre-compute the shared state unconditionally inside the loop (`bp_sq = bpx*bpx + bpy*bpy`) and pass it unconditionally to the next iteration (`ap_sq = bp_sq`) to eliminate duplicate math operations.
