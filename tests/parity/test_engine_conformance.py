@@ -46,18 +46,18 @@ def test_exercise_loads_in_real_engine(exercise: str) -> None:
 def test_exercise_conforms_to_standard(exercise: str) -> None:
     fp = fingerprint(exercise)
     divs = conformance.check_fingerprint(fp, STD)
-    unexpected, _ = conformance.reconcile(divs, conformance.load_ledger(LEDGER))
+    ledger = conformance.load_ledger(LEDGER)
+    unexpected, _ = conformance.reconcile(divs, ledger, exercise=exercise)
     assert not unexpected, [(d.key, d.message) for d in unexpected]
 
 
 def test_ledger_has_no_stale_entries() -> None:
-    """The ledger only ratchets down: an entry matching no divergence is stale."""
-    divs = [
-        d
-        for ex in EXERCISES
-        for d in conformance.check_fingerprint(fingerprint(ex), STD)
-    ]
-    _, stale = conformance.reconcile(divs, conformance.load_ledger(LEDGER))
+    """The ledger only ratchets down: an entry (or a scoped exercise of one)
+    matching no divergence is stale."""
+    by_exercise = {
+        ex: conformance.check_fingerprint(fingerprint(ex), STD) for ex in EXERCISES
+    }
+    _, stale = conformance.reconcile_all(by_exercise, conformance.load_ledger(LEDGER))
     assert not stale, f"stale ledger entries: {stale}"
 
 
