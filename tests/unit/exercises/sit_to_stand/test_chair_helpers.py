@@ -14,6 +14,10 @@ import xml.etree.ElementTree as ET
 from mujoco_models.exercises.sit_to_stand.sit_to_stand_model import (
     SitToStandModelBuilder,
 )
+from mujoco_models.shared.contact_masks import (
+    EQUIPMENT_CONAFFINITY,
+    EQUIPMENT_CONTYPE,
+)
 
 
 def test_create_chair_body_attaches_named_body() -> None:
@@ -34,8 +38,8 @@ def test_add_chair_seat_geom_is_a_box_geom_with_contact_flags() -> None:
     seat = geoms[0]
     assert seat.get("name") == "chair_seat"
     assert seat.get("type") == "box"
-    assert seat.get("contype") == "1"
-    assert seat.get("conaffinity") == "1"
+    assert seat.get("contype") == str(EQUIPMENT_CONTYPE)
+    assert seat.get("conaffinity") == str(EQUIPMENT_CONAFFINITY)
 
 
 def test_add_chair_back_geom_positions_behind_seat() -> None:

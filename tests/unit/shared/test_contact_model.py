@@ -11,6 +11,7 @@ from mujoco_models.exercises.bench_press.bench_press_model import (
 from mujoco_models.exercises.squat.squat_model import build_squat_model
 from mujoco_models.shared.body import create_full_body
 from mujoco_models.shared.body.body_helpers import _iter_foot_bodies
+from mujoco_models.shared.contact_masks import EQUIPMENT_CONAFFINITY, EQUIPMENT_CONTYPE
 
 
 class TestFootContactGeometry:
@@ -183,8 +184,8 @@ class TestBenchPressContact:
         bench_geom = root.find(".//geom[@name='bench_contact']")
         assert bench_geom is not None
         assert bench_geom.get("type") == "box"
-        assert bench_geom.get("contype") == "1"
-        assert bench_geom.get("conaffinity") == "1"
+        assert bench_geom.get("contype") == str(EQUIPMENT_CONTYPE)
+        assert bench_geom.get("conaffinity") == str(EQUIPMENT_CONAFFINITY)
         assert bench_geom.get("condim") == "3"
         assert bench_geom.get("friction") == "0.8 0.005 0.0001"
 

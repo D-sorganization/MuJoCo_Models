@@ -240,6 +240,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 ## Changelog
 
+- 2026-10-05 (#394): Human geoms now use collision class `contype=2 conaffinity=0` and equipment (bench, chair, barbell) `contype=1 conaffinity=3` (masks centralized in `shared/contact_masks.py`), so the lifter contacts the bench, chair and bar but never itself; the sit-to-stand chair moves behind the standing keyframe pose.
 
 
 - 2026-10-05 (#390): Re-vendored the fleet parity bundle (manifest-validated sync, lower-complexity fingerprint assembly, exercise-qualified cross-engine keys); no model or value changes.

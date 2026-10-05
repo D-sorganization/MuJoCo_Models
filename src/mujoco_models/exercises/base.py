@@ -29,6 +29,11 @@ from mujoco_models.exercises.contact_policy import (
 )
 from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
+from mujoco_models.shared.contact_masks import (
+    FLOOR_MASKS,
+    HUMAN_MASKS,
+    apply_masks,
+)
 from mujoco_models.shared.contracts.postconditions import ensure_mjcf_root
 from mujoco_models.shared.utils.mjcf_helpers import (
     add_weld_constraint,
@@ -251,26 +256,25 @@ class ExerciseModelBuilder(ABC):
 
         default = ET.SubElement(root, "default")
         ET.SubElement(default, "joint", damping="5.0", armature="0.1")
-        # Human geoms collide with nothing; environment geoms opt in explicitly.
-        ET.SubElement(default, "geom", contype="0", conaffinity="0", condim="3")
+        # Human geoms never collide with each other; equipment opts in via masks.
+        apply_masks(ET.SubElement(default, "geom", condim="3"), HUMAN_MASKS)
 
         return root
 
     def _create_worldbody(self, root: ET.Element) -> ET.Element:
         """Create worldbody with ground plane."""
         worldbody = ET.SubElement(root, "worldbody")
-        ET.SubElement(
+        ground = ET.SubElement(
             worldbody,
             "geom",
             name="ground",
             type="plane",
             size="5 5 0.1",
             rgba="0.9 0.9 0.9 1",
-            contype="1",
-            conaffinity="1",
             condim="3",
             friction=_GROUND_FRICTION,
         )
+        apply_masks(ground, FLOOR_MASKS)
         return worldbody
 
     def _build_bodies_and_barbell(
