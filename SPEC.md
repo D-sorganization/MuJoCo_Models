@@ -240,6 +240,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 ## Changelog
 
+- 2026-10-05 (#390): Re-vendor the fleet parity bundle (Repository_Management#2012/#2014/#2015). The deadlift `phase_count` ledger entry is now scoped to `deadlift`, so it cannot hide a phase-count regression in another exercise; conformance tests reconcile per exercise and check staleness with `reconcile_all`.
 - 2026-10-05 (#394): Human geoms now use collision class `contype=2 conaffinity=0` and equipment (bench, chair, barbell) `contype=1 conaffinity=3` (masks centralized in `shared/contact_masks.py`), so the lifter contacts the bench, chair and bar but never itself; the sit-to-stand chair moves behind the standing keyframe pose.
 
 
