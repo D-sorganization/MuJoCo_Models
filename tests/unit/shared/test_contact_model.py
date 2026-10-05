@@ -55,7 +55,7 @@ class TestFootContactGeometry:
             foot = bodies[f"foot_{side}"]
             contact = foot.find(f".//geom[@name='foot_{side}_contact']")
             assert contact is not None
-            assert contact.get("friction") == "1.0 0.005 0.0001"
+            assert contact.get("friction") == "0.8 0.005 0.0001"
 
     def test_foot_contact_group(self, bodies: dict[str, ET.Element]) -> None:
         for side in ("l", "r"):
@@ -117,13 +117,13 @@ class TestContactExclusions:
             assert (f"shank_{side}", f"foot_{side}") in exclusions
 
     def test_exclusion_count(self) -> None:
-        """Should have 2 central + 6 bilateral * 2 sides = 14 exclusions."""
+        """2 central + 6 bilateral * 2 sides + foot_l-foot_r = 15 exclusions."""
         xml_str = build_squat_model()
         root = ET.fromstring(xml_str)
         contact = root.find("contact")
         assert contact is not None
         excludes = contact.findall("exclude")
-        assert len(excludes) == 14
+        assert len(excludes) == 15
 
 
 class TestGroundPlaneContact:
@@ -139,7 +139,7 @@ class TestGroundPlaneContact:
         assert ground.get("contype") == "1"
         assert ground.get("conaffinity") == "1"
         assert ground.get("condim") == "3"
-        assert ground.get("friction") == "1.0 0.005 0.0001"
+        assert ground.get("friction") == "0.8 0.005 0.0001"
 
 
 class TestContactSolverOptions:
@@ -202,4 +202,4 @@ class TestBenchPressContact:
         contact = root.find("contact")
         assert contact is not None
         excludes = contact.findall("exclude")
-        assert len(excludes) == 14
+        assert len(excludes) == 15

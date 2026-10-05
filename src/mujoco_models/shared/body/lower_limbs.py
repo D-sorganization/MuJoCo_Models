@@ -116,4 +116,4 @@ def build_lower_limbs(
     _attach_thighs(bodies, spec)
     _attach_shanks(bodies, spec)
     _attach_feet(bodies, spec)
-    add_foot_contact_geoms(bodies)
+    add_foot_contact_geoms(bodies, ankle_height=spec.ankle_height)

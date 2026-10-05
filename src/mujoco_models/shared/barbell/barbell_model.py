@@ -35,6 +35,7 @@ from mujoco_models.shared.utils.geometry import (
 )
 from mujoco_models.shared.utils.mjcf_helpers import (
     add_body,
+    add_free_joint,
     add_weld_constraint,
 )
 
@@ -150,12 +151,13 @@ def _add_barbell_shaft(
     spec: BarbellSpec,
     shaft_name: str,
     shaft_inertia: tuple[float, float, float],
+    pos: tuple[float, float, float],
 ) -> ET.Element:
-    """Add the central shaft body to worldbody at the origin."""
+    """Add the central shaft body to worldbody at ``pos``."""
     return add_body(
         worldbody,
         name=shaft_name,
-        pos=(0, 0, 0),
+        pos=pos,
         mass=spec.shaft_mass,
         inertia_diag=shaft_inertia,
         geom_type="cylinder",
@@ -171,13 +173,13 @@ def _add_barbell_sleeve(
     sleeve_name: str,
     sleeve_total_mass: float,
     sleeve_inertia: tuple[float, float, float],
-    x_offset: float,
+    pos: tuple[float, float, float],
 ) -> ET.Element:
-    """Add one sleeve body at the given X offset from the shaft centre."""
+    """Add one sleeve body at ``pos`` (shaft centre plus its X offset)."""
     return add_body(
         worldbody,
         name=sleeve_name,
-        pos=(x_offset, 0, 0),
+        pos=pos,
         mass=sleeve_total_mass,
         inertia_diag=sleeve_inertia,
         geom_type="cylinder",
@@ -205,6 +207,7 @@ def create_barbell_bodies(
     spec: BarbellSpec,
     *,
     prefix: str = "barbell",
+    pos: tuple[float, float, float] = (0.0, 0.0, 0.0),
 ) -> dict[str, ET.Element]:
     """Add barbell bodies and weld constraints to an MJCF model.
 
@@ -212,6 +215,13 @@ def create_barbell_bodies(
 
     The barbell shaft center is at the local origin. Sleeves extend
     symmetrically along the X-axis (left = -X, right = +X).
+
+    Every barbell body carries a freejoint and collides with the environment
+    (contype/conaffinity 1; human geoms collide with nothing).  The weld
+    equality constraints then couple the bar to the lifter and to its own
+    sleeves instead of pinning bodies to the world.  ``pos`` is the world
+    position of the shaft centre at the keyframe; weld offsets are derived from
+    it, so it should be placed where the lifter holds the bar.
     """
     shaft_inertia = cylinder_inertia(
         spec.shaft_mass, spec.shaft_radius, spec.shaft_length
@@ -224,13 +234,27 @@ def create_barbell_bodies(
     left_name = f"{prefix}_left_sleeve"
     right_name = f"{prefix}_right_sleeve"
 
-    shaft_body = _add_barbell_shaft(worldbody, spec, shaft_name, shaft_inertia)
+    shaft_body = _add_barbell_shaft(worldbody, spec, shaft_name, shaft_inertia, pos)
     left_body = _add_barbell_sleeve(
-        worldbody, spec, left_name, sleeve_total_mass, sleeve_inertia, -sleeve_offset
+        worldbody,
+        spec,
+        left_name,
+        sleeve_total_mass,
+        sleeve_inertia,
+        (pos[0] - sleeve_offset, pos[1], pos[2]),
     )
     right_body = _add_barbell_sleeve(
-        worldbody, spec, right_name, sleeve_total_mass, sleeve_inertia, sleeve_offset
+        worldbody,
+        spec,
+        right_name,
+        sleeve_total_mass,
+        sleeve_inertia,
+        (pos[0] + sleeve_offset, pos[1], pos[2]),
     )
     _weld_sleeves_to_shaft(equality, shaft_name, left_name, right_name, prefix)
+    for body in (shaft_body, left_body, right_body):
+        add_free_joint(body, name=f"{body.get('name')}_free")
+        body.find("geom").set("contype", "1")  # type: ignore[union-attr]
+        body.find("geom").set("conaffinity", "1")  # type: ignore[union-attr]
 
     return {shaft_name: shaft_body, left_name: left_body, right_name: right_body}

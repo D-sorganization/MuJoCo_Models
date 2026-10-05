@@ -56,6 +56,34 @@ class BodyModelSpec:
         )
         return self.height * _LEG_HEIGHT_FRACTION + p_len / 2.0
 
+    @property
+    def ankle_height(self) -> float:
+        """Height of the foot-body origin above the ground at the neutral pose.
+
+        Pelvis centre minus half the pelvis, the thigh and the shank; the foot
+        contact box is placed so its sole sits exactly on the ground here.
+        """
+        _m, p_len, _r = segment_properties(self.total_mass, self.height, "pelvis")
+        _m, th_len, _r = segment_properties(self.total_mass, self.height, "thigh")
+        _m, sh_len, _r = segment_properties(self.total_mass, self.height, "shank")
+        return self.pelvis_height - p_len / 2.0 - th_len - sh_len
+
+    @property
+    def hand_height(self) -> float:
+        """Height of the hand-body origin above the ground at the neutral pose."""
+        _m, p_len, _r = segment_properties(self.total_mass, self.height, "pelvis")
+        _m, t_len, _r = segment_properties(self.total_mass, self.height, "torso")
+        _m, ua_len, _r = segment_properties(self.total_mass, self.height, "upper_arm")
+        _m, fa_len, _r = segment_properties(self.total_mass, self.height, "forearm")
+        return self.pelvis_height + p_len / 2.0 + 0.95 * t_len - ua_len - fa_len
+
+    @property
+    def shoulder_height(self) -> float:
+        """Height of the shoulder (upper-arm origin) above the ground."""
+        _m, p_len, _r = segment_properties(self.total_mass, self.height, "pelvis")
+        _m, t_len, _r = segment_properties(self.total_mass, self.height, "torso")
+        return self.pelvis_height + p_len / 2.0 + 0.95 * t_len
+
 
 def _seg(spec: BodyModelSpec, name: str) -> tuple[float, float, float]:
     """Return (mass, length, radius) for a named segment."""
