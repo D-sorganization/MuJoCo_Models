@@ -238,45 +238,29 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 - `model_pack.yaml` declares honest `capabilities` levels (`none`, `partial`,
   `full`); `full` requires a public API and a real-engine test as evidence.
 
-## Changelog
+## Change Log
 
-- 2026-10-05 (#390): Vendor the parity ledger split (`_canonical/ledger.py`, re-exported by `conformance`) so every vendored file stays within 300 lines. No behaviour change.
-- 2026-10-05 (#390): Refresh the vendored parity bundle (Repository_Management#2016): ledger validation split into per-entry helpers so no vendored function reaches radon rank C. No behaviour change.
-- 2026-10-05 (#390): Re-vendor the fleet parity bundle (Repository_Management#2012/#2014/#2015). The deadlift `phase_count` ledger entry is now scoped to `deadlift`, so it cannot hide a phase-count regression in another exercise; conformance tests reconcile per exercise and check staleness with `reconcile_all`.
-- 2026-10-05 (#394): Human geoms now use collision class `contype=2 conaffinity=0` and equipment (bench, chair, barbell) `contype=1 conaffinity=3` (masks centralized in `shared/contact_masks.py`), so the lifter contacts the bench, chair and bar but never itself; the sit-to-stand chair moves behind the standing keyframe pose.
-
-
-- 2026-10-05 (#390): Re-vendored the fleet parity bundle (manifest-validated sync, lower-complexity fingerprint assembly, exercise-qualified cross-engine keys); no model or value changes.
-- 2026-10-05 (#390): Barbell bodies get freejoints (no longer pin the lifter to the world); foot contact box on the ground with bundle friction; human geoms no longer self-collide; keyframe ctrl holds the pose; real-engine parity conformance against the fleet standard.
-- 2024-07-24: Unrolled explicit lists in core mathematical functions in `src/mujoco_models/shared/body/body_helpers.py` and `src/mujoco_models/shared/contracts/postconditions.py` for performance.
-
-- 2026-07-25: Inlined `_point_to_segment_sq` into `squared_distance_to_polygon` and `_squared_distance_to_polygon` to avoid function call overhead during iterative geometry calculations.
-- 2026-08-01: Optimized calculations inside the geometric inertia functions by replacing python's `**2` operator with float multiplication (`r2 = radius * radius`) and extracting shared constants (`mass / 12.0`) in `src/mujoco_models/shared/utils/geometry.py`.
-- 2026-08-05: Unrolled `com_position` finiteness checks in `src/mujoco_models/optimization/trajectory_optimizer.py` for the balance-cost optimization path.
-
-Update hash for CI: e83791ec284dfb5aaca43627bdc21c75
-Mon Aug 10 05:53:23 UTC 2026
-
-Update hash for CI: 56da7d780438df23b0528eb6b38d758c
-
-- 2026-08-06: Optimized `add_weld_constraint` in `mjcf_helpers.py` by replacing f-strings for formatting the 7-element `relpose` tuples with `%` formatting to reduce generator overhead.
-- 2026-08-07: Eliminated redundant subtractions inside the point-to-polygon loop in `squared_distance_to_polygon` by hoisting them.
-<!-- Updated string formatting and fast-path unpacking in preconditions for Bolt optimization -->
-
-Update hash for CI: 15f087d50a53a15731753a7c61dad8d1
-Update hash for CI: bolt-optimization-mjcf
-SPEC updated for compute balance optimization
-
-- 2026-08-11: Optimized sequential vertex loops in `polygon_geometry.py` and `trajectory_optimizer.py` by caching current vertex calculations (`px - xi`, `yi > py`) to be reused as the previous vertex's state (`px - xj`, `yj > py`) in the subsequent iteration, eliminating redundant mathematical operations.
-
-- 2024-05-30: Inlined squared distance calculation for boundary branches in polygon geometry loops.
-- 2026-08-29: CI: pinned the `rust` job to Python 3.12 via `actions/setup-python` and an explicit `PYO3_PYTHON`, because the self-hosted runners default to Python 3.14 and `pyo3-ffi` 0.22.6 supports at most 3.13 (issue #359).
-- 2026-09-10: Adopted Mermaid C4 architecture-map contract in `docs/architecture/C4.md` with C4Context, C4Container, and Feature Map, validated by `scripts/architecture_map_contract.py` and enforced in CI (issue #1605).
-- 2026-09-14: Downgraded non-existent workflow action versions to @v4/@v5 and renewed active CVE exception expirations to 2026-12-31 in docs/security/pip_audit_ignores.yml (#364).
-
-
-- 2026-09-21: Optimized point-to-polygon distance calculation in trajectory optimizer and polygon geometry modules by using algebraically simplified squared distance formulas.
-
-
-- 2026-09-26: Combined multiple worldbody.iter() calls in MJCF construction into a single traversal for performance optimization.
-- 2026-09-22: Cached bp_sq calculation across loop boundaries to avoid redundantly calculating the same squared distance per vertex.
+| Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
+| ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-05 | #414  | chore(changes): vendor RM-5 change-fragment tooling and test suite (ref Repository_Management#2019)                                                                                                                                                                                                               |
+| 2026-10-05 | #413  | fix(ci): fix Merge-Hold-Guard bare pipeline crash and add failure diagnostics (ref Repository_Management#2020)                                                                                                                                                                                                    |
+| 2026-10-05 | #398  | Vendor the parity ledger split (`_canonical/ledger.py`, re-exported by `conformance`) so every vendored file stays within 300 lines. No behaviour change.                                                                                                                                                         |
+| 2026-10-05 | #397  | Refresh the vendored parity bundle (Repository_Management#2016): ledger validation split into per-entry helpers so no vendored function reaches radon rank C. No behaviour change.                                                                                                                                |
+| 2026-10-05 | #396  | Re-vendor the fleet parity bundle (Repository_Management#2012/#2014/#2015). The deadlift `phase_count` ledger entry is now scoped to `deadlift`, so it cannot hide a phase-count regression in another exercise; conformance tests reconcile per exercise and check staleness with `reconcile_all`.               |
+| 2026-10-05 | #395  | Human geoms now use collision class `contype=2 conaffinity=0` and equipment (bench, chair, barbell) `contype=1 conaffinity=3` (masks centralized in `shared/contact_masks.py`), so the lifter contacts the bench, chair and bar but never itself; the sit-to-stand chair moves behind the standing keyframe pose. |
+| 2026-10-05 | #393  | Re-vendored the fleet parity bundle (manifest-validated sync, lower-complexity fingerprint assembly, exercise-qualified cross-engine keys); no model or value changes.                                                                                                                                            |
+| 2026-10-05 | #391  | Barbell bodies get freejoints (no longer pin the lifter to the world); foot contact box on the ground with bundle friction; human geoms no longer self-collide; keyframe ctrl holds the pose; real-engine parity conformance against the fleet standard.                                                          |
+| 2026-09-26 | n/a   | Combined multiple worldbody.iter() calls in MJCF construction into a single traversal for performance optimization.                                                                                                                                                                                               |
+| 2026-09-22 | n/a   | Cached bp_sq calculation across loop boundaries to avoid redundantly calculating the same squared distance per vertex.                                                                                                                                                                                            |
+| 2026-09-21 | n/a   | Optimized point-to-polygon distance calculation in trajectory optimizer and polygon geometry modules by using algebraically simplified squared distance formulas.                                                                                                                                                 |
+| 2026-09-14 | #364  | Downgraded non-existent workflow action versions to @v4/@v5 and renewed active CVE exception expirations to 2026-12-31 in docs/security/pip_audit_ignores.yml (#364).                                                                                                                                             |
+| 2026-09-10 | #1605 | Adopted Mermaid C4 architecture-map contract in docs/architecture/C4.md with C4Context, C4Container, and Feature Map, validated by scripts/architecture_map_contract.py and enforced in CI (issue #1605).                                                                                                         |
+| 2026-08-29 | #359  | CI: pinned the rust job to Python 3.12 via actions/setup-python and an explicit PYO3_PYTHON, because the self-hosted runners default to Python 3.14 and pyo3-ffi 0.22.6 supports at most 3.13 (issue #359).                                                                                                       |
+| 2026-08-11 | n/a   | Optimized sequential vertex loops in polygon_geometry.py and trajectory_optimizer.py by caching current vertex calculations (px - xi, yi > py) to be reused as the previous vertex's state (px - xj, yj > py) in the subsequent iteration, eliminating redundant mathematical operations.                         |
+| 2026-08-07 | n/a   | Eliminated redundant subtractions inside the point-to-polygon loop in squared_distance_to_polygon by hoisting them.                                                                                                                                                                                               |
+| 2026-08-06 | n/a   | Optimized add_weld_constraint in mjcf_helpers.py by replacing f-strings for formatting the 7-element relpose tuples with % formatting to reduce generator overhead.                                                                                                                                               |
+| 2026-08-05 | n/a   | Unrolled com_position finiteness checks in src/mujoco_models/optimization/trajectory_optimizer.py for the balance-cost optimization path.                                                                                                                                                                         |
+| 2026-08-01 | n/a   | Optimized calculations inside the geometric inertia functions by replacing python's \*_2 operator with float multiplication (r2 = radius _ radius) and extracting shared constants (mass / 12.0) in src/mujoco_models/shared/utils/geometry.py.                                                                   |
+| 2026-07-25 | n/a   | Inlined \_point_to_segment_sq into squared_distance_to_polygon and \_squared_distance_to_polygon to avoid function call overhead during iterative geometry calculations.                                                                                                                                          |
+| 2024-07-24 | n/a   | Unrolled explicit lists in core mathematical functions in src/mujoco_models/shared/body/body_helpers.py and src/mujoco_models/shared/contracts/postconditions.py for performance.                                                                                                                                 |
+| 2024-05-30 | n/a   | Inlined squared distance calculation for boundary branches in polygon geometry loops.                                                                                                                                                                                                                             |
