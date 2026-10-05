@@ -241,6 +241,8 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 ## Changelog
 
 
+
+- 2026-10-05 (#390): Re-vendored the fleet parity bundle (manifest-validated sync, lower-complexity fingerprint assembly, exercise-qualified cross-engine keys); no model or value changes.
 - 2026-10-05 (#390): Barbell bodies get freejoints (no longer pin the lifter to the world); foot contact box on the ground with bundle friction; human geoms no longer self-collide; keyframe ctrl holds the pose; real-engine parity conformance against the fleet standard.
 - 2024-07-24: Unrolled explicit lists in core mathematical functions in `src/mujoco_models/shared/body/body_helpers.py` and `src/mujoco_models/shared/contracts/postconditions.py` for performance.
 
