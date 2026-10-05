@@ -129,6 +129,8 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
                 f"{_CHAIR_SEAT_HEIGHT / 2 + _CHAIR_BACK_HEIGHT / 2:.4f}"
             ),
             rgba="0.6 0.4 0.2 1",
+            contype="1",
+            conaffinity="1",
         )
 
     @staticmethod

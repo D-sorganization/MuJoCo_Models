@@ -1,0 +1,9 @@
+{
+  "schema": "parity-divergences/v1",
+  "divergences": {
+    "phase_count": {
+      "issue": "#390",
+      "reason": "deadlift objective (optimization/objective_data/deadlift.py) defines 4 phases; the bundle standard requires 5. Adding a phase changes trajectory content and is a separate follow-up."
+    }
+  }
+}

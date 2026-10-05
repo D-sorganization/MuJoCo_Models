@@ -20,6 +20,13 @@ import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
+from mujoco_models.exercises.contact_policy import (
+    _GROUND_FRICTION,
+    _SERVO_FORCERANGE,
+    _SERVO_KP,
+    _SERVO_KV,
+    _add_contact_exclusions,
+)
 from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
 from mujoco_models.shared.contracts.postconditions import ensure_mjcf_root
@@ -34,51 +41,6 @@ logger = logging.getLogger(__name__)
 # Defined here so subclasses can import from a single authoritative location.
 FLOOR_PULL_HIP_FLEX: float = 1.3963  # ~80° hip flexion (radians)
 FLOOR_PULL_KNEE_FLEX: float = -1.0472  # ~60° knee flexion (radians)
-
-# Adjacent body segment pairs to exclude from self-collision.
-# Central pairs (no side suffix needed):
-_CENTRAL_EXCLUSION_PAIRS: list[tuple[str, str]] = [
-    ("pelvis", "torso"),
-    ("torso", "head"),
-]
-
-# Bilateral pairs (will be expanded with _l and _r suffixes):
-_BILATERAL_EXCLUSION_PAIRS: list[tuple[str, str]] = [
-    ("pelvis", "thigh"),
-    ("torso", "upper_arm"),
-    ("upper_arm", "forearm"),
-    ("forearm", "hand"),
-    ("thigh", "shank"),
-    ("shank", "foot"),
-]
-
-
-def _add_contact_exclusions(contact: ET.Element) -> None:
-    """Add <exclude> elements to prevent self-collision between adjacent segments.
-
-    Central body pairs (pelvis-torso, torso-head) are excluded once.
-    Bilateral pairs are excluded for both left and right sides.
-    """
-    for body1, body2 in _CENTRAL_EXCLUSION_PAIRS:
-        ET.SubElement(
-            contact,
-            "exclude",
-            name=f"exclude_{body1}_{body2}",
-            body1=body1,
-            body2=body2,
-        )
-
-    for body1, body2 in _BILATERAL_EXCLUSION_PAIRS:
-        for side in ("l", "r"):
-            b1 = f"{body1}_{side}" if body1 not in ("pelvis", "torso") else body1
-            b2 = f"{body2}_{side}"
-            ET.SubElement(
-                contact,
-                "exclude",
-                name=f"exclude_{b1}_{b2}",
-                body1=b1,
-                body2=b2,
-            )
 
 
 @dataclass(frozen=True)
@@ -123,6 +85,15 @@ class ExerciseModelBuilder(ABC):
     def gravity(self) -> tuple[float, float, float]:
         """Forward to the configured gravity vector."""
         return self.config.gravity
+
+    @property
+    def barbell_start_pos(self) -> tuple[float, float, float]:
+        """World position of the barbell shaft centre at the keyframe.
+
+        Default: at hand height on the body midline, so hand welds are
+        consistent at the start pose.  Subclasses (squat) override.
+        """
+        return (0.0, 0.0, self.body_spec.hand_height)
 
     @property
     def grip_offset(self) -> tuple[float, ...] | None:
@@ -280,7 +251,8 @@ class ExerciseModelBuilder(ABC):
 
         default = ET.SubElement(root, "default")
         ET.SubElement(default, "joint", damping="5.0", armature="0.1")
-        ET.SubElement(default, "geom", contype="1", conaffinity="1", condim="3")
+        # Human geoms collide with nothing; environment geoms opt in explicitly.
+        ET.SubElement(default, "geom", contype="0", conaffinity="0", condim="3")
 
         return root
 
@@ -297,7 +269,7 @@ class ExerciseModelBuilder(ABC):
             contype="1",
             conaffinity="1",
             condim="3",
-            friction="1.0 0.005 0.0001",
+            friction=_GROUND_FRICTION,
         )
         return worldbody
 
@@ -313,7 +285,7 @@ class ExerciseModelBuilder(ABC):
         barbell_bodies: dict[str, ET.Element] = {}
         if self.uses_barbell:
             barbell_bodies = create_barbell_bodies(
-                worldbody, equality, self.barbell_spec
+                worldbody, equality, self.barbell_spec, pos=self.barbell_start_pos
             )
             self.attach_barbell(equality, body_bodies, barbell_bodies)
         return body_bodies, barbell_bodies
@@ -336,36 +308,44 @@ class ExerciseModelBuilder(ABC):
         sensor = ET.SubElement(root, "sensor")
 
         qpos_values: list[str] = []
-        fj_qpos_values: list[str] = []
+        ctrl_values: list[str] = []
 
-        # ⚡ Bolt Optimization: Combine actuator, sensor, and keyframe building
-        # into a single .iter() traversal over the worldbody to avoid redundant
-        # O(N) full-tree passes.
+        # Single document-order (depth-first) traversal: MuJoCo orders qpos by
+        # the kinematic tree, so every freejoint (pelvis AND each barbell body)
+        # contributes its 7 values exactly where its body appears.
         for el in worldbody.iter():
             tag = el.tag
             if tag == "joint":
                 name = el.get("name", "")
+                ref = el.get("ref", "0")
                 if name:
                     ET.SubElement(
-                        actuator, "position", name=f"act_{name}", joint=name, kp="100"
+                        actuator,
+                        "position",
+                        name=f"act_{name}",
+                        joint=name,
+                        kp=f"{_SERVO_KP:g}",
+                        kv=f"{_SERVO_KV:g}",
+                        forcerange=f"{-_SERVO_FORCERANGE:g} {_SERVO_FORCERANGE:g}",
                     )
                     ET.SubElement(sensor, "jointpos", name=f"pos_{name}", joint=name)
-                qpos_values.append(el.get("ref", "0"))
-            elif tag == "body":
-                if el.find("freejoint") is not None:
-                    pos_str = el.get("pos", "0 0 0")
-                    pos_parts = pos_str.split()
-                    fj_qpos = pos_parts + ["1", "0", "0", "0"]
-                    fj_qpos_values = fj_qpos + fj_qpos_values
+                    ctrl_values.append(ref)
+                qpos_values.append(ref)
+            elif tag == "body" and el.find("freejoint") is not None:
+                qpos_values.extend(
+                    el.get("pos", "0 0 0").split() + ["1", "0", "0", "0"]
+                )
 
-        qpos_values = fj_qpos_values + qpos_values
         if qpos_values:
             keyframe = ET.SubElement(root, "keyframe")
+            # ctrl = pose so the position servos hold the keyframe instead of
+            # springing every joint to 0.
             ET.SubElement(
                 keyframe,
                 "key",
                 name=f"{self.exercise_name}_start",
                 qpos=" ".join(qpos_values),
+                ctrl=" ".join(ctrl_values),
             )
 
     def _finalize_model(self, root: ET.Element) -> str:

@@ -13,6 +13,7 @@ import logging
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
+from mujoco_models.shared.parity.standard import FOOT_CONTACT_DIMS, GROUND_FRICTION
 from mujoco_models.shared.utils.geometry import capsule_inertia
 from mujoco_models.shared.utils.mjcf_helpers import add_body, add_hinge_joint
 
@@ -22,12 +23,16 @@ logger = logging.getLogger(__name__)
 _ExtraJoints = list[tuple[str, tuple[float, float, float], float, float]]
 
 
-# Foot contact-geometry constants.  Centralizing here removes magic numbers
-# from the sub-element calls and keeps the geometry documented in one place.
-# Half-sizes correspond to a 0.26 m x 0.10 m x 0.02 m contact box.
-_FOOT_CONTACT_SIZE = "0.13 0.05 0.01"
-_FOOT_CONTACT_POS = "0.04 0 -0.02"  # slightly forward and at bottom of foot
-_FOOT_CONTACT_FRICTION = "1.0 0.005 0.0001"  # tangent, torsion, rolling
+# Foot contact-geometry constants, all derived from the parity bundle.  The
+# contact box is the ONLY foot geom that collides with the floor (the visual
+# capsule has contype/conaffinity 0 via the model defaults).
+_FOOT_CONTACT_HALF_SIZE = tuple(0.5 * v for v in FOOT_CONTACT_DIMS.values())
+_FOOT_CONTACT_SIZE = " ".join(f"{v:g}" for v in _FOOT_CONTACT_HALF_SIZE)
+_FOOT_CONTACT_X = 0.04  # slightly forward of the ankle
+# Fallback centre height when the ankle height is unknown (legacy callers).
+_FOOT_CONTACT_POS = f"{_FOOT_CONTACT_X:g} 0 -0.02"
+# tangent, torsion, rolling; tangent = static coefficient from the bundle
+_FOOT_CONTACT_FRICTION = f"{GROUND_FRICTION['static']:g} 0.005 0.0001"
 _FOOT_CONTACT_RGBA = "0.8 0.6 0.4 0.3"  # semi-transparent for visualization
 
 
@@ -60,13 +65,22 @@ def _demote_visual_geom_group(foot_body: ET.Element) -> None:
         visual_geom.set("group", "0")
 
 
-def _add_single_foot_contact_geom(foot_body: ET.Element, side: str) -> None:
+def _add_single_foot_contact_geom(
+    foot_body: ET.Element, side: str, ankle_height: float | None = None
+) -> None:
     """Attach the standard sole-contact box geom to a single foot body.
 
     Args:
         foot_body: The ``<body name="foot_{side}">`` element.
         side: One of ``"l"`` or ``"r"``.
+        ankle_height: Height of the foot body origin above the ground at the
+            keyframe pose.  When given, the box bottom is placed exactly on
+            the ground (box centre at ``-ankle_height + half_height``).
     """
+    pos = _FOOT_CONTACT_POS
+    if ankle_height is not None:
+        centre_z = -ankle_height + _FOOT_CONTACT_HALF_SIZE[2]
+        pos = f"{_FOOT_CONTACT_X:g} 0 {centre_z:.6f}"
     # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
     # to avoid Python call frame overhead from multiple .set() calls.
     ET.SubElement(
@@ -75,7 +89,7 @@ def _add_single_foot_contact_geom(foot_body: ET.Element, side: str) -> None:
         name=f"foot_{side}_contact",
         type="box",
         size=_FOOT_CONTACT_SIZE,
-        pos=_FOOT_CONTACT_POS,
+        pos=pos,
         contype="1",
         conaffinity="1",
         condim="3",
@@ -102,7 +116,9 @@ def _iter_foot_bodies(
     return t
 
 
-def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
+def add_foot_contact_geoms(
+    bodies: dict[str, ET.Element], ankle_height: float | None = None
+) -> None:
     """Add box collision geometry to foot segments for ground contact.
 
     Each foot gets a box geom representing the sole contact area:
@@ -110,7 +126,7 @@ def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     bottom of the foot segment.
 
     Contact properties: contype=1, conaffinity=1, condim=3,
-    friction="1.0 0.005 0.0001" (tangent, torsion, rolling).
+    friction="0.8 0.005 0.0001" (tangent = bundle static coefficient).
     Group=1 separates contact geoms from visual geoms (group=0).
 
     Missing sides (e.g. unilateral rigs) are silently skipped; callers
@@ -118,7 +134,7 @@ def add_foot_contact_geoms(bodies: dict[str, ET.Element]) -> None:
     """
     for side, foot_body in _iter_foot_bodies(bodies):
         _demote_visual_geom_group(foot_body)
-        _add_single_foot_contact_geom(foot_body, side)
+        _add_single_foot_contact_geom(foot_body, side, ankle_height)
 
     logger.debug("Added contact sole geometry to foot segments")
 

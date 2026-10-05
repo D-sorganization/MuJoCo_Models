@@ -15,18 +15,12 @@ from __future__ import annotations
 import math
 
 from mujoco_models.shared.contracts.preconditions import require_positive
+from mujoco_models.shared.parity.standard import SEGMENT_TABLE as _PARITY_SEGMENT_TABLE
 
-# Winter (2009) segment mass fractions and length fractions of total height.
+# Winter (2009) segment mass / length / radius fractions of total height.
+# Single source of truth: the vendored parity bundle (see shared/parity).
 SEGMENT_TABLE: dict[str, dict[str, float]] = {
-    "pelvis": {"mass_frac": 0.142, "length_frac": 0.100, "radius_frac": 0.085},
-    "torso": {"mass_frac": 0.355, "length_frac": 0.288, "radius_frac": 0.080},
-    "head": {"mass_frac": 0.081, "length_frac": 0.130, "radius_frac": 0.060},
-    "upper_arm": {"mass_frac": 0.028, "length_frac": 0.186, "radius_frac": 0.023},
-    "forearm": {"mass_frac": 0.016, "length_frac": 0.146, "radius_frac": 0.018},
-    "hand": {"mass_frac": 0.006, "length_frac": 0.050, "radius_frac": 0.020},
-    "thigh": {"mass_frac": 0.100, "length_frac": 0.245, "radius_frac": 0.037},
-    "shank": {"mass_frac": 0.047, "length_frac": 0.246, "radius_frac": 0.025},
-    "foot": {"mass_frac": 0.014, "length_frac": 0.040, "radius_frac": 0.025},
+    name: dict(props) for name, props in _PARITY_SEGMENT_TABLE.items()
 }
 
 # Unique (non-bilateral) segment names for mass fraction summation.

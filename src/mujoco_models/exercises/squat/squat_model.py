@@ -46,6 +46,11 @@ class SquatModelBuilder(ExerciseModelBuilder):
         """Return the canonical exercise name for the back squat model."""
         return "back_squat"
 
+    @property
+    def barbell_start_pos(self) -> tuple[float, float, float]:
+        """Bar rests on the upper trapezius: shoulder height, behind the neck."""
+        return (0.0, -0.1, self.body_spec.shoulder_height)
+
     def attach_barbell(
         self,
         equality: ET.Element,

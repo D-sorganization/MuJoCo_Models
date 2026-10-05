@@ -218,8 +218,30 @@ This header is present in every module-level `.py` file as of the SPDX header up
 - 2026-07-26: Fixed mypy typing error for optional text in `_fast_serialize_node` XML serialization.
 - 2026-08-05: Optimized `compute_balance_cost` validation in `trajectory_optimizer.py` by unrolling fixed-size `math.isfinite` checks for `com_position`, avoiding iterator/helper overhead in the balance-cost hot path.
 
+## Engine Parity Contract
+
+Cross-engine parameters come from the fleet parity standard vendored at
+`src/mujoco_models/shared/parity/_canonical/` (`biomech_parity_standard.json`,
+`conformance.py`, `assemble.py`, `MANIFEST.json`). The canonical source is
+`Repository_Management/shared_scripts/model_parity/`; vendored files are never
+edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
+
+- `shared/parity/standard.py` and the body segment table are computed from the
+  bundle; no constants are duplicated.
+- `shared/parity/fingerprint.py` loads every exercise's generated MJCF model in
+  the real mujoco engine and reports a `model-fingerprint/v1`
+  (`python -m mujoco_models.shared.parity.fingerprint --all --out DIR`).
+- `tests/parity/test_engine_conformance.py` runs in default CI with the engine
+  installed and fails on any divergence from the standard that is not listed,
+  with an issue reference, in `shared/parity/parity_divergences.json`. Ledger
+  entries that no longer diverge fail as stale, so the ledger only shrinks.
+- `model_pack.yaml` declares honest `capabilities` levels (`none`, `partial`,
+  `full`); `full` requires a public API and a real-engine test as evidence.
+
 ## Changelog
 
+
+- 2026-10-05 (#390): Barbell bodies get freejoints (no longer pin the lifter to the world); foot contact box on the ground with bundle friction; human geoms no longer self-collide; keyframe ctrl holds the pose; real-engine parity conformance against the fleet standard.
 - 2024-07-24: Unrolled explicit lists in core mathematical functions in `src/mujoco_models/shared/body/body_helpers.py` and `src/mujoco_models/shared/contracts/postconditions.py` for performance.
 
 - 2026-07-25: Inlined `_point_to_segment_sq` into `squared_distance_to_polygon` and `_squared_distance_to_polygon` to avoid function call overhead during iterative geometry calculations.
