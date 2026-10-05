@@ -25,6 +25,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
 from mujoco_models.exceptions import ValidationError
+from mujoco_models.shared.contact_masks import EQUIPMENT_MASKS, apply_masks
 from mujoco_models.shared.contracts.preconditions import (
     require_non_negative,
     require_positive,
@@ -217,7 +218,7 @@ def create_barbell_bodies(
     symmetrically along the X-axis (left = -X, right = +X).
 
     Every barbell body carries a freejoint and collides with the environment
-    (contype/conaffinity 1; human geoms collide with nothing).  The weld
+    (EQUIPMENT_MASKS: collides with humans, floor and other equipment).  The weld
     equality constraints then couple the bar to the lifter and to its own
     sleeves instead of pinning bodies to the world.  ``pos`` is the world
     position of the shaft centre at the keyframe; weld offsets are derived from
@@ -254,7 +255,6 @@ def create_barbell_bodies(
     _weld_sleeves_to_shaft(equality, shaft_name, left_name, right_name, prefix)
     for body in (shaft_body, left_body, right_body):
         add_free_joint(body, name=f"{body.get('name')}_free")
-        body.find("geom").set("contype", "1")  # type: ignore[union-attr]
-        body.find("geom").set("conaffinity", "1")  # type: ignore[union-attr]
+        apply_masks(body.find("geom"), EQUIPMENT_MASKS)  # type: ignore[arg-type]
 
     return {shaft_name: shaft_body, left_name: left_body, right_name: right_body}

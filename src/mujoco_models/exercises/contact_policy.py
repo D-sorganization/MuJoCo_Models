@@ -10,12 +10,14 @@ import xml.etree.ElementTree as ET
 
 from mujoco_models.shared.parity.standard import GROUND_FRICTION
 
-# Self-collision policy (issue #390): human-body geoms collide with NOTHING
-# (contype=0, conaffinity=0 in the model defaults).  Only the environment
-# (ground, bench, chair seat), the barbell and the dedicated foot contact boxes
-# opt in with contype=conaffinity=1.  This removes every non-physical
-# self contact (torso-thigh, thigh-thigh, hand-pelvis, ...) that previously
-# produced forces up to 64 kN.  The explicit <exclude> pairs below stay as
+# Self-collision policy (issues #390, #394): collision bitmasks live in
+# ``mujoco_models.shared.contact_masks``.  Human body geoms (contype=2,
+# conaffinity=0) never collide with each other, yet collide with equipment
+# (bench, chair, barbell: contype=1, conaffinity=3).  The floor and the
+# dedicated foot contact boxes use contype=conaffinity=1, so only the feet
+# touch the floor.  This removes every non-physical self contact
+# (torso-thigh, thigh-thigh, hand-pelvis, ...) that previously produced forces
+# up to 64 kN.  The explicit <exclude> pairs below stay as
 # defence in depth (e.g. if a downstream caller re-enables body collisions).
 #
 # Servo gains: position actuators hold the keyframe pose (ctrl = keyframe

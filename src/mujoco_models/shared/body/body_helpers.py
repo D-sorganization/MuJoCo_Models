@@ -13,6 +13,7 @@ import logging
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
+from mujoco_models.shared.contact_masks import FOOT_CONTACT_MASKS, apply_masks
 from mujoco_models.shared.parity.standard import FOOT_CONTACT_DIMS, GROUND_FRICTION
 from mujoco_models.shared.utils.geometry import capsule_inertia
 from mujoco_models.shared.utils.mjcf_helpers import add_body, add_hinge_joint
@@ -25,7 +26,7 @@ _ExtraJoints = list[tuple[str, tuple[float, float, float], float, float]]
 
 # Foot contact-geometry constants, all derived from the parity bundle.  The
 # contact box is the ONLY foot geom that collides with the floor (the visual
-# capsule has contype/conaffinity 0 via the model defaults).
+# capsule uses the human masks, which never touch the floor).
 _FOOT_CONTACT_HALF_SIZE = tuple(0.5 * v for v in FOOT_CONTACT_DIMS.values())
 _FOOT_CONTACT_SIZE = " ".join(f"{v:g}" for v in _FOOT_CONTACT_HALF_SIZE)
 _FOOT_CONTACT_X = 0.04  # slightly forward of the ankle
@@ -83,20 +84,19 @@ def _add_single_foot_contact_geom(
         pos = f"{_FOOT_CONTACT_X:g} 0 {centre_z:.6f}"
     # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
     # to avoid Python call frame overhead from multiple .set() calls.
-    ET.SubElement(
+    contact_geom = ET.SubElement(
         foot_body,
         "geom",
         name=f"foot_{side}_contact",
         type="box",
         size=_FOOT_CONTACT_SIZE,
         pos=pos,
-        contype="1",
-        conaffinity="1",
         condim="3",
         friction=_FOOT_CONTACT_FRICTION,
         group="1",
         rgba=_FOOT_CONTACT_RGBA,
     )
+    apply_masks(contact_geom, FOOT_CONTACT_MASKS)
 
 
 def _iter_foot_bodies(

@@ -24,6 +24,7 @@ import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
 from mujoco_models.shared.body import BodyModelSpec
+from mujoco_models.shared.contact_masks import EQUIPMENT_MASKS, apply_masks
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,11 @@ _CHAIR_SEAT_HEIGHT = 0.45
 _CHAIR_SEAT_DEPTH = 0.40
 _CHAIR_SEAT_WIDTH = 0.45
 _CHAIR_BACK_HEIGHT = 0.40
+# The keyframe is the neutral standing pose (see #392), so the chair sits
+# behind the pelvis origin, clear of the standing legs.  Now that human geoms
+# collide with equipment (#394) an overlapping chair would inject huge forces.
+_CHAIR_CLEARANCE = 0.12
+_CHAIR_CENTER_Y = -(_CHAIR_SEAT_DEPTH / 2 + _CHAIR_CLEARANCE)
 
 # Initial seated pose (radians): ~90 deg hip and knee flexion
 _INITIAL_HIP_FLEX = math.radians(90)
@@ -96,13 +102,13 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             worldbody,
             "body",
             name="chair",
-            pos=f"0 0 {_CHAIR_SEAT_HEIGHT / 2:.4f}",
+            pos=f"0 {_CHAIR_CENTER_Y:.4f} {_CHAIR_SEAT_HEIGHT / 2:.4f}",
         )
 
     @staticmethod
     def _add_chair_seat_geom(chair: ET.Element) -> None:
         """Add the horizontal seat box geom."""
-        ET.SubElement(
+        geom = ET.SubElement(
             chair,
             "geom",
             name="chair_seat",
@@ -110,14 +116,13 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             size=(f"{_CHAIR_SEAT_WIDTH / 2:.4f} {_CHAIR_SEAT_DEPTH / 2:.4f} 0.02"),
             pos=f"0 0 {_CHAIR_SEAT_HEIGHT / 2:.4f}",
             rgba="0.6 0.4 0.2 1",
-            contype="1",
-            conaffinity="1",
         )
+        apply_masks(geom, EQUIPMENT_MASKS)
 
     @staticmethod
     def _add_chair_back_geom(chair: ET.Element) -> None:
         """Add the vertical chair-back box geom."""
-        ET.SubElement(
+        geom = ET.SubElement(
             chair,
             "geom",
             name="chair_back",
@@ -129,9 +134,8 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
                 f"{_CHAIR_SEAT_HEIGHT / 2 + _CHAIR_BACK_HEIGHT / 2:.4f}"
             ),
             rgba="0.6 0.4 0.2 1",
-            contype="1",
-            conaffinity="1",
         )
+        apply_masks(geom, EQUIPMENT_MASKS)
 
     @staticmethod
     def _weld_chair_to_world(equality: ET.Element) -> None:

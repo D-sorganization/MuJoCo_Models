@@ -240,6 +240,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 ## Changelog
 
+- 2026-10-05 (#394): Human geoms now use collision class `contype=2 conaffinity=0` and equipment (bench, chair, barbell) `contype=1 conaffinity=3` (masks centralized in `shared/contact_masks.py`), so the lifter contacts the bench, chair and bar but never itself; the sit-to-stand chair moves behind the standing keyframe pose.
 
 - 2026-10-05 (#390): Barbell bodies get freejoints (no longer pin the lifter to the world); foot contact box on the ground with bundle friction; human geoms no longer self-collide; keyframe ctrl holds the pose; real-engine parity conformance against the fleet standard.
 - 2024-07-24: Unrolled explicit lists in core mathematical functions in `src/mujoco_models/shared/body/body_helpers.py` and `src/mujoco_models/shared/contracts/postconditions.py` for performance.

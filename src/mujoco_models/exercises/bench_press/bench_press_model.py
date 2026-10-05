@@ -27,6 +27,7 @@ import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
+from mujoco_models.shared.contact_masks import EQUIPMENT_MASKS, apply_masks
 from mujoco_models.shared.utils.mjcf_helpers import add_weld_constraint
 
 logger = logging.getLogger(__name__)
@@ -75,18 +76,17 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         )
         # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
         # to avoid Python call frame overhead from multiple .set() calls.
-        ET.SubElement(
+        bench_geom = ET.SubElement(
             bench,
             "geom",
             name="bench_contact",
             type="box",
             size="0.30 0.65 0.02",
             rgba="0.5 0.35 0.2 1",
-            contype="1",
-            conaffinity="1",
             condim="3",
             friction="0.8 0.005 0.0001",
         )
+        apply_masks(bench_geom, EQUIPMENT_MASKS)
 
         add_weld_constraint(
             equality,
