@@ -46,8 +46,15 @@ import logging
 import subprocess
 import sys
 from collections.abc import Sequence
-from datetime import UTC, date, datetime
 from pathlib import Path
+
+try:
+    from datetime import UTC, date, datetime
+except ImportError:  # pragma: no cover - Python < 3.11 compatibility
+    from datetime import date, datetime, timezone
+
+    UTC = timezone.utc  # type: ignore[attr-defined,misc]
+
 
 try:
     from shared_scripts import changes_fragment_schema as schema

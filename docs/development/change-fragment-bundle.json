@@ -2,7 +2,7 @@
   "source_repository": "D-sorganization/Repository_Management",
   "source_commit": "b13150898be81bca3bbfe66d79614dbe0c7c12cc",
   "files": {
-    "shared_scripts/changes_fragment.py": "338ac47aca60949f34b83dffbf1295a42616d57a04aa51bdc6ad6bbd70077cbe",
+    "shared_scripts/changes_fragment.py": "56c63e605a4c80cd1b773d168c1cb86695a01278c2509b3d926d831a932d4488",
     "shared_scripts/changes_fragment_schema.py": "2c923c0140cd50767f5ee49f27a9451a022463265555ed6e1f0320b27bc11b78",
     "shared_scripts/changes_fragment_collate.py": "82138320b982a68dded80364c2951b6e4787d5c7a0b16ec1c12c2775a0c4d299",
     "shared_scripts/development_log.py": "23f561d3d4dcc12e646675db771324c37692a746d24c3391b46983b8e0b99710",
