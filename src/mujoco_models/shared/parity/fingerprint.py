@@ -22,6 +22,7 @@ import numpy as np
 from mujoco_models.exercises import EXERCISE_REGISTRY
 from mujoco_models.model_pack import manifest
 from mujoco_models.optimization.exercise_objectives import get_exercise_objective
+from mujoco_models.shared.parity import pose_probe
 from mujoco_models.shared.parity._canonical import assemble, conformance, kinematics
 from mujoco_models.shared.parity.standing import (
     GRAVITY_MPS2,
@@ -183,6 +184,7 @@ def fingerprint(exercise: str) -> dict[str, Any]:
         if model.jnt_type[j] == _HINGE
     }
     pelvis_joint = model.body_jntadr[model.body("pelvis").id]
+    base = _zero_pose_qpos(model)
     extras: dict[str, Any] = {}
     if not builder.uses_barbell:
         human_mass = sum(
@@ -201,6 +203,10 @@ def fingerprint(exercise: str) -> dict[str, Any]:
         coordinate_limits_rad=limits,
         segment_origins_engine_m=_neutral_origins(model),
         coordinate_axes_engine=_coordinate_axes(model, std),
+        pelvis_rotation_engine=pose_probe.pelvis_rotation(model, base),
+        segment_origins_test_poses_engine_m=pose_probe.origins_at_test_poses(
+            model, base, std, lambda c: _engine_name(c, COORDINATE_ALIASES)
+        ),
         capabilities=assemble.capabilities_from_manifest(manifest(), std),
         coordinate_aliases=COORDINATE_ALIASES,
         segment_aliases=SEGMENT_ALIASES,
