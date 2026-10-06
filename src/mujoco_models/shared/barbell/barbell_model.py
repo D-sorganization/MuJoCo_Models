@@ -47,6 +47,12 @@ from mujoco_models.shared.utils.mjcf_helpers import (
 _AXIS_ALONG_Y = (math.pi / 2.0, 0.0, 0.0)
 
 
+def _inertia_along_y(inertia: tuple[float, float, float]) -> tuple[float, float, float]:
+    """Re-express a Z-axis cylinder inertia (perp, perp, axial) along Y."""
+    perp_x, perp_y, axial = inertia
+    return (perp_x, axial, perp_y)
+
+
 @dataclass(frozen=True)
 class BarbellSpec:
     """Immutable specification for a barbell.
@@ -230,10 +236,10 @@ def create_barbell_bodies(
     position of the shaft centre at the keyframe; weld offsets are derived from
     it, so it should be placed where the lifter holds the bar.
     """
-    shaft_inertia = cylinder_inertia(
-        spec.shaft_mass, spec.shaft_radius, spec.shaft_length
+    shaft_inertia = _inertia_along_y(
+        cylinder_inertia(spec.shaft_mass, spec.shaft_radius, spec.shaft_length)
     )
-    sleeve_inertia = _compute_sleeve_inertia(spec)
+    sleeve_inertia = _inertia_along_y(_compute_sleeve_inertia(spec))
     sleeve_total_mass = spec.sleeve_mass + spec.plate_mass_per_side
     sleeve_offset = spec.shaft_length / 2.0 + spec.sleeve_length / 2.0
 

@@ -148,3 +148,30 @@ class TestCreateBarbellBodies:
         shaft = bodies["barbell_shaft"]
         geom = shaft.find("geom")
         assert geom.get("type") == "cylinder"  # type: ignore
+
+
+def test_bar_spin_inertia_is_about_the_lateral_axis() -> None:
+    """The shaft and sleeves lie along Y (#410), so their axial moment is Iyy."""
+    import xml.etree.ElementTree as ET
+
+    from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
+    from mujoco_models.shared.barbell.barbell_model import _compute_sleeve_inertia
+    from mujoco_models.shared.utils.geometry import cylinder_inertia
+
+    spec = BarbellSpec.mens_olympic(plate_mass_per_side=20.0)
+    worldbody = ET.Element("worldbody")
+    bodies = create_barbell_bodies(worldbody, ET.Element("equality"), spec)
+    shaft_axial = cylinder_inertia(
+        spec.shaft_mass, spec.shaft_radius, spec.shaft_length
+    )[2]
+    axial = {
+        "barbell_shaft": shaft_axial,
+        "barbell_left_sleeve": _compute_sleeve_inertia(spec)[2],
+        "barbell_right_sleeve": _compute_sleeve_inertia(spec)[2],
+    }
+    for name, want in axial.items():
+        inertial = bodies[name].find("inertial")
+        assert inertial is not None
+        ixx, iyy, izz = (float(v) for v in inertial.get("diaginertia", "").split())
+        assert iyy == pytest.approx(want, abs=1e-6)  # XML keeps 6 decimals
+        assert ixx == pytest.approx(izz)
