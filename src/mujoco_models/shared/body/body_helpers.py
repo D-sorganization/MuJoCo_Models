@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import logging
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
+from mujoco_models.shared.body.axes import SIDE_SIGN, joint_axis
 from mujoco_models.shared.contact_masks import FOOT_CONTACT_MASKS, apply_masks
 from mujoco_models.shared.parity.standard import FOOT_CONTACT_DIMS, GROUND_FRICTION
 from mujoco_models.shared.utils.geometry import capsule_inertia
@@ -20,8 +21,9 @@ from mujoco_models.shared.utils.mjcf_helpers import add_body, add_hinge_joint
 
 logger = logging.getLogger(__name__)
 
-# Type alias for extra hinge-joint specs: (suffix, axis, range_min, range_max)
-_ExtraJoints = list[tuple[str, tuple[float, float, float], float, float]]
+# Extra hinge-joint specs: (suffix, range_min, range_max).  The axis comes from
+# the canonical axis table, per side (see ``shared/body/axes.py``).
+_ExtraJoints = list[tuple[str, float, float]]
 
 
 # Foot contact-geometry constants, all derived from the parity bundle.  The
@@ -53,6 +55,7 @@ class _LimbSideSpec:
     range_min: float
     range_max: float
     extra_joints: _ExtraJoints | None = None
+    geom_euler: tuple[float, ...] | None = None
 
 
 def _demote_visual_geom_group(foot_body: ET.Element) -> None:
@@ -149,6 +152,7 @@ def _create_limb_side_body(spec: _LimbSideSpec) -> ET.Element:
         inertia=spec.inertia,
         radius=spec.radius,
         length=spec.length,
+        geom_euler=spec.geom_euler,
     )
     _add_limb_joints(
         child_body,
@@ -170,6 +174,7 @@ def _build_limb_body(
     inertia: tuple[float, float, float],
     radius: float,
     length: float,
+    geom_euler: tuple[float, ...] | None = None,
 ) -> ET.Element:
     """Create the capsule body for one side of a bilateral limb."""
     return add_body(
@@ -181,6 +186,7 @@ def _build_limb_body(
         geom_type="capsule",
         geom_size=(radius, length / 2.0),
         geom_rgba="0.8 0.6 0.4 1",
+        geom_euler=geom_euler,
     )
 
 
@@ -194,22 +200,39 @@ def _add_limb_joints(
     extra_joints: _ExtraJoints | None = None,
 ) -> None:
     """Attach the flexion joint and any optional side-specific joints."""
-    add_hinge_joint(
-        child_body,
-        name=f"{coord_prefix}_{side}_flex",
-        axis=(1, 0, 0),
-        range_min=range_min,
-        range_max=range_max,
+    specs = [("flex", range_min, range_max), *(extra_joints or [])]
+    for suffix, ex_min, ex_max in specs:
+        name = f"{coord_prefix}_{side}_{suffix}"
+        add_hinge_joint(
+            child_body,
+            name=name,
+            axis=joint_axis(name),
+            range_min=ex_min,
+            range_max=ex_max,
+        )
+
+
+def _side_spec(
+    parent_bodies: dict[str, ET.Element],
+    side: str,
+    base: _LimbSideSpec,
+    *,
+    parent_name: str,
+    seg_name: str,
+    lateral: float,
+    offset_z: float,
+) -> _LimbSideSpec:
+    """Return *base* specialised for one side: body name, parent and Y offset."""
+    parent_key = f"{parent_name}_{side}"
+    if parent_key not in parent_bodies:  # central (unilateral) parent
+        parent_key = parent_name
+    return replace(
+        base,
+        parent_el=parent_bodies[parent_key],
+        body_name=f"{seg_name}_{side}",
+        pos=(0.0, SIDE_SIGN[side] * lateral, offset_z),
+        side=side,
     )
-    if extra_joints:
-        for suffix, axis, ex_min, ex_max in extra_joints:
-            add_hinge_joint(
-                child_body,
-                name=f"{coord_prefix}_{side}_{suffix}",
-                axis=axis,
-                range_min=ex_min,
-                range_max=ex_max,
-            )
 
 
 def add_bilateral_limb(
@@ -221,39 +244,36 @@ def add_bilateral_limb(
     seg_name: str,
     parent_name: str,
     parent_offset_z: float,
-    parent_lateral_x: float,
+    parent_lateral: float,
     coord_prefix: str,
     range_min: float,
     range_max: float,
     extra_joints: _ExtraJoints | None = None,
+    geom_euler: tuple[float, ...] | None = None,
 ) -> dict[str, ET.Element]:
     """Add left and right limb segments with hinge joints.
 
-    MuJoCo convention: Z-up, so vertical offsets use Z coordinate.
-    Hinge joints rotate about the X-axis (medio-lateral) by default
-    for sagittal-plane flexion/extension.
+    Canonical frame (MuJoCo world): X forward, Y left, Z up.  The left segment
+    sits at ``+parent_lateral`` on Y and the right one at ``-parent_lateral``;
+    vertical offsets use Z.  Every hinge axis comes from the canonical axis
+    table (``shared/body/axes.py``), so flexion is about the lateral Y axis and
+    left/right adduction and rotation axes are mirrored.
 
     Parameters
     ----------
-    extra_joints : list of (suffix, axis, range_min, range_max) or None
+    extra_joints : list of (suffix, range_min, range_max) or None
         Additional hinge joints to add after the primary flexion joint.
-        Each entry creates ``{coord_prefix}_{side}_{suffix}`` on the
-        given axis with the given range limits.
+        Each entry creates ``{coord_prefix}_{side}_{suffix}`` with the
+        canonical axis of that coordinate and the given range limits.
+    geom_euler : tuple or None
+        Optional euler orientation (radians) of the segment's visual geom.
     """
-    inertia = capsule_inertia(mass, radius, length)
-    parent_is_bilateral = f"{parent_name}_l" in parent_bodies
-    created: dict[str, ET.Element] = {}
-    # ⚡ Bolt Optimization:
-    # Unrolled loop to avoid temporary list and tuple allocation in tight paths.
-
-    # Left side
-    key_l = f"{parent_name}_l" if parent_is_bilateral else parent_name
-    spec_l = _LimbSideSpec(
-        parent_el=parent_bodies[key_l],
-        body_name=f"{seg_name}_l",
-        pos=(-1.0 * parent_lateral_x, 0, parent_offset_z),
+    base = _LimbSideSpec(
+        parent_el=next(iter(parent_bodies.values())),  # replaced per side
+        body_name=seg_name,
+        pos=(0.0, 0.0, 0.0),
         mass=mass,
-        inertia=inertia,
+        inertia=capsule_inertia(mass, radius, length),
         radius=radius,
         length=length,
         coord_prefix=coord_prefix,
@@ -261,24 +281,18 @@ def add_bilateral_limb(
         range_min=range_min,
         range_max=range_max,
         extra_joints=extra_joints,
+        geom_euler=geom_euler,
     )
-    created[spec_l.body_name] = _create_limb_side_body(spec_l)
-
-    # Right side
-    key_r = f"{parent_name}_r" if parent_is_bilateral else parent_name
-    spec_r = _LimbSideSpec(
-        parent_el=parent_bodies[key_r],
-        body_name=f"{seg_name}_r",
-        pos=(1.0 * parent_lateral_x, 0, parent_offset_z),
-        mass=mass,
-        inertia=inertia,
-        radius=radius,
-        length=length,
-        coord_prefix=coord_prefix,
-        side="r",
-        range_min=range_min,
-        range_max=range_max,
-        extra_joints=extra_joints,
-    )
-    created[spec_r.body_name] = _create_limb_side_body(spec_r)
+    created: dict[str, ET.Element] = {}
+    for side in ("l", "r"):
+        spec = _side_spec(
+            parent_bodies,
+            side,
+            base,
+            parent_name=parent_name,
+            seg_name=seg_name,
+            lateral=parent_lateral,
+            offset_z=parent_offset_z,
+        )
+        created[spec.body_name] = _create_limb_side_body(spec)
     return created

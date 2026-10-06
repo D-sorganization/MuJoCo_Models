@@ -12,7 +12,7 @@ from mujoco_models.exercises.bench_press.bench_press_model import (
     build_bench_press_model,
 )
 from mujoco_models.exercises.sit_to_stand.sit_to_stand_model import (
-    _CHAIR_CENTER_Y,
+    _CHAIR_CENTER_X,
     build_sit_to_stand_model,
 )
 from mujoco_models.exercises.squat.squat_model import build_squat_model
@@ -94,7 +94,7 @@ def test_human_leg_in_chair_generates_contact() -> None:
 
     # Standing clear of the chair: no contact.
     assert human_chair_contacts() == 0
-    # Slide the root (first freejoint, y is qpos[1]) back into the seat.
-    data.qpos[1] += _CHAIR_CENTER_Y
+    # Slide the root (first freejoint, x is qpos[0]) back into the seat.
+    data.qpos[0] += _CHAIR_CENTER_X
     mujoco.mj_forward(model, data)
     assert human_chair_contacts() > 0

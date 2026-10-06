@@ -116,7 +116,7 @@ def test_add_limb_joints_writes_primary_and_extra_joints() -> None:
         range_min=-1.0,
         range_max=1.0,
         extra_joints=[
-            ("deviate", (0, 0, 1), -0.5, 0.5),
+            ("deviate", -0.5, 0.5),
         ],
     )
 
@@ -126,9 +126,10 @@ def test_add_limb_joints_writes_primary_and_extra_joints() -> None:
         "wrist_r_deviate",
     ]
     assert joints[0].get("type") == "hinge"
-    assert joints[0].get("axis") == "1.000000 0.000000 0.000000"
+    # Canonical axes (right side): wrist flexion about -Y, deviation about +X.
+    assert joints[0].get("axis") == "0.000000 -1.000000 0.000000"
     assert joints[0].get("range") == "-1.0000 1.0000"
-    assert joints[1].get("axis") == "0.000000 0.000000 1.000000"
+    assert joints[1].get("axis") == "1.000000 0.000000 0.000000"
     assert joints[1].get("range") == "-0.5000 0.5000"
 
 

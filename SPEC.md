@@ -103,6 +103,8 @@ The model-building APIs accept plain dataclass configuration rather than implici
 - `BarbellSpec` controls bar dimensions, mass, and optional plate mass per side.
 - All lengths are expressed in meters and all masses in kilograms.
 - MuJoCo uses a Z-up convention in this repository: gravity is `(0.0, 0.0, -9.80665)`.
+- The MuJoCo world frame is the fleet canonical frame: X forward, Y left, Z up. The left side of bilateral segments sits at +Y, the right at -Y, feet point +X, and the barbell lies along Y with its left sleeve at +Y. Human body frames are world-aligned at the all-zero pose, so each hinge's `axis` is its canonical rotation axis. The axes are read from the vendored parity standard (kinematics block, `shared/body/axes.py`): flexion is about `-Y` (`+Y` for lumbar and neck), adduction and deviation about `+X`, rotation about `+Z`, with the left side mirrored for adduction, rotation, deviation and inversion. Knee flexion is negative. `shared/parity/fingerprint.py` measures every axis in the real engine and the conformance tests require zero `axis.*` and `side.*` divergences.
+- A hinge `ref` is the value of its zero angle (`qpos0`): the XML geometry is the pose at `qpos = ref`, so a `ref` relabels the zero and never moves a segment. Only the bench press poses the body (supine, arms raised) and does so with a pelvis `quat` plus keyframe angle offsets (`keyframe_angle_offsets`).
 
 The package also exposes `mujoco-models` as a console script via `[project.scripts]` in `pyproject.toml`. Both entrypoints are functionally equivalent.
 

@@ -35,7 +35,7 @@ from mujoco_models.shared.body.segment_data import (
 
 def _attach_upper_arms(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
     """Attach bilateral upper-arm segments (shoulder joints) to torso."""
-    _t_mass, t_len, t_rad = _seg(spec, "torso")
+    _t_mass, t_len, _t_rad = _seg(spec, "torso")
     ua_mass, ua_len, ua_rad = _seg(spec, "upper_arm")
     bodies.update(
         add_bilateral_limb(
@@ -46,13 +46,13 @@ def _attach_upper_arms(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> No
             seg_name="upper_arm",
             parent_name="torso",
             parent_offset_z=t_len * 0.95,
-            parent_lateral_x=t_rad * 1.2,
+            parent_lateral=spec.shoulder_half_width,
             coord_prefix="shoulder",
             range_min=SHOULDER_FLEX_MIN,
             range_max=SHOULDER_FLEX_MAX,
             extra_joints=[
-                ("adduct", (0, 0, 1), SHOULDER_ADDUCT_MIN, SHOULDER_ADDUCT_MAX),
-                ("rotate", (0, 1, 0), SHOULDER_ROTATE_MIN, SHOULDER_ROTATE_MAX),
+                ("adduct", SHOULDER_ADDUCT_MIN, SHOULDER_ADDUCT_MAX),
+                ("rotate", SHOULDER_ROTATE_MIN, SHOULDER_ROTATE_MAX),
             ],
         )
     )
@@ -71,7 +71,7 @@ def _attach_forearms(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None
             seg_name="forearm",
             parent_name="upper_arm",
             parent_offset_z=-ua_len,
-            parent_lateral_x=0,
+            parent_lateral=0,
             coord_prefix="elbow",
             range_min=0,
             range_max=2.618,
@@ -92,11 +92,11 @@ def _attach_hands(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
             seg_name="hand",
             parent_name="forearm",
             parent_offset_z=-fa_len,
-            parent_lateral_x=0,
+            parent_lateral=0,
             coord_prefix="wrist",
             range_min=WRIST_FLEX_MIN,
             range_max=WRIST_FLEX_MAX,
-            extra_joints=[("deviate", (0, 0, 1), WRIST_DEVIATE_MIN, WRIST_DEVIATE_MAX)],
+            extra_joints=[("deviate", WRIST_DEVIATE_MIN, WRIST_DEVIATE_MAX)],
         )
     )
 

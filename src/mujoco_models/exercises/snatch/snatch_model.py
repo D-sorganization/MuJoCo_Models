@@ -44,7 +44,13 @@ logger = logging.getLogger(__name__)
 # Deep hip hinge starting position — same as deadlift (shared constants).
 _INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
 _INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
-_INITIAL_SHOULDER_ADDUCT = math.radians(45)  # ~45° abduction for wide overhead grip
+# Abduction is negative adduction.  The wide overhead grip wants ~45°, but the
+# standard's shoulder_adduct range stops at -30°, so the pose uses that limit.
+_INITIAL_SHOULDER_ADDUCT = math.radians(-30)
+# The bar is rigid across both hands, so wrist deviation cancels the shoulder
+# abduction (both rotate about the same mirrored X axis) and keeps the hands,
+# and with them the bar, level.
+_INITIAL_WRIST_DEVIATE = -_INITIAL_SHOULDER_ADDUCT
 
 
 class SnatchModelBuilder(ExerciseModelBuilder):
@@ -71,7 +77,8 @@ class SnatchModelBuilder(ExerciseModelBuilder):
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set starting position: bar on floor, wide grip, deep hip hinge.
 
-        Shoulder abduction opens the arms for the wide snatch grip.
+        Shoulder abduction (negative adduction) opens the arms for the wide snatch
+        grip; wrist deviation cancels it so the hands stay level.
 
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
@@ -82,6 +89,8 @@ class SnatchModelBuilder(ExerciseModelBuilder):
                 "hip_r_flex": _INITIAL_HIP_FLEX,
                 "shoulder_l_adduct": _INITIAL_SHOULDER_ADDUCT,
                 "shoulder_r_adduct": _INITIAL_SHOULDER_ADDUCT,
+                "wrist_l_deviate": _INITIAL_WRIST_DEVIATE,
+                "wrist_r_deviate": _INITIAL_WRIST_DEVIATE,
                 "knee": _INITIAL_KNEE_FLEX,
             },
         )

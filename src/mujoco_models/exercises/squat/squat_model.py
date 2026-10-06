@@ -30,7 +30,9 @@ logger = logging.getLogger(__name__)
 # Slight hip/knee flexion for unrack position (radians)
 _INITIAL_HIP_FLEX = 0.15  # ~8.6 degrees
 _INITIAL_KNEE_FLEX = -0.15  # slight knee bend
-_INITIAL_HIP_ROTATE = math.radians(10)  # ~10° external rotation for squat stance
+# ~10° external rotation for squat stance; internal rotation is positive in the
+# canonical convention, so external rotation is negative.
+_INITIAL_HIP_ROTATE = math.radians(-10)
 
 
 class SquatModelBuilder(ExerciseModelBuilder):
@@ -48,8 +50,8 @@ class SquatModelBuilder(ExerciseModelBuilder):
 
     @property
     def barbell_start_pos(self) -> tuple[float, float, float]:
-        """Bar rests on the upper trapezius: shoulder height, behind the neck."""
-        return (0.0, -0.1, self.body_spec.shoulder_height)
+        """Bar rests on the upper trapezius: shoulder height, behind the neck (-X)."""
+        return (-0.1, 0.0, self.body_spec.shoulder_height)
 
     def attach_barbell(
         self,
@@ -89,7 +91,7 @@ class SquatModelBuilder(ExerciseModelBuilder):
 
         The lifter starts in a comfortable standing position with the
         barbell on the back, knees slightly unlocked.  Hip external
-        rotation (~10 deg) opens the stance for squat mechanics.
+        rotation (~10 deg, a negative angle) opens the stance for squat mechanics.
 
         Ref values are stored in radians to match <compiler angle='radian'>.
         """

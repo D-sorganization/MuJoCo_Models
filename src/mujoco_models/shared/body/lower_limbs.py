@@ -13,6 +13,7 @@ Extracted from body_model.py to keep modules under the 300-line guideline.
 
 from __future__ import annotations
 
+import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.shared.body.body_anthropometrics import (
@@ -36,6 +37,9 @@ from mujoco_models.shared.body.segment_data import (
     HIP_ROTATE_MIN,
 )
 
+# The foot's visual capsule lies along +X (toes forward): Z rotated onto X.
+_FOOT_GEOM_EULER = (0.0, math.pi / 2.0, 0.0)
+
 
 def _attach_thighs(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
     """Attach bilateral thigh segments (hip joints) to pelvis."""
@@ -50,13 +54,13 @@ def _attach_thighs(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
             seg_name="thigh",
             parent_name="pelvis",
             parent_offset_z=-p_len / 2.0,
-            parent_lateral_x=p_rad * 0.6,
+            parent_lateral=p_rad * 0.6,
             coord_prefix="hip",
             range_min=HIP_FLEX_MIN,
             range_max=HIP_FLEX_MAX,
             extra_joints=[
-                ("adduct", (0, 0, 1), HIP_ADDUCT_MIN, HIP_ADDUCT_MAX),
-                ("rotate", (0, 1, 0), HIP_ROTATE_MIN, HIP_ROTATE_MAX),
+                ("adduct", HIP_ADDUCT_MIN, HIP_ADDUCT_MAX),
+                ("rotate", HIP_ROTATE_MIN, HIP_ROTATE_MAX),
             ],
         )
     )
@@ -75,7 +79,7 @@ def _attach_shanks(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
             seg_name="shank",
             parent_name="thigh",
             parent_offset_z=-th_len,
-            parent_lateral_x=0,
+            parent_lateral=0,
             coord_prefix="knee",
             range_min=-2.618,
             range_max=0,
@@ -96,11 +100,12 @@ def _attach_feet(bodies: dict[str, ET.Element], spec: BodyModelSpec) -> None:
             seg_name="foot",
             parent_name="shank",
             parent_offset_z=-sh_len,
-            parent_lateral_x=0,
+            parent_lateral=0,
             coord_prefix="ankle",
             range_min=ANKLE_FLEX_MIN,
             range_max=ANKLE_FLEX_MAX,
-            extra_joints=[("invert", (0, 0, 1), ANKLE_INVERT_MIN, ANKLE_INVERT_MAX)],
+            extra_joints=[("invert", ANKLE_INVERT_MIN, ANKLE_INVERT_MAX)],
+            geom_euler=_FOOT_GEOM_EULER,
         )
     )
 

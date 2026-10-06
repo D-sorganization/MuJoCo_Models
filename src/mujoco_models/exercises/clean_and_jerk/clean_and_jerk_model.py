@@ -48,7 +48,9 @@ logger = logging.getLogger(__name__)
 # Deep hip hinge starting position — same as deadlift (shared constants).
 _INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
 _INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
-_INITIAL_SHOULDER_ROTATE = math.radians(45)  # ~45° external rotation for front rack
+# ~45° external rotation for the front rack; internal rotation is positive in the
+# canonical convention, so external rotation is negative.
+_INITIAL_SHOULDER_ROTATE = math.radians(-45)
 
 
 class CleanAndJerkModelBuilder(ExerciseModelBuilder):

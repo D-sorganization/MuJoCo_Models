@@ -29,6 +29,7 @@ from mujoco_models.exercises.contact_policy import (
 )
 from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
+from mujoco_models.shared.body.axes import SIDE_SIGN
 from mujoco_models.shared.contact_masks import (
     FLOOR_MASKS,
     HUMAN_MASKS,
@@ -46,6 +47,8 @@ logger = logging.getLogger(__name__)
 # Defined here so subclasses can import from a single authoritative location.
 FLOOR_PULL_HIP_FLEX: float = 1.3963  # ~80° hip flexion (radians)
 FLOOR_PULL_KNEE_FLEX: float = -1.0472  # ~60° knee flexion (radians)
+
+_IDENTITY_QUAT: tuple[float, float, float, float] = (1.0, 0.0, 0.0, 0.0)
 
 
 @dataclass(frozen=True)
@@ -95,8 +98,8 @@ class ExerciseModelBuilder(ABC):
     def barbell_start_pos(self) -> tuple[float, float, float]:
         """World position of the barbell shaft centre at the keyframe.
 
-        Default: at hand height on the body midline, so hand welds are
-        consistent at the start pose.  Subclasses (squat) override.
+        Default: at hand height on the body midline (X = Y = 0), so hand welds
+        are consistent at the start pose.  Subclasses (squat, bench) override.
         """
         return (0.0, 0.0, self.body_spec.hand_height)
 
@@ -133,6 +136,16 @@ class ExerciseModelBuilder(ABC):
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set default coordinate values for the starting position."""
 
+    def keyframe_angle_offsets(self) -> dict[str, float]:
+        """Joint name -> radians added to the joint's ``ref`` in the keyframe.
+
+        A joint's ``ref`` is the value of its zero angle: the XML geometry is the
+        body pose at ``qpos = ref``, so ``ref`` alone never moves a segment.  An
+        exercise whose start pose really is posed (bench press) lists the pose
+        angle here; the keyframe ``qpos`` and ``ctrl`` hold ``ref + offset``.
+        """
+        return {}
+
     def _post_worldbody_hook(self, worldbody: ET.Element, equality: ET.Element) -> None:
         """No-op hook called after worldbody is built, before actuator generation.
 
@@ -150,19 +163,23 @@ class ExerciseModelBuilder(ABC):
         side: str,
         grip_width: float | None = None,
         grip_offset: tuple[float, ...] | None = None,
+        hand_quat: tuple[float, float, float, float] = _IDENTITY_QUAT,
     ) -> tuple[float, ...] | None:
-        """Return the weld relpose for one hand.
+        """Return the weld relpose (bar relative to the hand frame) for one hand.
 
-        ``grip_offset`` wins when provided. Otherwise, ``grip_width`` is
-        converted into a left/right X offset anchored at the hand.
+        ``grip_offset`` wins when provided.  Otherwise ``grip_width`` becomes a
+        lateral (Y) offset anchored at the hand: the left hand is at +Y, so the
+        bar centre sits at ``-grip_width`` in its frame and at ``+grip_width``
+        in the right hand's.  ``hand_quat`` is the bar orientation in the hand
+        frame (identity when the hand frame is world-aligned); it must be a
+        rotation about Y so the lateral offset is unchanged.
         """
         if grip_offset is not None:
             return grip_offset
         if grip_width is None:
             return None
 
-        sign = -1.0 if side == "l" else 1.0
-        return (-sign * grip_width, 0, 0, 1, 0, 0, 0)
+        return (0, -SIDE_SIGN[side] * grip_width, 0, *hand_quat)
 
     @staticmethod
     def _attach_barbell_to_hand(
@@ -183,6 +200,7 @@ class ExerciseModelBuilder(ABC):
         *,
         grip_width: float | None = None,
         grip_offset: tuple[float, ...] | None = None,
+        hand_quat: tuple[float, float, float, float] = _IDENTITY_QUAT,
     ) -> None:
         """Weld barbell shaft to both hands (DRY helper for subclasses).
 
@@ -191,15 +209,21 @@ class ExerciseModelBuilder(ABC):
         equality : ET.Element
             The ``<equality>`` section of the MJCF model.
         grip_width : float or None
-            Distance from the barbell shaft center to each hand along the X-axis.
-            If None, the initial pose determines the grip width.
+            Distance from the barbell shaft center to each hand along the Y-axis
+            (the shaft's own axis).  If None, the initial pose determines it.
         grip_offset : tuple or None
             Optional 7-element relative pose (x y z qw qx qy qz) for the grip
             offset from the hand to the barbell shaft.
+        hand_quat : tuple
+            Bar orientation in the hand frame, for exercises whose hands are
+            not world-aligned at the keyframe (see ``_barbell_relpose_for_hand``).
         """
         for side in ("l", "r"):
             relpose = self._barbell_relpose_for_hand(
-                side, grip_width=grip_width, grip_offset=grip_offset
+                side,
+                grip_width=grip_width,
+                grip_offset=grip_offset,
+                hand_quat=hand_quat,
             )
             self._attach_barbell_to_hand(equality, side=side, relpose=relpose)
 
@@ -313,6 +337,7 @@ class ExerciseModelBuilder(ABC):
 
         qpos_values: list[str] = []
         ctrl_values: list[str] = []
+        offsets = self.keyframe_angle_offsets()
 
         # Single document-order (depth-first) traversal: MuJoCo orders qpos by
         # the kinematic tree, so every freejoint (pelvis AND each barbell body)
@@ -322,6 +347,8 @@ class ExerciseModelBuilder(ABC):
             if tag == "joint":
                 name = el.get("name", "")
                 ref = el.get("ref", "0")
+                if name in offsets:
+                    ref = repr(float(ref) + offsets[name])
                 if name:
                     ET.SubElement(
                         actuator,
@@ -337,7 +364,7 @@ class ExerciseModelBuilder(ABC):
                 qpos_values.append(ref)
             elif tag == "body" and el.find("freejoint") is not None:
                 qpos_values.extend(
-                    el.get("pos", "0 0 0").split() + ["1", "0", "0", "0"]
+                    el.get("pos", "0 0 0").split() + el.get("quat", "1 0 0 0").split()
                 )
 
         if qpos_values:

@@ -24,6 +24,9 @@ from mujoco_models.shared.contracts.preconditions import require_positive
 # a hardcoded constant.  For a 1.75 m person this yields approximately 1.015 m.
 _LEG_HEIGHT_FRACTION: float = 0.530
 
+# Shoulder joints sit this multiple of the torso radius left/right of the midline.
+_SHOULDER_OFFSET_OVER_TORSO_RADIUS: float = 1.2
+
 
 @dataclass(frozen=True)
 class BodyModelSpec:
@@ -76,6 +79,12 @@ class BodyModelSpec:
         _m, ua_len, _r = segment_properties(self.total_mass, self.height, "upper_arm")
         _m, fa_len, _r = segment_properties(self.total_mass, self.height, "forearm")
         return self.pelvis_height + p_len / 2.0 + 0.95 * t_len - ua_len - fa_len
+
+    @property
+    def shoulder_half_width(self) -> float:
+        """Lateral (Y) distance from the midline to each shoulder joint."""
+        _m, _l, t_rad = segment_properties(self.total_mass, self.height, "torso")
+        return _SHOULDER_OFFSET_OVER_TORSO_RADIUS * t_rad
 
     @property
     def shoulder_height(self) -> float:

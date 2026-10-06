@@ -17,11 +17,12 @@ import sys
 from typing import Any
 
 import mujoco
+import numpy as np
 
 from mujoco_models.exercises import EXERCISE_REGISTRY
 from mujoco_models.model_pack import manifest
 from mujoco_models.optimization.exercise_objectives import get_exercise_objective
-from mujoco_models.shared.parity._canonical import assemble, conformance
+from mujoco_models.shared.parity._canonical import assemble, conformance, kinematics
 from mujoco_models.shared.parity.standing import (
     GRAVITY_MPS2,
     standing_vertical_grf_n,
@@ -40,25 +41,105 @@ _FREE = int(mujoco.mjtJoint.mjJNT_FREE)
 _HINGE = int(mujoco.mjtJoint.mjJNT_HINGE)
 
 
-def _neutral_origins(model: mujoco.MjModel) -> dict[str, list[float]]:
-    """Raw world origin of every body at the all-zero joint-angle configuration.
+def _zero_pose_qpos(model: mujoco.MjModel) -> np.ndarray:
+    """``qpos`` of the all-zero joint-angle configuration.
 
     "All coordinates zero" means every hinge at ``qpos0``: MuJoCo's joint ``ref``
     is the value of the joint in the reference (XML) geometry, so the joint
     ANGLE is ``qpos - ref`` and angle 0 is ``qpos == qpos0`` (qpos=0 would
     rotate each hinge by ``-ref``).  Free joints are put at the identity pose
-    (position 0, quaternion 1 0 0 0); the adapter output is re-based on the
-    pelvis, so the root position drops out.
+    (position 0, quaternion 1 0 0 0); outputs are re-based on the pelvis, so
+    the root position and orientation drop out.
     """
-    data = mujoco.MjData(model)
-    mujoco.mj_resetData(model, data)
-    data.qpos[:] = model.qpos0
+    qpos = np.array(model.qpos0, dtype=float)
     for jid in range(model.njnt):
         if model.jnt_type[jid] == _FREE:
             adr = model.jnt_qposadr[jid]
-            data.qpos[adr : adr + 7] = [0, 0, 0, 1, 0, 0, 0]
+            qpos[adr : adr + 7] = [0, 0, 0, 1, 0, 0, 0]
+    return qpos
+
+
+def _neutral_origins(model: mujoco.MjModel) -> dict[str, list[float]]:
+    """Raw world origin of every body at the all-zero joint-angle configuration."""
+    data = mujoco.MjData(model)
+    mujoco.mj_resetData(model, data)
+    data.qpos[:] = _zero_pose_qpos(model)
     mujoco.mj_kinematics(model, data)
     return {model.body(b).name: data.xpos[b].tolist() for b in range(model.nbody)}
+
+
+def _engine_name(canonical: str, aliases: dict[str, str]) -> str:
+    """Engine-native name of a canonical coordinate or segment."""
+    for engine_name, canon in aliases.items():
+        if canon == canonical:
+            return engine_name
+    return canonical
+
+
+def _rotations(
+    data: mujoco.MjData, pelvis: int, segment: int
+) -> tuple[list[list[float]], list[list[float]]]:
+    """World rotation matrices of the pelvis and one segment."""
+    return (
+        data.xmat[pelvis].reshape(3, 3).tolist(),
+        data.xmat[segment].reshape(3, 3).tolist(),
+    )
+
+
+def _measure_axis(
+    model: mujoco.MjModel,
+    data: mujoco.MjData,
+    base_qpos: np.ndarray,
+    *,
+    joint: int,
+    segment: int,
+    angle: float,
+) -> kinematics.Vec3:
+    """Rotate one hinge by *angle* from the zero pose and measure its axis."""
+    pelvis = model.body("pelvis").id
+    data.qpos[:] = base_qpos
+    mujoco.mj_kinematics(model, data)
+    before = _rotations(data, pelvis, segment)
+    data.qpos[model.jnt_qposadr[joint]] += angle
+    mujoco.mj_kinematics(model, data)
+    after = _rotations(data, pelvis, segment)
+    return kinematics.segment_axis(before[0], before[1], after[0], after[1])
+
+
+def _coordinate_axes(
+    model: mujoco.MjModel, std: dict[str, Any]
+) -> dict[str, kinematics.Vec3]:
+    """Positive rotation axis of every coordinate, in the engine (= canonical) frame.
+
+    Each coordinate is rotated alone by the standard's probe angle from the
+    all-zero pose and the rotation of its segment relative to the pelvis is
+    measured.  Coordinates or segments the model lacks are omitted, which the
+    conformance check reports as ``axis.<name>.missing``.
+    """
+    data = mujoco.MjData(model)
+    base_qpos = _zero_pose_qpos(model)
+    angle = kinematics.probe_angle_rad(std)
+    axes: dict[str, kinematics.Vec3] = {}
+    for coordinate, segment in kinematics.axis_probes(std).items():
+        joint = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_JOINT,
+            _engine_name(coordinate, COORDINATE_ALIASES),
+        )
+        body = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            _engine_name(segment, SEGMENT_ALIASES),
+        )
+        if joint < 0 or body < 0:
+            logger.warning(
+                "axis probe skipped: %s on %s not in model", coordinate, segment
+            )
+            continue
+        axes[coordinate] = _measure_axis(
+            model, data, base_qpos, joint=joint, segment=body, angle=angle
+        )
+    return axes
 
 
 def _ground_friction(model: mujoco.MjModel) -> float | None:
@@ -119,6 +200,7 @@ def fingerprint(exercise: str) -> dict[str, Any]:
         segment_masses_kg=masses,
         coordinate_limits_rad=limits,
         segment_origins_engine_m=_neutral_origins(model),
+        coordinate_axes_engine=_coordinate_axes(model, std),
         capabilities=assemble.capabilities_from_manifest(manifest(), std),
         coordinate_aliases=COORDINATE_ALIASES,
         segment_aliases=SEGMENT_ALIASES,
