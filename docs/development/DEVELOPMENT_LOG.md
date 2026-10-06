@@ -67,6 +67,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#410 · Canonical Axis Convention
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #410
+- **Branch:** fix/issue-410-canonical-axes
+- **PR:** #418
+- **Paths:** see #418
+- **Started:** 2026-10-06
+- **Last verified:** 2026-10-06 (`1861f66e`; collated from changes/410-align-the-mujoco-models-with-the-canonic.md)
+- **Summary:** Align the MuJoCo models with the canonical axis convention (X forward, Y left, Z up): bilateral segments offset along Y, joint axes from the fleet standard, barbell along Y, and a real-engine axis fingerprint.
+- **Next step:** Shipped in PR #418.
+
 ### DL-#2019 · Vendor RM-5 Change-Fragment Tooling and Test Suite
 
 - **State:** shipped
