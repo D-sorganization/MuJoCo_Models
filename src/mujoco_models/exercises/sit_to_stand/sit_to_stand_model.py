@@ -34,10 +34,10 @@ _CHAIR_SEAT_DEPTH = 0.40
 _CHAIR_SEAT_WIDTH = 0.45
 _CHAIR_BACK_HEIGHT = 0.40
 # The keyframe is the neutral standing pose (see #392), so the chair sits
-# behind the pelvis origin, clear of the standing legs.  Now that human geoms
+# behind the pelvis origin (-X, canonical backward), clear of the standing legs.  Now that human geoms
 # collide with equipment (#394) an overlapping chair would inject huge forces.
 _CHAIR_CLEARANCE = 0.12
-_CHAIR_CENTER_Y = -(_CHAIR_SEAT_DEPTH / 2 + _CHAIR_CLEARANCE)
+_CHAIR_CENTER_X = -(_CHAIR_SEAT_DEPTH / 2 + _CHAIR_CLEARANCE)
 
 # Initial seated pose (radians): ~90 deg hip and knee flexion
 _INITIAL_HIP_FLEX = math.radians(90)
@@ -102,7 +102,7 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             worldbody,
             "body",
             name="chair",
-            pos=f"0 {_CHAIR_CENTER_Y:.4f} {_CHAIR_SEAT_HEIGHT / 2:.4f}",
+            pos=f"{_CHAIR_CENTER_X:.4f} 0 {_CHAIR_SEAT_HEIGHT / 2:.4f}",
         )
 
     @staticmethod
@@ -113,7 +113,7 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             "geom",
             name="chair_seat",
             type="box",
-            size=(f"{_CHAIR_SEAT_WIDTH / 2:.4f} {_CHAIR_SEAT_DEPTH / 2:.4f} 0.02"),
+            size=(f"{_CHAIR_SEAT_DEPTH / 2:.4f} {_CHAIR_SEAT_WIDTH / 2:.4f} 0.02"),
             pos=f"0 0 {_CHAIR_SEAT_HEIGHT / 2:.4f}",
             rgba="0.6 0.4 0.2 1",
         )
@@ -127,10 +127,10 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             "geom",
             name="chair_back",
             type="box",
-            size=(f"{_CHAIR_SEAT_WIDTH / 2:.4f} 0.02 {_CHAIR_BACK_HEIGHT / 2:.4f}"),
+            size=(f"0.02 {_CHAIR_SEAT_WIDTH / 2:.4f} {_CHAIR_BACK_HEIGHT / 2:.4f}"),
             pos=(
-                f"0 "
                 f"{-_CHAIR_SEAT_DEPTH / 2:.4f} "
+                f"0 "
                 f"{_CHAIR_SEAT_HEIGHT / 2 + _CHAIR_BACK_HEIGHT / 2:.4f}"
             ),
             rgba="0.6 0.4 0.2 1",

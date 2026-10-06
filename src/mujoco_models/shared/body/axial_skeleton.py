@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 
+from mujoco_models.shared.body.axes import joint_axis
 from mujoco_models.shared.body.body_anthropometrics import (
     BodyModelSpec,
     _seg,
@@ -80,27 +81,27 @@ def _build_torso(
         mass=t_mass,
         inertia_diag=t_inertia,
         geom_type="box",
-        geom_size=(t_rad, t_rad * 0.8, t_len / 2.0),
+        geom_size=(t_rad * 0.8, t_rad, t_len / 2.0),
         geom_rgba="0.8 0.6 0.4 1",
     )
     add_hinge_joint(
         torso_body,
         name="lumbar_flex",
-        axis=(1, 0, 0),
+        axis=joint_axis("lumbar_flex"),
         range_min=LUMBAR_FLEX_MIN,
         range_max=LUMBAR_FLEX_MAX,
     )
     add_hinge_joint(
         torso_body,
         name="lumbar_lateral",
-        axis=(0, 0, 1),
+        axis=joint_axis("lumbar_lateral"),
         range_min=LUMBAR_LATERAL_MIN,
         range_max=LUMBAR_LATERAL_MAX,
     )
     add_hinge_joint(
         torso_body,
         name="lumbar_rotate",
-        axis=(0, 1, 0),
+        axis=joint_axis("lumbar_rotate"),
         range_min=LUMBAR_ROTATE_MIN,
         range_max=LUMBAR_ROTATE_MAX,
     )
@@ -126,7 +127,11 @@ def _build_head(
         geom_rgba="0.9 0.75 0.6 1",
     )
     add_hinge_joint(
-        head_body, name="neck_flex", axis=(1, 0, 0), range_min=-0.5236, range_max=0.5236
+        head_body,
+        name="neck_flex",
+        axis=joint_axis("neck_flex"),
+        range_min=-0.5236,
+        range_max=0.5236,
     )
     return head_body
 

@@ -254,11 +254,19 @@ class TestBarbellAttachmentHelpers:
         assert relpose == offset
 
     def test_barbell_relpose_for_hand_uses_width_per_side(self) -> None:
-        """Grip width is converted into mirrored left/right weld offsets."""
+        """Grip width becomes mirrored lateral (Y) weld offsets: left hand at +Y."""
         left = ForwardingBuilder._barbell_relpose_for_hand("l", grip_width=0.4)
         right = ForwardingBuilder._barbell_relpose_for_hand("r", grip_width=0.4)
-        assert left == (0.4, 0, 0, 1, 0, 0, 0)
-        assert right == (-0.4, 0, 0, 1, 0, 0, 0)
+        assert left == (0, -0.4, 0, 1, 0, 0, 0)
+        assert right == (0, 0.4, 0, 1, 0, 0, 0)
+
+    def test_barbell_relpose_for_hand_carries_the_hand_orientation(self) -> None:
+        """A rotated hand frame passes the bar orientation through unchanged."""
+        quat = (0.0, 0.0, 1.0, 0.0)
+        left = ForwardingBuilder._barbell_relpose_for_hand(
+            "l", grip_width=0.3, hand_quat=quat
+        )
+        assert left == (0, -0.3, 0, 0.0, 0.0, 1.0, 0.0)
 
     def test_attach_barbell_to_hands_writes_welds_for_each_side(self) -> None:
         """The helper should still emit one weld per hand with the derived pose."""
@@ -270,8 +278,8 @@ class TestBarbellAttachmentHelpers:
         welds = {w.get("name"): w for w in equality.findall("weld")}
         assert set(welds) == {"barbell_to_hand_l", "barbell_to_hand_r"}
         assert welds["barbell_to_hand_l"].get("relpose") == (
-            "0.400000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000"
+            "0.000000 -0.400000 0.000000 1.000000 0.000000 0.000000 0.000000"
         )
         assert welds["barbell_to_hand_r"].get("relpose") == (
-            "-0.400000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000"
+            "0.000000 0.400000 0.000000 1.000000 0.000000 0.000000 0.000000"
         )

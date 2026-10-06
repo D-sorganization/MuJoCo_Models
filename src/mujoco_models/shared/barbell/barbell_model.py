@@ -10,7 +10,8 @@ Standard Olympic barbell dimensions (IWF / IPF regulations):
 The barbell is modelled as three rigid bodies (left_sleeve, shaft, right_sleeve)
 connected by weld constraints. Plates are added as additional mass on the sleeves.
 
-MuJoCo convention: Z-up, barbell shaft extends along the X-axis.
+Canonical frame (MuJoCo world): X forward, Y left, Z up.  The shaft extends
+along the Y-axis with the left sleeve at +Y and the right sleeve at -Y.
 
 Law of Demeter: callers interact only with BarbellSpec and create_barbell_bodies;
 internal geometry details remain encapsulated.
@@ -21,6 +22,7 @@ internal geometry details remain encapsulated.
 
 from __future__ import annotations
 
+import math
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
@@ -39,6 +41,16 @@ from mujoco_models.shared.utils.mjcf_helpers import (
     add_free_joint,
     add_weld_constraint,
 )
+
+# Cylinders are modelled along local Z; rotating 90 degrees about X (radians,
+# the compiler uses ``angle="radian"``) lays them along the lateral Y axis.
+_AXIS_ALONG_Y = (math.pi / 2.0, 0.0, 0.0)
+
+
+def _inertia_along_y(inertia: tuple[float, float, float]) -> tuple[float, float, float]:
+    """Re-express a Z-axis cylinder inertia (perp, perp, axial) along Y."""
+    perp_x, perp_y, axial = inertia
+    return (perp_x, axial, perp_y)
 
 
 @dataclass(frozen=True)
@@ -164,7 +176,7 @@ def _add_barbell_shaft(
         geom_type="cylinder",
         geom_size=(spec.shaft_radius, spec.shaft_length / 2.0),
         geom_rgba="0.7 0.7 0.7 1",
-        geom_euler=(0, 90, 0),
+        geom_euler=_AXIS_ALONG_Y,
     )
 
 
@@ -176,7 +188,7 @@ def _add_barbell_sleeve(
     sleeve_inertia: tuple[float, float, float],
     pos: tuple[float, float, float],
 ) -> ET.Element:
-    """Add one sleeve body at ``pos`` (shaft centre plus its X offset)."""
+    """Add one sleeve body at ``pos`` (shaft centre plus its Y offset)."""
     return add_body(
         worldbody,
         name=sleeve_name,
@@ -186,7 +198,7 @@ def _add_barbell_sleeve(
         geom_type="cylinder",
         geom_size=(spec.sleeve_radius, spec.sleeve_length / 2.0),
         geom_rgba="0.5 0.5 0.5 1",
-        geom_euler=(0, 90, 0),
+        geom_euler=_AXIS_ALONG_Y,
     )
 
 
@@ -215,7 +227,7 @@ def create_barbell_bodies(
     Returns dict of created body elements keyed by name.
 
     The barbell shaft center is at the local origin. Sleeves extend
-    symmetrically along the X-axis (left = -X, right = +X).
+    symmetrically along the Y-axis (left = +Y, right = -Y).
 
     Every barbell body carries a freejoint and collides with the environment
     (EQUIPMENT_MASKS: collides with humans, floor and other equipment).  The weld
@@ -224,10 +236,10 @@ def create_barbell_bodies(
     position of the shaft centre at the keyframe; weld offsets are derived from
     it, so it should be placed where the lifter holds the bar.
     """
-    shaft_inertia = cylinder_inertia(
-        spec.shaft_mass, spec.shaft_radius, spec.shaft_length
+    shaft_inertia = _inertia_along_y(
+        cylinder_inertia(spec.shaft_mass, spec.shaft_radius, spec.shaft_length)
     )
-    sleeve_inertia = _compute_sleeve_inertia(spec)
+    sleeve_inertia = _inertia_along_y(_compute_sleeve_inertia(spec))
     sleeve_total_mass = spec.sleeve_mass + spec.plate_mass_per_side
     sleeve_offset = spec.shaft_length / 2.0 + spec.sleeve_length / 2.0
 
@@ -242,7 +254,7 @@ def create_barbell_bodies(
         left_name,
         sleeve_total_mass,
         sleeve_inertia,
-        (pos[0] - sleeve_offset, pos[1], pos[2]),
+        (pos[0], pos[1] + sleeve_offset, pos[2]),
     )
     right_body = _add_barbell_sleeve(
         worldbody,
@@ -250,7 +262,7 @@ def create_barbell_bodies(
         right_name,
         sleeve_total_mass,
         sleeve_inertia,
-        (pos[0] + sleeve_offset, pos[1], pos[2]),
+        (pos[0], pos[1] - sleeve_offset, pos[2]),
     )
     _weld_sleeves_to_shaft(equality, shaft_name, left_name, right_name, prefix)
     for body in (shaft_body, left_body, right_body):

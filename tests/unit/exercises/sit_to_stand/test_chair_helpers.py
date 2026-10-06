@@ -43,16 +43,16 @@ def test_add_chair_seat_geom_is_a_box_geom_with_contact_flags() -> None:
 
 
 def test_add_chair_back_geom_positions_behind_seat() -> None:
-    """Chair back has negative Y position (behind the pelvis origin)."""
+    """Chair back has negative X position (behind the pelvis origin)."""
     chair = ET.Element("body")
     SitToStandModelBuilder._add_chair_back_geom(chair)
     back = chair.find("geom")
     assert back is not None
     assert back.get("name") == "chair_back"
     pos = back.get("pos", "")
-    # pos is "0 <negY> <posZ>" -- second token should start with minus sign
-    y_token = pos.split()[1]
-    assert y_token.startswith("-"), f"expected negative Y in back pos, got {pos!r}"
+    # pos is "<negX> 0 <posZ>" -- first token should start with minus sign
+    x_token = pos.split()[0]
+    assert x_token.startswith("-"), f"expected negative X in back pos, got {pos!r}"
 
 
 def test_weld_chair_to_world_creates_fixed_weld() -> None:
