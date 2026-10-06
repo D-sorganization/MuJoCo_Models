@@ -67,6 +67,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#2011 · Fingerprint Reports Test-Pose Origins in the Pelvis Frame
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #2011
+- **Branch:** feat/issue-2011-test-pose-origins
+- **PR:** #420
+- **Paths:** see #420
+- **Started:** 2026-10-06
+- **Last verified:** 2026-10-06 (`8bb03799`; collated from changes/2011-test-pose-origins.md)
+- **Summary:** Re-vendored parity bundle (standard 1.2.0, topology.py, Repository_Management#2011 slice 2). The MuJoCo fingerprint reports the pelvis rotation and segment origins at the standard's three test poses; conformance checks them against the reference forward kinematics with zero origin and pose divergences for every exercise.
+- **Next step:** Shipped in PR #420.
+
 ### DL-#410 · Canonical Axis Convention
 
 - **State:** shipped
