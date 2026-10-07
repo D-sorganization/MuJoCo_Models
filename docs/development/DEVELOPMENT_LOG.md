@@ -67,6 +67,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#422 · SECURITY: Guard Fork PRs Off the Self-Hosted Fleet; Vendor Fork_Pr_Runner_Guard and Run It in CI (RM#1989)
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #422
+- **Branch:** merged via #423
+- **PR:** #423
+- **Paths:** see #423
+- **Started:** 2026-10-07
+- **Last verified:** 2026-10-07 (`8a687bd5`; collated from changes/422-security-guard-fork-prs-off-the-self-hos.md)
+- **Summary:** SECURITY: guard fork PRs off the self-hosted fleet; vendor fork_pr_runner_guard and run it in CI (RM#1989)
+- **Next step:** Shipped in PR #423.
+
 ### DL-#2011 · Fingerprint Reports Test-Pose Origins in the Pelvis Frame
 
 - **State:** shipped
