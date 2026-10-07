@@ -145,6 +145,11 @@ jobs:
       - pick-runner
     runs-on: ${{ github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || fromJSON('["self-hosted","Linux","X64","d-sorg-fleet"]') }}
     timeout-minutes: 25
+    env:
+      # Per-workspace rustup home: concurrent jobs on one runner must not share
+      # ~/.rustup, where one job's toolchain update deletes rustc from under
+      # another (RM#2021).
+      RUSTUP_HOME: ${{ github.workspace }}/.rustup-home
     steps:
       - uses: actions/checkout@v7
       # PyO3 0.22.6 supports Python up to 3.13. The self-hosted runners' default
