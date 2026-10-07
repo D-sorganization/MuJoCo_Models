@@ -41,3 +41,4 @@ sbom.json
 /profile_*.py
 /test_*.py
 stats
+.rustup-home/
