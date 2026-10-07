@@ -6,6 +6,12 @@ import yaml
 
 WORKFLOWS = Path(".github/workflows")
 HOSTED_MODE = "CI_RUNNER_MODE != 'local'"
+# Fork PRs go to a hosted runner first (RM#1989); the picker output is the fallback.
+PICKED_RUNNER = (
+    "${{ github.event.pull_request && "
+    "github.event.pull_request.head.repo.full_name != github.repository && "
+    "'ubuntu-latest' || needs.pick-runner.outputs.runner }}"
+)
 
 
 def _workflow(name: str) -> dict:
@@ -27,8 +33,8 @@ def test_standard_ci_picker_is_zero_polling_and_reversible() -> None:
 def test_lightweight_ci_is_hosted_eligible_but_rust_stays_local() -> None:
     jobs = _workflow("ci-standard.yml")["jobs"]
 
-    assert jobs["quality-gate"]["runs-on"] == "${{ needs.pick-runner.outputs.runner }}"
-    assert jobs["tests"]["runs-on"] == "${{ needs.pick-runner.outputs.runner }}"
+    assert jobs["quality-gate"]["runs-on"] == PICKED_RUNNER
+    assert jobs["tests"]["runs-on"] == PICKED_RUNNER
     assert jobs["tests"]["strategy"]["max-parallel"] == "3"
     assert "d-sorg-fleet" in jobs["rust"]["runs-on"]
 
