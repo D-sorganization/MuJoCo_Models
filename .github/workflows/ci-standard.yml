@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   pick-runner:
-    runs-on: ${{ !github.event.repository.private && vars.CI_RUNNER_MODE != 'local' && 'ubuntu-latest' || 'd-sorg-fleet' }}
+    runs-on: ${{ github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || !github.event.repository.private && vars.CI_RUNNER_MODE != 'local' && 'ubuntu-latest' || 'd-sorg-fleet' }}
     timeout-minutes: 1
     outputs:
       runner: ${{ steps.check.outputs.runner }}
@@ -49,7 +49,7 @@ jobs:
           echo "Selected $runner ($mode)"
 
   lint:
-    runs-on: ${{ needs.pick-runner.outputs.runner }}
+    runs-on: ${{ github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || needs.pick-runner.outputs.runner }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
@@ -143,7 +143,7 @@ jobs:
   rust:
     needs:
       - pick-runner
-    runs-on: [self-hosted, Linux, X64, d-sorg-fleet]
+    runs-on: ${{ github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || fromJSON('["self-hosted","Linux","X64","d-sorg-fleet"]') }}
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
@@ -188,7 +188,7 @@ jobs:
     needs:
       - pick-runner
       - rust
-    runs-on: ${{ needs.pick-runner.outputs.runner }}
+    runs-on: ${{ github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || needs.pick-runner.outputs.runner }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -286,7 +286,7 @@ jobs:
   quality-gate:
     needs: [pick-runner, lint, tests]
     if: always()
-    runs-on: ${{ needs.pick-runner.outputs.runner }}
+    runs-on: ${{ github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || needs.pick-runner.outputs.runner }}
     timeout-minutes: 5
     steps:
       - name: Require every gated job to succeed
