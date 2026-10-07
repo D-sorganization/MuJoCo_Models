@@ -67,6 +67,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#2021 · Fix(Ci): Isolate RUSTUP_HOME per Workspace for the Rust Job (RM#2021)
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #2021
+- **Branch:** merged via #425
+- **PR:** #425
+- **Paths:** see #425
+- **Started:** 2026-10-07
+- **Last verified:** 2026-10-07 (`6a7c19fd`; collated from changes/2021-fix-ci-isolate-rustup-home-per-workspace.md)
+- **Summary:** fix(ci): isolate RUSTUP_HOME per workspace for the Rust job (RM#2021)
+- **Next step:** Shipped in PR #425.
+
 ### DL-#422 · SECURITY: Guard Fork PRs Off the Self-Hosted Fleet; Vendor Fork_Pr_Runner_Guard and Run It in CI (RM#1989)
 
 - **State:** shipped
