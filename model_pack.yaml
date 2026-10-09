@@ -26,7 +26,7 @@ capabilities:
   forward_kinematics: {level: partial, evidence: null}  # engine-native only, no repo API
   inverse_kinematics: {level: partial, evidence: src/mujoco_models/optimization/inverse_kinematics.py}  # phase interpolation, no solver
   forward_dynamics: {level: partial, evidence: tests/parity/test_engine_physics.py}  # engine steps the model; no controller API
-  inverse_dynamics: {level: none, evidence: null}
+  inverse_dynamics: {level: full, evidence: tests/parity/test_engine_physics.py}
   contact_grf: {level: partial, evidence: src/mujoco_models/shared/parity/standing.py}  # fingerprint-only standing GRF
   urdf_import: {level: none, evidence: null}
   urdf_export: {level: none, evidence: null}
