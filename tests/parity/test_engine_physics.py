@@ -7,6 +7,7 @@ import mujoco
 import numpy as np
 import pytest
 
+from mujoco_models.dynamics import inverse_dynamics
 from mujoco_models.exercises.deadlift.deadlift_model import build_deadlift_model
 from mujoco_models.exercises.gait.gait_model import build_gait_model
 from mujoco_models.exercises.squat.squat_model import build_squat_model
@@ -91,3 +92,50 @@ def test_keyframe_ctrl_matches_pose() -> None:
         assert ctrl[a] == pytest.approx(model.key_qpos[0][model.jnt_qposadr[jid]])
     assert np.isfinite(model.actuator_gainprm[:, 0]).all()
     assert (model.actuator_forcelimited == 1).all()
+
+
+def test_inverse_dynamics_static_standing_pose_balances_gravity() -> None:
+    """At a static standing pose, inverse dynamics must balance gravity (issue #405).
+
+    The returned generalized force must balance gravity: qfrc_inverse matches
+    mj_inverse output to 1e-9, and root vertical force is about m*g.
+    """
+    model, data = _load(build_gait_model())
+    q = data.qpos.copy()
+    qvel = np.zeros(model.nv)
+    qacc = np.zeros(model.nv)
+
+    torques = inverse_dynamics("gait", q, qvel, qacc)
+
+    # 1. Compare with direct mj_inverse call to 1e-9
+    d_direct = mujoco.MjData(model)
+    d_direct.qpos[:] = q
+    d_direct.qvel[:] = qvel
+    d_direct.qacc[:] = qacc
+    mujoco.mj_inverse(model, d_direct)
+    np.testing.assert_allclose(torques, d_direct.qfrc_inverse, atol=1e-9)
+
+    # 2. Root vertical force balances gravity (about m * g)
+    total_mass = float(np.sum(model.body_mass))
+    g = float(abs(model.opt.gravity[2]))
+    expected_root_vertical_f = total_mass * g
+    # Root pelvis freejoint vertical translation is DOF index 2 (Z-up)
+    assert torques[2] == pytest.approx(expected_root_vertical_f, rel=1e-3)
+
+
+def test_inverse_dynamics_dynamic_motion_matches_mj_inverse() -> None:
+    """Non-zero velocity and acceleration match mj_inverse output to 1e-9."""
+    model, data = _load(build_gait_model())
+    rng = np.random.default_rng(2026)
+    q = data.qpos.copy()
+    qvel = rng.standard_normal(model.nv) * 0.5
+    qacc = rng.standard_normal(model.nv) * 2.0
+
+    torques = inverse_dynamics("gait", q, qvel, qacc)
+
+    d_direct = mujoco.MjData(model)
+    d_direct.qpos[:] = q
+    d_direct.qvel[:] = qvel
+    d_direct.qacc[:] = qacc
+    mujoco.mj_inverse(model, d_direct)
+    np.testing.assert_allclose(torques, d_direct.qfrc_inverse, atol=1e-9)

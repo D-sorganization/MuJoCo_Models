@@ -2,6 +2,7 @@
 # Copyright (c) 2026 D-sorganization
 """MuJoCo Models — biomechanical exercise models for MuJoCo simulation."""
 
+from mujoco_models.dynamics import inverse_dynamics
 from mujoco_models.exceptions import (
     ModelBuildError,
     MuJoCoModelError,
@@ -14,4 +15,5 @@ __all__ = [
     "MuJoCoModelError",
     "PreconditionError",
     "ValidationError",
+    "inverse_dynamics",
 ]
