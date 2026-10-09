@@ -67,6 +67,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#399 · Probe MuJoCo GL Backend in conftest.py and Fall Back to Osmesa or Unset on Failure
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #399
+- **Branch:** merged via #429
+- **PR:** #429
+- **Paths:** see #429
+- **Started:** 2026-10-09
+- **Last verified:** 2026-10-09 (`2eaf83f0`; collated from changes/399-probe-mujoco-gl-backend-in-conftest-py-a.md)
+- **Summary:** Probe MuJoCo GL backend in conftest.py and fall back to osmesa or unset on failure
+- **Next step:** Shipped in PR #429.
+
 ### DL-#2021 · Fix(Ci): Isolate RUSTUP_HOME per Workspace for the Rust Job (RM#2021)
 
 - **State:** shipped
