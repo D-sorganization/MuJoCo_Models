@@ -67,6 +67,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#405 · Add Public Inverse_Dynamics Wrapper Around Mj_Inverse With Real-Engine Tests
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #405
+- **Branch:** merged via #431
+- **PR:** #431
+- **Paths:** see #431
+- **Started:** 2026-10-09
+- **Last verified:** 2026-10-09 (`854ba92b`; collated from changes/405-add-public-inverse-dynamics-wrapper-arou.md)
+- **Summary:** Add public inverse_dynamics wrapper around mj_inverse with real-engine tests
+- **Next step:** Shipped in PR #431.
+
 ### DL-#399 · Probe MuJoCo GL Backend in conftest.py and Fall Back to Osmesa or Unset on Failure
 
 - **State:** shipped
