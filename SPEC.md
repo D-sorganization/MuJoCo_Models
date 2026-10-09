@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
 | ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-09 | #429 | Probe MuJoCo GL backend in conftest.py and fall back to osmesa or unset on failure |
 | 2026-10-07 | #425 | fix(ci): isolate RUSTUP_HOME per workspace for the Rust job (RM#2021) |
 | 2026-10-07 | #423 | SECURITY: guard fork PRs off the self-hosted fleet; vendor fork_pr_runner_guard and run it in CI (RM#1989) |
 | 2026-10-06 | #420 | Re-vendored parity bundle (standard 1.2.0, topology.py, Repository_Management#2011 slice 2). The MuJoCo fingerprint reports the pelvis rotation and segment origins at the standard's three test poses; conformance checks them against the reference forward kinematics with zero origin and pose divergences for every exercise. |
