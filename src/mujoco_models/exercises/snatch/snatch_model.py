@@ -29,7 +29,6 @@ The barbell is welded to both hands with a wide grip offset.
 from __future__ import annotations
 
 import logging
-import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import (
@@ -44,13 +43,13 @@ logger = logging.getLogger(__name__)
 # Deep hip hinge starting position — same as deadlift (shared constants).
 _INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
 _INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
-# Abduction is negative adduction.  The wide overhead grip wants ~45°, but the
-# standard's shoulder_adduct range stops at -30°, so the pose uses that limit.
-_INITIAL_SHOULDER_ADDUCT = math.radians(-30)
-# The bar is rigid across both hands, so wrist deviation cancels the shoulder
-# abduction (both rotate about the same mirrored X axis) and keeps the hands,
-# and with them the bar, level.
-_INITIAL_WRIST_DEVIATE = -_INITIAL_SHOULDER_ADDUCT
+# Snatch grip is approximately 0.55-0.60 m from shaft center on each side
+# (~1.5x shoulder width).  The shoulder's own range of motion caps how wide
+# ``keyframe_angle_offsets`` can actually abduct the arms (the standard's
+# shoulder_adduct range stops at -30 deg of abduction), so the pose reaches
+# as close to this as the joint limit allows; ``attach_barbell`` welds to
+# the width it actually achieves (MuJoCo_Models#408).
+_GRIP_WIDTH = 0.60
 
 
 class SnatchModelBuilder(ExerciseModelBuilder):
@@ -61,6 +60,12 @@ class SnatchModelBuilder(ExerciseModelBuilder):
         """Return the canonical exercise name for the snatch model."""
         return "snatch"
 
+    @property
+    def barbell_start_pos(self) -> tuple[float, float, float]:
+        """Bar centre at hand height, raised for the grip's shoulder abduction."""
+        rise = self._grip_vertical_rise(_GRIP_WIDTH)
+        return (0.0, 0.0, self.body_spec.hand_height + rise)
+
     def attach_barbell(
         self,
         equality: ET.Element,
@@ -69,16 +74,21 @@ class SnatchModelBuilder(ExerciseModelBuilder):
     ) -> None:
         """Weld barbell to both hands with wide (snatch) grip.
 
-        Snatch grip is approximately 0.55-0.60 m from shaft center
-        on each side (~1.5x shoulder width).
+        The start pose abducts the shoulders toward ``_GRIP_WIDTH`` (see
+        :meth:`keyframe_angle_offsets`); the weld uses the width that pose
+        actually achieves, which the shoulder's range of motion may clamp
+        below ``_GRIP_WIDTH`` (MuJoCo_Models#408).
         """
-        self._attach_barbell_to_hands(equality, grip_width=0.60)
+        self._attach_barbell_to_hands(
+            equality, grip_width=self._achieved_grip_width(_GRIP_WIDTH)
+        )
+
+    def keyframe_angle_offsets(self) -> dict[str, float]:
+        """Abduct the shoulders so both hands reach toward the wide snatch grip."""
+        return self._grip_pose_offsets(_GRIP_WIDTH)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
-        """Set starting position: bar on floor, wide grip, deep hip hinge.
-
-        Shoulder abduction (negative adduction) opens the arms for the wide snatch
-        grip; wrist deviation cancels it so the hands stay level.
+        """Set starting position: bar on floor, deep hip hinge.
 
         Ref values are stored in radians to match <compiler angle='radian'>.
         """
@@ -87,19 +97,13 @@ class SnatchModelBuilder(ExerciseModelBuilder):
             {
                 "hip_l_flex": _INITIAL_HIP_FLEX,
                 "hip_r_flex": _INITIAL_HIP_FLEX,
-                "shoulder_l_adduct": _INITIAL_SHOULDER_ADDUCT,
-                "shoulder_r_adduct": _INITIAL_SHOULDER_ADDUCT,
-                "wrist_l_deviate": _INITIAL_WRIST_DEVIATE,
-                "wrist_r_deviate": _INITIAL_WRIST_DEVIATE,
                 "knee": _INITIAL_KNEE_FLEX,
             },
         )
         logger.debug(
-            "Setting snatch initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad, "
-            "shoulder_adduct=%.4f rad",
+            "Setting snatch initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad",
             _INITIAL_HIP_FLEX,
             _INITIAL_KNEE_FLEX,
-            _INITIAL_SHOULDER_ADDUCT,
         )
 
 

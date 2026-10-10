@@ -93,6 +93,18 @@ class BodyModelSpec:
         _m, t_len, _r = segment_properties(self.total_mass, self.height, "torso")
         return self.pelvis_height + p_len / 2.0 + 0.95 * t_len
 
+    @property
+    def arm_reach_length(self) -> float:
+        """Straight-arm length from the shoulder joint to the wrist.
+
+        Upper arm plus forearm length; used to convert a shoulder-abduction
+        angle into the lateral reach it gives the hand (see grip-width pose
+        helpers in ``exercises/base.py``, MuJoCo_Models#408).
+        """
+        _m, ua_len, _r = segment_properties(self.total_mass, self.height, "upper_arm")
+        _m, fa_len, _r = segment_properties(self.total_mass, self.height, "forearm")
+        return ua_len + fa_len
+
 
 def _seg(spec: BodyModelSpec, name: str) -> tuple[float, float, float]:
     """Return (mass, length, radius) for a named segment."""
