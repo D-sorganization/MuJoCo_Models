@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
 | ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-10 | #433 | Add public forward_kinematics API with real-MuJoCo test |
 | 2026-10-09 | #431 | Add public inverse_dynamics wrapper around mj_inverse with real-engine tests |
 | 2026-10-09 | #429 | Probe MuJoCo GL backend in conftest.py and fall back to osmesa or unset on failure |
 | 2026-10-07 | #425 | fix(ci): isolate RUSTUP_HOME per workspace for the Rust job (RM#2021) |

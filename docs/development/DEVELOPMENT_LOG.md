@@ -67,6 +67,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#402 · Add Public Forward_Kinematics API With Real-MuJoCo Test
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #402
+- **Branch:** merged via #433
+- **PR:** #433
+- **Paths:** see #433
+- **Started:** 2026-10-10
+- **Last verified:** 2026-10-10 (`54ba188d`; collated from changes/402-add-public-forward-kinematics-api-with-r.md)
+- **Summary:** Add public forward_kinematics API with real-MuJoCo test
+- **Next step:** Shipped in PR #433.
+
 ### DL-#405 · Add Public Inverse_Dynamics Wrapper Around Mj_Inverse With Real-Engine Tests
 
 - **State:** shipped
