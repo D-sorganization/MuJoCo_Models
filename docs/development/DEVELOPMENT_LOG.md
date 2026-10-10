@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#440 · Keep Bar Level via Weld Relpose in Tilted Hand Frame Instead of Wrist Counter-Rotation
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #440
+- **Branch:** claude/grip-weld-orientation-440
+- **PR:** #443
+- **Paths:** see #443
+- **Started:** 2026-10-10
+- **Last verified:** 2026-10-10 (`0e080946`; collated from changes/440-keep-bar-level-via-weld-relpose-in-tilte.md)
+- **Summary:** Keep bar level via weld relpose in tilted hand frame instead of wrist counter-rotation
+- **Next step:** Open PR, run CI, merge
+
 ### DL-#438 · Fix Mirrored Shoulder-Adduct Joint Range for Anatomical Abduction/Adduction
 
 - **State:** in_review
