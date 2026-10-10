@@ -4,6 +4,7 @@
 import math
 import xml.etree.ElementTree as ET
 
+import numpy as np
 import pytest
 
 from mujoco_models.exercises.sit_to_stand.sit_to_stand_model import (
@@ -67,6 +68,14 @@ class TestSitToStandModelBuilder:
         welds = root.findall(".//weld")
         weld_names = {w.get("name") for w in welds}
         assert "chair_to_world" in weld_names
+
+    def test_chair_weld_relpose_matches_offset(self) -> None:
+        """The chair_to_world weld relpose matches the chair's worldbody offset."""
+        xml_str = build_sit_to_stand_model()
+        root = ET.fromstring(xml_str)
+        weld = root.find(".//weld[@name='chair_to_world']")
+        assert weld is not None
+        assert weld.get("relpose") == "0.3200 0 -0.2250 1 0 0 0"
 
     def test_chair_seat_height(self) -> None:
         assert 0.40 <= _CHAIR_SEAT_HEIGHT <= 0.50
@@ -132,3 +141,58 @@ class TestSitToStandModelBuilder:
         weld_names = {w.get("name") for w in root.findall(".//weld")}
         assert "barbell_left_weld" not in weld_names
         assert "barbell_right_weld" not in weld_names
+
+
+try:
+    import mujoco
+
+    _MUJOCO_AVAILABLE = True
+except (ImportError, OSError):
+    _MUJOCO_AVAILABLE = False
+
+_SKIP_MUJOCO = pytest.mark.skipif(
+    not _MUJOCO_AVAILABLE,
+    reason="mujoco not installed in this environment",
+)
+
+
+@_SKIP_MUJOCO
+@pytest.mark.requires_mujoco
+class TestSitToStandRealMuJoCo:
+    def test_equality_constraint_violation_at_keyframe(self) -> None:
+        """At keyframe, every equality constraint violation (efc_pos) is below 1e-6."""
+        model = mujoco.MjModel.from_xml_string(build_sit_to_stand_model())
+        data = mujoco.MjData(model)
+        mujoco.mj_resetDataKeyframe(model, data, 0)
+        mujoco.mj_forward(model, data)
+        weld_violations = [
+            abs(data.efc_pos[i])
+            for i in range(data.nefc)
+            if data.efc_type[i] == mujoco.mjtConstraint.mjCNSTR_EQUALITY
+        ]
+        assert all(v < 1e-6 for v in weld_violations)
+
+    def test_chair_weld_kinematic_relpose_at_keyframe(self) -> None:
+        """Chair weld relative pose matches the chair's keyframe pose."""
+        model = mujoco.MjModel.from_xml_string(build_sit_to_stand_model())
+        data = mujoco.MjData(model)
+        mujoco.mj_resetDataKeyframe(model, data, 0)
+        mujoco.mj_forward(model, data)
+        eq = model.equality("chair_to_world").id
+        chair = model.body("chair").id
+        rel_pos = data.xmat[chair].reshape(3, 3).T @ (data.xpos[0] - data.xpos[chair])
+        assert rel_pos == pytest.approx(model.eq_data[eq][3:6], abs=1e-6)
+
+    def test_chair_position_stable_over_simulation(self) -> None:
+        """After 0.5 s simulation, chair position changes by less than 1 mm."""
+        model = mujoco.MjModel.from_xml_string(build_sit_to_stand_model())
+        data = mujoco.MjData(model)
+        mujoco.mj_resetDataKeyframe(model, data, 0)
+        mujoco.mj_forward(model, data)
+        chair = model.body("chair").id
+        init_pos = data.xpos[chair].copy()
+        for _ in range(int(0.5 / model.opt.timestep)):
+            mujoco.mj_step(model, data)
+        final_pos = data.xpos[chair].copy()
+        delta = float(np.linalg.norm(final_pos - init_pos))
+        assert delta < 0.001
