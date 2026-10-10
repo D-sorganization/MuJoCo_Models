@@ -19,6 +19,7 @@ import logging
 import math
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from mujoco_models.exercises.contact_policy import (
@@ -51,7 +52,45 @@ logger = logging.getLogger(__name__)
 FLOOR_PULL_HIP_FLEX: float = 1.3963  # ~80° hip flexion (radians)
 FLOOR_PULL_KNEE_FLEX: float = -1.0472  # ~60° knee flexion (radians)
 
-_IDENTITY_QUAT: tuple[float, float, float, float] = (1.0, 0.0, 0.0, 0.0)
+HandQuat = tuple[float, float, float, float]
+
+_IDENTITY_QUAT: HandQuat = (1.0, 0.0, 0.0, 0.0)
+
+
+def _quat_rotate_vector(
+    quat: HandQuat, vec: tuple[float, float, float]
+) -> tuple[float, float, float]:
+    """Rotate *vec* by *quat* (``w, x, y, z``): the quaternion sandwich product.
+
+    Uses the standard expansion ``v' = v + 2w(q_xyz x v) + 2 q_xyz x (q_xyz x v)``
+    so callers never need a separate rotation-matrix path for a quaternion
+    they already hold (MuJoCo_Models#440).
+    """
+    w, qx, qy, qz = quat
+    vx, vy, vz = vec
+    tx = 2.0 * (qy * vz - qz * vy)
+    ty = 2.0 * (qz * vx - qx * vz)
+    tz = 2.0 * (qx * vy - qy * vx)
+    return (
+        vx + w * tx + (qy * tz - qz * ty),
+        vy + w * ty + (qz * tx - qx * tz),
+        vz + w * tz + (qx * ty - qy * tx),
+    )
+
+
+def _hand_quat_for_side(
+    hand_quat: HandQuat | Mapping[str, HandQuat], side: str
+) -> HandQuat:
+    """Resolve a hand-orientation argument that may be per-side.
+
+    ``hand_quat`` is either a single quaternion applied to both hands
+    (bench press: both hands share the same tilt) or a mapping with one
+    quaternion per side (grip exercises, where shoulder abduction tilts
+    the two hands oppositely, MuJoCo_Models#440).
+    """
+    if isinstance(hand_quat, Mapping):
+        return hand_quat[side]
+    return hand_quat
 
 
 @dataclass(frozen=True)
@@ -166,23 +205,28 @@ class ExerciseModelBuilder(ABC):
         side: str,
         grip_width: float | None = None,
         grip_offset: tuple[float, ...] | None = None,
-        hand_quat: tuple[float, float, float, float] = _IDENTITY_QUAT,
+        hand_quat: HandQuat = _IDENTITY_QUAT,
     ) -> tuple[float, ...] | None:
         """Return the weld relpose (bar relative to the hand frame) for one hand.
 
-        ``grip_offset`` wins when provided.  Otherwise ``grip_width`` becomes a
-        lateral (Y) offset anchored at the hand: the left hand is at +Y, so the
-        bar centre sits at ``-grip_width`` in its frame and at ``+grip_width``
-        in the right hand's.  ``hand_quat`` is the bar orientation in the hand
-        frame (identity when the hand frame is world-aligned); it must be a
-        rotation about Y so the lateral offset is unchanged.
+        ``grip_offset`` wins when provided.  Otherwise ``grip_width`` sizes a
+        lateral (Y) offset in the WORLD frame: the left hand is at +Y, so the
+        bar centre sits at ``-grip_width`` in the world Y direction from it,
+        and at ``+grip_width`` from the right hand's.  That world offset is
+        then rotated into the hand's own frame by ``hand_quat`` -- the bar's
+        orientation relative to the hand -- so a tilted hand (shoulder
+        abduction without a counter-rotating wrist, MuJoCo_Models#440) still
+        gets a relpose that keeps the bar at its intended world position.
+        ``hand_quat`` defaults to identity for a world-aligned hand.
         """
         if grip_offset is not None:
             return grip_offset
         if grip_width is None:
             return None
 
-        return (0, -SIDE_SIGN[side] * grip_width, 0, *hand_quat)
+        world_offset = (0.0, -SIDE_SIGN[side] * grip_width, 0.0)
+        pos = _quat_rotate_vector(hand_quat, world_offset)
+        return (*pos, *hand_quat)
 
     @staticmethod
     def _attach_barbell_to_hand(
@@ -203,7 +247,7 @@ class ExerciseModelBuilder(ABC):
         *,
         grip_width: float | None = None,
         grip_offset: tuple[float, ...] | None = None,
-        hand_quat: tuple[float, float, float, float] = _IDENTITY_QUAT,
+        hand_quat: HandQuat | Mapping[str, HandQuat] = _IDENTITY_QUAT,
     ) -> None:
         """Weld barbell shaft to both hands (DRY helper for subclasses).
 
@@ -217,16 +261,19 @@ class ExerciseModelBuilder(ABC):
         grip_offset : tuple or None
             Optional 7-element relative pose (x y z qw qx qy qz) for the grip
             offset from the hand to the barbell shaft.
-        hand_quat : tuple
+        hand_quat : tuple or mapping
             Bar orientation in the hand frame, for exercises whose hands are
             not world-aligned at the keyframe (see ``_barbell_relpose_for_hand``).
+            Either one quaternion shared by both hands (bench press), or a
+            ``{"l": ..., "r": ...}`` mapping for hands tilted oppositely
+            (grip exercises, see ``_grip_hand_quats``, MuJoCo_Models#440).
         """
         for side in ("l", "r"):
             relpose = self._barbell_relpose_for_hand(
                 side,
                 grip_width=grip_width,
                 grip_offset=grip_offset,
-                hand_quat=hand_quat,
+                hand_quat=_hand_quat_for_side(hand_quat, side),
             )
             self._attach_barbell_to_hand(equality, side=side, relpose=relpose)
 
@@ -282,9 +329,14 @@ class ExerciseModelBuilder(ABC):
     def _grip_pose_offsets(self, grip_width: float) -> dict[str, float]:
         """Keyframe angle offsets that abduct both shoulders toward ``grip_width``.
 
-        Wrist deviation cancels the shoulder abduction's tilt (mirrored axis,
-        equal magnitude) so the hands -- and the bar welded to them -- stay
-        level. Returns ``{}`` when ``grip_width`` needs no abduction.
+        The wrist stays at its ``ref`` (no deviation offset): the snatch's
+        documented grip needs ~48 deg of shoulder abduction (#438), which
+        exceeds the wrist's own +30 deg deviate limit, so a wrist
+        counter-rotation can no longer cancel the hand tilt for every grip
+        exercise (MuJoCo_Models#440). Instead ``attach_barbell`` passes the
+        per-side bar orientation from :meth:`_grip_hand_quats`, so the grip
+        weld's relpose follows the tilted hand rather than fighting it.
+        Returns ``{}`` when ``grip_width`` needs no abduction.
         """
         angle = self._grip_abduction_angle(grip_width)
         if angle == 0.0:
@@ -292,8 +344,27 @@ class ExerciseModelBuilder(ABC):
         return {
             "shoulder_l_adduct": -angle,
             "shoulder_r_adduct": -angle,
-            "wrist_l_deviate": angle,
-            "wrist_r_deviate": angle,
+        }
+
+    def _grip_hand_quats(self, grip_width: float) -> dict[str, HandQuat]:
+        """Per-side bar-in-hand-frame orientation for a ``grip_width`` grip.
+
+        The shoulder abduction in :meth:`_grip_pose_offsets` tilts each hand
+        about the canonical forward axis (``shoulder_{side}_adduct`` and
+        ``wrist_{side}_deviate`` share that axis, see ``shared/body/axes.py``)
+        by the same ``_grip_abduction_angle`` used there, mirrored per side.
+        The returned quaternion is the inverse of that tilt, so a weld using
+        it keeps the bar level and lateral in the world frame even though the
+        wrist no longer counter-rotates (MuJoCo_Models#440).
+        """
+        angle = self._grip_abduction_angle(grip_width)
+        if angle == 0.0:
+            return {"l": _IDENTITY_QUAT, "r": _IDENTITY_QUAT}
+        half = angle / 2.0
+        cos_half, sin_half = math.cos(half), math.sin(half)
+        return {
+            "l": (cos_half, -sin_half, 0.0, 0.0),
+            "r": (cos_half, sin_half, 0.0, 0.0),
         }
 
     def _grip_vertical_rise(self, grip_width: float) -> float:

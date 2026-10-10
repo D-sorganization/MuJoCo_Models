@@ -3,11 +3,16 @@
 
 from __future__ import annotations
 
+import math
 import xml.etree.ElementTree as ET
 
 import pytest
 
-from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
+from mujoco_models.exercises.base import (
+    ExerciseConfig,
+    ExerciseModelBuilder,
+    _quat_rotate_vector,
+)
 from mujoco_models.shared.barbell import BarbellSpec
 from mujoco_models.shared.body import BodyModelSpec, segment_properties
 
@@ -283,3 +288,95 @@ class TestBarbellAttachmentHelpers:
         assert welds["barbell_to_hand_r"].get("relpose") == (
             "0.000000 0.400000 0.000000 1.000000 0.000000 0.000000 0.000000"
         )
+
+    def test_attach_barbell_to_hands_resolves_per_side_hand_quat_mapping(
+        self,
+    ) -> None:
+        """A ``{"l": ..., "r": ...}`` mapping sends each side its own quat."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        equality = ET.Element("equality")
+        quats = {
+            "l": (0.0, 1.0, 0.0, 0.0),
+            "r": (0.0, 0.0, 1.0, 0.0),
+        }
+
+        builder._attach_barbell_to_hands(equality, grip_width=0.4, hand_quat=quats)
+
+        welds = {w.get("name"): w for w in equality.findall("weld")}
+        relpose_l: str = welds["barbell_to_hand_l"].get("relpose")  # type: ignore[assignment]
+        relpose_r: str = welds["barbell_to_hand_r"].get("relpose")  # type: ignore[assignment]
+        assert relpose_l.endswith("0.000000 1.000000 0.000000 0.000000")
+        assert relpose_r.endswith("0.000000 0.000000 1.000000 0.000000")
+
+
+class TestQuatRotateVector:
+    """Unit tests for the quaternion sandwich-product helper (MuJoCo_Models#440)."""
+
+    def test_identity_quat_is_a_no_op(self) -> None:
+        rotated = _quat_rotate_vector((1.0, 0.0, 0.0, 0.0), (1.0, 2.0, 3.0))
+        assert rotated == pytest.approx((1.0, 2.0, 3.0))
+
+    def test_90_degree_rotation_about_z_maps_x_to_y(self) -> None:
+        half = math.pi / 4.0
+        quat = (math.cos(half), 0.0, 0.0, math.sin(half))
+        assert _quat_rotate_vector(quat, (1.0, 0.0, 0.0)) == pytest.approx(
+            (0.0, 1.0, 0.0), abs=1e-9
+        )
+
+
+class TestGripHandQuats:
+    """Tests for the per-side bar orientation helper (MuJoCo_Models#440)."""
+
+    def test_zero_angle_grip_returns_identity_for_both_sides(self) -> None:
+        builder = ForwardingBuilder(ExerciseConfig())
+        narrow_width = builder.body_spec.shoulder_half_width
+        quats = builder._grip_hand_quats(narrow_width)
+        assert quats == {"l": (1.0, 0.0, 0.0, 0.0), "r": (1.0, 0.0, 0.0, 0.0)}
+
+    def test_hand_quats_mirror_left_and_right(self) -> None:
+        builder = ForwardingBuilder(ExerciseConfig())
+        wide_width = builder.body_spec.shoulder_half_width + 0.1
+        angle = builder._grip_abduction_angle(wide_width)
+        assert angle > 0.0  # precondition: this grip actually needs abduction
+
+        quats = builder._grip_hand_quats(wide_width)
+        half = angle / 2.0
+        assert quats["l"] == pytest.approx((math.cos(half), -math.sin(half), 0.0, 0.0))
+        assert quats["r"] == pytest.approx((math.cos(half), math.sin(half), 0.0, 0.0))
+
+    def test_grip_pose_offsets_no_longer_sets_wrist_deviate(self) -> None:
+        """The wrist stays at its ref; the weld carries the hand tilt instead."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        wide_width = builder.body_spec.shoulder_half_width + 0.1
+        offsets = builder._grip_pose_offsets(wide_width)
+        assert "wrist_l_deviate" not in offsets
+        assert "wrist_r_deviate" not in offsets
+        assert "shoulder_l_adduct" in offsets
+        assert "shoulder_r_adduct" in offsets
+
+
+class TestGripWeldSymmetry:
+    """Left/right grip welds mirror each other (MuJoCo_Models#440)."""
+
+    def test_grip_weld_relposes_mirror_left_and_right(self) -> None:
+        """X matches, Y mirrors (opposite sides of the bar), Z matches (same
+        rise); the orientation quaternion's w and y/z match while x mirrors."""
+        builder = ForwardingBuilder(ExerciseConfig())
+        grip_width = builder.body_spec.shoulder_half_width + 0.1
+        quats = builder._grip_hand_quats(grip_width)
+
+        left = builder._barbell_relpose_for_hand(
+            "l", grip_width=grip_width, hand_quat=quats["l"]
+        )
+        right = builder._barbell_relpose_for_hand(
+            "r", grip_width=grip_width, hand_quat=quats["r"]
+        )
+
+        assert left is not None and right is not None
+        assert left[0] == pytest.approx(right[0])
+        assert left[1] == pytest.approx(-right[1])
+        assert left[2] == pytest.approx(right[2])
+        assert left[3] == pytest.approx(right[3])  # quat w
+        assert left[4] == pytest.approx(-right[4])  # quat x mirrors
+        assert left[5] == pytest.approx(right[5]) == 0.0
+        assert left[6] == pytest.approx(right[6]) == 0.0

@@ -26,17 +26,12 @@ _BARBELL_EXERCISES = [
 # must be removed, so this allowlist cannot silently grow stale in the other
 # direction either.
 #
-# wrist_{l,r}_deviate on snatch: ``_grip_pose_offsets`` sizes the wrist
-# counter-rotation to exactly cancel the shoulder abduction's tilt on the
-# hand (keeps the grip weld residual near zero, #408/#437). The snatch's
-# documented 0.60 m grip needs ~48 deg of shoulder abduction (#438), which
-# exceeds the wrist's own +30 deg deviate limit. Clamping the counter-
-# rotation to the wrist's own ROM instead reintroduces a ~188 mm weld
-# residual (measured with the real engine), so it is not fixed here.
-# Tracked as MuJoCo_Models#440.
-_KNOWN_RANGE_VIOLATIONS: dict[str, frozenset[str]] = {
-    "snatch": frozenset({"wrist_l_deviate", "wrist_r_deviate"}),
-}
+# No known violations: the wrist no longer counter-rotates the shoulder
+# abduction's hand tilt (MuJoCo_Models#440). The grip weld's relpose
+# follows the tilted hand instead (see ``_grip_hand_quats`` in
+# ``exercises/base.py``), so ``wrist_{l,r}_deviate`` stays at 0 for every
+# grip exercise, including the snatch's wide grip.
+_KNOWN_RANGE_VIOLATIONS: dict[str, frozenset[str]] = {}
 
 
 @pytest.mark.parametrize("exercise", sorted(_BARBELL_EXERCISES))

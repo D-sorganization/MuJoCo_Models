@@ -77,10 +77,14 @@ class SnatchModelBuilder(ExerciseModelBuilder):
         The start pose abducts the shoulders toward ``_GRIP_WIDTH`` (see
         :meth:`keyframe_angle_offsets`); the weld uses the width that pose
         actually achieves, which the shoulder's range of motion may clamp
-        below ``_GRIP_WIDTH`` (MuJoCo_Models#408).
+        below ``_GRIP_WIDTH`` (MuJoCo_Models#408). The per-side ``hand_quat``
+        keeps the weld satisfied even though the wrist no longer
+        counter-rotates the shoulder abduction's hand tilt (MuJoCo_Models#440).
         """
         self._attach_barbell_to_hands(
-            equality, grip_width=self._achieved_grip_width(_GRIP_WIDTH)
+            equality,
+            grip_width=self._achieved_grip_width(_GRIP_WIDTH),
+            hand_quat=self._grip_hand_quats(_GRIP_WIDTH),
         )
 
     def keyframe_angle_offsets(self) -> dict[str, float]:
