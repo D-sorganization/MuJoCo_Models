@@ -6,10 +6,14 @@ mass fractions sum to ~1.0, all fractions are positive, and the
 segment_properties function returns physically plausible values.
 """
 
+import math
+
 import pytest
 
 from mujoco_models.shared.body.segment_data import (
     SEGMENT_TABLE,
+    SHOULDER_ADDUCT_MAX,
+    SHOULDER_ADDUCT_MIN,
     segment_properties,
     total_mass_fraction,
 )
@@ -94,3 +98,30 @@ class TestSegmentProperties:
             assert mass > 0, f"{name} mass not positive"
             assert length > 0, f"{name} length not positive"
             assert radius > 0, f"{name} radius not positive"
+
+
+class TestShoulderAdductRangeIsAnatomical:
+    """Shoulder-adduct range must favour abduction, not adduction (#438).
+
+    ``shoulder_{l,r}_adduct`` is positive = adduction toward the midline,
+    negative = abduction, confirmed empirically with real-MuJoCo forward
+    kinematics (perturbing the joint and reading the hand body's world Y
+    against the midline). Shoulder abduction active ROM reaches roughly
+    180 deg (arm overhead), while adduction past the torso is close to 0
+    deg beyond neutral, nominally capped around 30 deg of cross-body
+    adduction (Kapandji, *The Physiology of the Joints*, Vol. 1, 6th ed.,
+    2008) -- the mirror image of what ``SHOULDER_ADDUCT_MIN``/``_MAX`` had
+    encoded.
+    """
+
+    def test_90_degrees_abduction_is_within_range(self) -> None:
+        """90 deg of abduction (negative adduct) is an ordinary overhead
+        position and must lie inside the joint's own range."""
+        abduction_90 = math.radians(-90)
+        assert SHOULDER_ADDUCT_MIN <= abduction_90 <= SHOULDER_ADDUCT_MAX
+
+    def test_90_degrees_pure_adduction_is_outside_range(self) -> None:
+        """90 deg of pure adduction (positive adduct) is anatomically
+        impossible and must lie outside the joint's own range."""
+        adduction_90 = math.radians(90)
+        assert not (SHOULDER_ADDUCT_MIN <= adduction_90 <= SHOULDER_ADDUCT_MAX)

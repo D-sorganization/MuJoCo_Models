@@ -62,8 +62,13 @@ HIP_ROTATE_MAX = math.radians(45)
 # Shoulder (3-DOF): flexion/extension, abduction/adduction, internal/external rotation
 SHOULDER_FLEX_MIN = math.radians(-60)
 SHOULDER_FLEX_MAX = math.radians(180)
-SHOULDER_ADDUCT_MIN = math.radians(-30)
-SHOULDER_ADDUCT_MAX = math.radians(180)
+# shoulder_{l,r}_adduct: positive = adduction toward the midline, negative =
+# abduction (confirmed empirically with real-MuJoCo forward kinematics,
+# MuJoCo_Models#438). Shoulder abduction active ROM reaches ~180 deg
+# (arm overhead); adduction past the torso is nominally capped around 30 deg
+# (Kapandji, *The Physiology of the Joints*, Vol. 1, 6th ed., 2008).
+SHOULDER_ADDUCT_MIN = math.radians(-180)
+SHOULDER_ADDUCT_MAX = math.radians(30)
 SHOULDER_ROTATE_MIN = math.radians(-90)
 SHOULDER_ROTATE_MAX = math.radians(90)
 

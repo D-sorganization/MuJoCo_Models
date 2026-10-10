@@ -44,11 +44,11 @@ logger = logging.getLogger(__name__)
 _INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
 _INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
 # Snatch grip is approximately 0.55-0.60 m from shaft center on each side
-# (~1.5x shoulder width).  The shoulder's own range of motion caps how wide
-# ``keyframe_angle_offsets`` can actually abduct the arms (the standard's
-# shoulder_adduct range stops at -30 deg of abduction), so the pose reaches
-# as close to this as the joint limit allows; ``attach_barbell`` welds to
-# the width it actually achieves (MuJoCo_Models#408).
+# (~1.5x shoulder width). The shoulder's own range of motion caps how wide
+# ``keyframe_angle_offsets`` can actually abduct the arms; with the
+# anatomical shoulder_adduct range (abduction to -180 deg, MuJoCo_Models#438)
+# this pose reaches the full 0.60 m, so ``attach_barbell`` welds to the width
+# it actually achieves (MuJoCo_Models#408).
 _GRIP_WIDTH = 0.60
 
 

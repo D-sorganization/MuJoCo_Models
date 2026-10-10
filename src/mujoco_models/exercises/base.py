@@ -246,7 +246,11 @@ class ExerciseModelBuilder(ABC):
         ``grip_width``, clamped to the shoulder's own range of motion.
 
         Precondition: ``grip_width`` is non-negative.
-        Postcondition: the returned angle lies in ``[0, abs(SHOULDER_ADDUCT_MIN)]``.
+        Postcondition: the returned angle lies in ``[0, abduction_limit]``,
+        where ``abduction_limit`` is the magnitude of the joint's negative
+        (abduction) bound, ``-SHOULDER_ADDUCT_MIN`` -- the explicit abduction
+        limit, not ``abs(SHOULDER_ADDUCT_MIN)`` (MuJoCo_Models#438): the two
+        happen to agree only because the abduction bound is the negative one.
         A grip no wider than the body's natural shoulder width needs no
         abduction and returns 0.
         """
@@ -254,9 +258,10 @@ class ExerciseModelBuilder(ABC):
         needed = grip_width - self.body_spec.shoulder_half_width
         if needed <= 0.0:
             return 0.0
-        max_angle = abs(SHOULDER_ADDUCT_MIN)
+        abduction_limit = -SHOULDER_ADDUCT_MIN
         return min(
-            math.asin(min(needed / self.body_spec.arm_reach_length, 1.0)), max_angle
+            math.asin(min(needed / self.body_spec.arm_reach_length, 1.0)),
+            abduction_limit,
         )
 
     def _achieved_grip_width(self, grip_width: float) -> float:
