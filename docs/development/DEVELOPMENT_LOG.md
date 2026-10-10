@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#417 · Set Sit_to_Stand Chair_to_World Weld Relpose to the Chair's Keyframe Offset
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #417
+- **Branch:** agy-417
+- **PR:** #435
+- **Paths:** see #435
+- **Started:** 2026-10-10
+- **Last verified:** 2026-10-10 (`b6168284`; collated from changes/417-set-sit-to-stand-chair-to-world-weld-rel.md)
+- **Summary:** Set sit_to_stand chair_to_world weld relpose to the chair's keyframe offset
+- **Next step:** Merge the PR.
+
 ### DL-#1605 · Adopt Mermaid C4 Architecture Map Contract
 
 - **Issue:** #1605 (https://github.com/D-sorganization/Repository_Management/issues/1605)
