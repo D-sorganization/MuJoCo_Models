@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#408 · Fix Conflicting Grip-Weld Constraints at the Barbell Exercise Initial Pose
+
+- **State:** in_review
+- **Owner:** claude
+- **Issue:** #408
+- **Branch:** claude/grip-welds-408
+- **PR:** #437
+- **Paths:** `src/mujoco_models/exercises/base.py`, `src/mujoco_models/exercises/deadlift/deadlift_model.py`, `src/mujoco_models/exercises/snatch/snatch_model.py`, `src/mujoco_models/exercises/clean_and_jerk/clean_and_jerk_model.py`, `src/mujoco_models/shared/body/body_anthropometrics.py`, `tests/integration/test_grip_weld_residual.py`
+- **Started:** 2026-10-10
+- **Last verified:** 2026-10-10 (`20a99010`; collated from changes/408-fix-conflicting-grip-weld-constraints-at.md)
+- **Summary:** Fix conflicting grip-weld constraints at the barbell exercise initial pose
+- **Next step:** Open the PR and arm auto-merge.
+
 ### DL-#417 · Set Sit_to_Stand Chair_to_World Weld Relpose to the Chair's Keyframe Offset
 
 - **State:** in_review
