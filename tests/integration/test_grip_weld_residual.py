@@ -11,6 +11,8 @@ the actual dynamics of the lift.
 
 from __future__ import annotations
 
+import math
+
 import mujoco
 import numpy as np
 import pytest
@@ -34,6 +36,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.requires_mujoco]
 
 # Acceptance threshold from issue #408: under 5 mm position residual.
 _MAX_RESIDUAL_M = 0.005
+# Acceptance threshold from issue #440: under 1 degree orientation residual.
+_MAX_RESIDUAL_DEG = 1.0
 
 GRIP_BUILDERS = {
     "deadlift": build_deadlift_model,
@@ -62,18 +66,42 @@ def _weld_position_residual(
     return float(np.linalg.norm(data.xpos[obj2] - expected_pos2))
 
 
-def _grip_weld_residuals(xml: str) -> dict[str, float]:
-    """Return ``{weld_name: residual_m}`` for hand-to-barbell welds at key 0."""
+def _weld_orientation_residual_deg(
+    model: mujoco.MjModel, data: mujoco.MjData, eq_id: int
+) -> float:
+    """Rotational residual (degrees) of a weld equality at the current state.
+
+    The constraint is satisfied when ``body2``'s orientation equals
+    ``body1``'s orientation composed with ``relpose_quat`` (MuJoCo's
+    ``eq_data[6:10]``); see ``test_hand_welds_hold_at_the_keyframe`` in
+    ``tests/parity/test_kinematic_directions.py`` for the same semantics
+    checked directly against a bench-press model.
+    """
+    obj1 = model.eq_obj1id[eq_id]
+    obj2 = model.eq_obj2id[eq_id]
+    relpose_quat = model.eq_data[eq_id][6:10]
+    expected_quat2 = np.zeros(4)
+    mujoco.mju_mulQuat(expected_quat2, data.xquat[obj1], relpose_quat)
+    dot = abs(float(np.dot(expected_quat2, data.xquat[obj2])))
+    angle_rad = 2.0 * math.acos(min(1.0, dot))
+    return math.degrees(angle_rad)
+
+
+def _grip_weld_residuals(xml: str) -> dict[str, tuple[float, float]]:
+    """Return ``{weld_name: (pos_residual_m, orient_residual_deg)}`` at key 0."""
     model = mujoco.MjModel.from_xml_string(xml)
     data = mujoco.MjData(model)
     mujoco.mj_resetDataKeyframe(model, data, 0)
     mujoco.mj_forward(model, data)
-    residuals: dict[str, float] = {}
+    residuals: dict[str, tuple[float, float]] = {}
     for eq_id in range(model.neq):
         name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_EQUALITY, eq_id)
         if name is None or "hand" not in name:
             continue
-        residuals[name] = _weld_position_residual(model, data, eq_id)
+        residuals[name] = (
+            _weld_position_residual(model, data, eq_id),
+            _weld_orientation_residual_deg(model, data, eq_id),
+        )
     return residuals
 
 
@@ -89,10 +117,30 @@ def test_grip_weld_residual_under_5mm_at_initial_pose(exercise: str) -> None:
     builder = GRIP_BUILDERS[exercise]
     residuals = _grip_weld_residuals(builder())
     assert residuals, f"{exercise}: no hand-to-barbell weld constraints found"
-    for name, residual in residuals.items():
-        assert residual < _MAX_RESIDUAL_M, (
-            f"{exercise}: {name} residual {residual * 1000:.2f} mm "
+    for name, (pos_residual, _orient_residual) in residuals.items():
+        assert pos_residual < _MAX_RESIDUAL_M, (
+            f"{exercise}: {name} residual {pos_residual * 1000:.2f} mm "
             f">= {_MAX_RESIDUAL_M * 1000:.0f} mm at the initial pose"
+        )
+
+
+@pytest.mark.parametrize("exercise", sorted(GRIP_BUILDERS))
+def test_grip_weld_orientation_residual_under_1deg_at_initial_pose(
+    exercise: str,
+) -> None:
+    """Both grip welds' orientation must also be (almost) satisfied (#440).
+
+    The weld constrains orientation as well as position; a hand welded to
+    the bar while level only in a position sense would still start with a
+    violated orientation row that the solver has to fight at step 0.
+    """
+    builder = GRIP_BUILDERS[exercise]
+    residuals = _grip_weld_residuals(builder())
+    assert residuals, f"{exercise}: no hand-to-barbell weld constraints found"
+    for name, (_pos_residual, orient_residual) in residuals.items():
+        assert orient_residual < _MAX_RESIDUAL_DEG, (
+            f"{exercise}: {name} orientation residual {orient_residual:.2f} deg "
+            f">= {_MAX_RESIDUAL_DEG:.0f} deg at the initial pose"
         )
 
 
