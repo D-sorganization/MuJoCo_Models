@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
 | ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-10 | #437 | Fix conflicting grip-weld constraints at the barbell exercise initial pose |
 | 2026-10-10 | #435 | Set sit_to_stand chair_to_world weld relpose to the chair's keyframe offset |
 | 2026-10-10 | #433 | Add public forward_kinematics API with real-MuJoCo test |
 | 2026-10-09 | #431 | Add public inverse_dynamics wrapper around mj_inverse with real-engine tests |
