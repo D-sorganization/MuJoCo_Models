@@ -145,7 +145,7 @@ class SitToStandModelBuilder(ExerciseModelBuilder):
             "weld",
             name="chair_to_world",
             body1="chair",
-            relpose="0 0 0 1 0 0 0",
+            relpose=(f"{-_CHAIR_CENTER_X:.4f} 0 {-_CHAIR_SEAT_HEIGHT / 2:.4f} 1 0 0 0"),
         )
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:

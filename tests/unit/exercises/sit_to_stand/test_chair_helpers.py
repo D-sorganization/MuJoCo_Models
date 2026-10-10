@@ -56,7 +56,7 @@ def test_add_chair_back_geom_positions_behind_seat() -> None:
 
 
 def test_weld_chair_to_world_creates_fixed_weld() -> None:
-    """``_weld_chair_to_world`` emits an identity-weld for the chair body."""
+    """``_weld_chair_to_world`` emits a weld with the chair's offset."""
     equality = ET.Element("equality")
     SitToStandModelBuilder._weld_chair_to_world(equality)
     welds = equality.findall("weld")
@@ -64,7 +64,7 @@ def test_weld_chair_to_world_creates_fixed_weld() -> None:
     weld = welds[0]
     assert weld.get("name") == "chair_to_world"
     assert weld.get("body1") == "chair"
-    assert weld.get("relpose") == "0 0 0 1 0 0 0"
+    assert weld.get("relpose") == "0.3200 0 -0.2250 1 0 0 0"
 
 
 def test_post_worldbody_hook_assembles_full_chair() -> None:
