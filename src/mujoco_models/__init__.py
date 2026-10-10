@@ -9,11 +9,14 @@ from mujoco_models.exceptions import (
     PreconditionError,
     ValidationError,
 )
+from mujoco_models.kinematics import SegmentPose, forward_kinematics
 
 __all__ = [
     "ModelBuildError",
     "MuJoCoModelError",
     "PreconditionError",
+    "SegmentPose",
     "ValidationError",
+    "forward_kinematics",
     "inverse_dynamics",
 ]
