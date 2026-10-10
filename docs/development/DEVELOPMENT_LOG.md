@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#438 · Fix Mirrored Shoulder-Adduct Joint Range for Anatomical Abduction/Adduction
+
+- **State:** in_review
+- **Owner:** claude
+- **Issue:** #438
+- **Branch:** claude/shoulder-rom-438
+- **PR:** #441
+- **Paths:** `src/mujoco_models/shared/body/segment_data.py`, `src/mujoco_models/exercises/base.py`, `src/mujoco_models/exercises/snatch/snatch_model.py`, `src/mujoco_models/shared/parity/parity_divergences.json`, `tests/unit/shared/test_segment_data.py`, `tests/integration/test_grip_weld_residual.py`, `tests/integration/test_keyframe_within_joint_ranges.py`
+- **Started:** 2026-10-10
+- **Last verified:** 2026-10-10 (`f8af32a4`; collated from changes/438-fix-mirrored-shoulder-adduct-joint-range.md)
+- **Summary:** Fix mirrored shoulder-adduct joint range so the snatch reaches its documented 0.60 m grip width
+- **Next step:** Open the PR and arm auto-merge.
+
 ### DL-#408 · Fix Conflicting Grip-Weld Constraints at the Barbell Exercise Initial Pose
 
 - **State:** in_review
