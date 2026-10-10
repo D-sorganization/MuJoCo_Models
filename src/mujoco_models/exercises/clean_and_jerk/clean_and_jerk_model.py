@@ -51,6 +51,8 @@ _INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
 # ~45° external rotation for the front rack; internal rotation is positive in the
 # canonical convention, so external rotation is negative.
 _INITIAL_SHOULDER_ROTATE = math.radians(-45)
+# Clean grip: approximately shoulder width, ~0.25 m from shaft center.
+_GRIP_WIDTH = 0.25
 
 
 class CleanAndJerkModelBuilder(ExerciseModelBuilder):
@@ -65,6 +67,12 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
         """Return the canonical exercise name for the clean and jerk model."""
         return "clean_and_jerk"
 
+    @property
+    def barbell_start_pos(self) -> tuple[float, float, float]:
+        """Bar centre at hand height, raised for the grip's shoulder abduction."""
+        rise = self._grip_vertical_rise(_GRIP_WIDTH)
+        return (0.0, 0.0, self.body_spec.hand_height + rise)
+
     def attach_barbell(
         self,
         equality: ET.Element,
@@ -73,9 +81,18 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
     ) -> None:
         """Weld barbell to both hands at clean grip width.
 
-        Clean grip: approximately shoulder width, ~0.25 m from shaft center.
+        The start pose abducts the shoulders to actually reach
+        ``_GRIP_WIDTH`` (see :meth:`keyframe_angle_offsets`), so the weld's
+        grip width matches the hands' true kinematic position
+        (MuJoCo_Models#408).
         """
-        self._attach_barbell_to_hands(equality, grip_width=0.25)
+        self._attach_barbell_to_hands(
+            equality, grip_width=self._achieved_grip_width(_GRIP_WIDTH)
+        )
+
+    def keyframe_angle_offsets(self) -> dict[str, float]:
+        """Abduct the shoulders so both hands reach the ``_GRIP_WIDTH`` grip."""
+        return self._grip_pose_offsets(_GRIP_WIDTH)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set starting position: bar on floor, clean grip, hip hinge.

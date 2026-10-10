@@ -40,6 +40,9 @@ PLATE_RADIUS = 0.225  # Standard 450mm diameter plate radius
 _INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
 _INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
 
+# Slightly outside shoulder width (~0.22 m from center).
+_GRIP_WIDTH = 0.22
+
 
 class DeadliftModelBuilder(ExerciseModelBuilder):
     """Builds a conventional deadlift MuJoCo MJCF model.
@@ -52,6 +55,12 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
         """Return the canonical exercise name for the deadlift model."""
         return "deadlift"
 
+    @property
+    def barbell_start_pos(self) -> tuple[float, float, float]:
+        """Bar centre at hand height, raised for the grip's shoulder abduction."""
+        rise = self._grip_vertical_rise(_GRIP_WIDTH)
+        return (0.0, 0.0, self.body_spec.hand_height + rise)
+
     def attach_barbell(
         self,
         equality: ET.Element,
@@ -60,9 +69,18 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
     ) -> None:
         """Weld barbell shaft to both hands at shoulder-width grip.
 
-        Grip is slightly outside the knees (~0.22 m from center).
+        Grip is slightly outside the knees (~0.22 m from center); the start
+        pose abducts the shoulders to actually reach that width (see
+        :meth:`keyframe_angle_offsets`), so the weld's grip width matches
+        the hands' true kinematic position (MuJoCo_Models#408).
         """
-        self._attach_barbell_to_hands(equality, grip_width=0.22)
+        self._attach_barbell_to_hands(
+            equality, grip_width=self._achieved_grip_width(_GRIP_WIDTH)
+        )
+
+    def keyframe_angle_offsets(self) -> dict[str, float]:
+        """Abduct the shoulders so both hands reach the ``_GRIP_WIDTH`` grip."""
+        return self._grip_pose_offsets(_GRIP_WIDTH)
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:
         """Set the starting position: deep hip hinge, knees flexed.

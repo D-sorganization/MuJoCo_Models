@@ -16,6 +16,7 @@ through their public APIs, never reaching into internal segment tables.
 from __future__ import annotations
 
 import logging
+import math
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -30,12 +31,14 @@ from mujoco_models.exercises.contact_policy import (
 from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
 from mujoco_models.shared.body.axes import SIDE_SIGN
+from mujoco_models.shared.body.segment_data import SHOULDER_ADDUCT_MIN
 from mujoco_models.shared.contact_masks import (
     FLOOR_MASKS,
     HUMAN_MASKS,
     apply_masks,
 )
 from mujoco_models.shared.contracts.postconditions import ensure_mjcf_root
+from mujoco_models.shared.contracts.preconditions import require_non_negative
 from mujoco_models.shared.utils.mjcf_helpers import (
     add_weld_constraint,
     serialize_model,
@@ -226,6 +229,79 @@ class ExerciseModelBuilder(ABC):
                 hand_quat=hand_quat,
             )
             self._attach_barbell_to_hand(equality, side=side, relpose=relpose)
+
+    # ------------------------------------------------------------------
+    # Grip-width pose helpers (issue #408)
+    #
+    # A hand's lateral (Y) position at the initial pose is fixed at the
+    # body's shoulder_half_width unless the shoulder is actually abducted.
+    # A grip weld's relpose assumes the hand already sits at the exercise's
+    # documented grip width, so a grip wider than shoulder_half_width needs
+    # real shoulder abduction in the start pose -- not a wider weld offset --
+    # or the two grip welds start violated by the gap between the two.
+    # ------------------------------------------------------------------
+
+    def _grip_abduction_angle(self, grip_width: float) -> float:
+        """Shoulder-abduction magnitude (radians) that spreads both hands to
+        ``grip_width``, clamped to the shoulder's own range of motion.
+
+        Precondition: ``grip_width`` is non-negative.
+        Postcondition: the returned angle lies in ``[0, abs(SHOULDER_ADDUCT_MIN)]``.
+        A grip no wider than the body's natural shoulder width needs no
+        abduction and returns 0.
+        """
+        require_non_negative(grip_width, "grip_width")
+        needed = grip_width - self.body_spec.shoulder_half_width
+        if needed <= 0.0:
+            return 0.0
+        max_angle = abs(SHOULDER_ADDUCT_MIN)
+        return min(
+            math.asin(min(needed / self.body_spec.arm_reach_length, 1.0)), max_angle
+        )
+
+    def _achieved_grip_width(self, grip_width: float) -> float:
+        """Lateral hand distance the pose in :meth:`_grip_pose_offsets` reaches.
+
+        Mirrors that method's range-of-motion clamp, so a grip weld built
+        from this value matches the hand's true kinematic position exactly
+        instead of assuming the exercise's nominal ``grip_width`` was reached.
+        """
+        angle = self._grip_abduction_angle(grip_width)
+        if angle == 0.0:
+            return self.body_spec.shoulder_half_width
+        return (
+            self.body_spec.shoulder_half_width
+            + self.body_spec.arm_reach_length * math.sin(angle)
+        )
+
+    def _grip_pose_offsets(self, grip_width: float) -> dict[str, float]:
+        """Keyframe angle offsets that abduct both shoulders toward ``grip_width``.
+
+        Wrist deviation cancels the shoulder abduction's tilt (mirrored axis,
+        equal magnitude) so the hands -- and the bar welded to them -- stay
+        level. Returns ``{}`` when ``grip_width`` needs no abduction.
+        """
+        angle = self._grip_abduction_angle(grip_width)
+        if angle == 0.0:
+            return {}
+        return {
+            "shoulder_l_adduct": -angle,
+            "shoulder_r_adduct": -angle,
+            "wrist_l_deviate": angle,
+            "wrist_r_deviate": angle,
+        }
+
+    def _grip_vertical_rise(self, grip_width: float) -> float:
+        """Height the hand gains when the shoulder abducts toward ``grip_width``.
+
+        An abducted arm no longer hangs straight down, so the hand sits this
+        much above the straight-arm ``hand_height``; a caller welding the bar
+        to hands abducted this way must raise ``barbell_start_pos`` by the
+        same amount, or the grip weld starts with a vertical residual
+        (MuJoCo_Models#408).
+        """
+        angle = self._grip_abduction_angle(grip_width)
+        return self.body_spec.arm_reach_length * (1.0 - math.cos(angle))
 
     # ------------------------------------------------------------------
     # Shared pose helper (issue #116)
