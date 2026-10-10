@@ -7,6 +7,10 @@
       "exercises": [
         "deadlift"
       ]
+    },
+    "coordinate.shoulder_*_adduct.limits_rad": {
+      "issue": "#438",
+      "reason": "the vendored standard's shoulder_{side}_adduct limits_deg [-30, 180] mirror the anatomical abduction/adduction convention (positive = adduction toward the midline); this model uses the corrected [-180, 30] range (abduction to ~180 deg, adduction capped near 30 deg, Kapandji 2008). Tracked upstream as Repository_Management#2062; the standard itself is not edited here."
     }
   }
 }
