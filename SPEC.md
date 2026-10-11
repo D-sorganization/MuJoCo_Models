@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
 | ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-11 | #457 | Lift objectives consume the vendored parity standard v2.0: phase names, timing and start/catch/lockout via-poses come from the spec (LIFT-2, UpstreamDrift#11742); deadlift now has the 5 standard phases. |
 | 2026-10-11 | #452 | Seat lift-model foot boxes at the soft-contact equilibrium depth (0.78-0.86 mm) so the start pose does not settle and contact survives sub-mm root float |
 | 2026-10-11 | #449 | Sync the agent-identity managed block: the owner's personal token is an approved agent identity |
 | 2026-10-11 | #446 | Exclude barbell self-contacts and bar-lifter contacts at the start pose |
