@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#447 · Seat Lift-Model Foot Boxes at the Soft-Contact Equilibrium Depth (0.78-0.86 mm) so the Start Pose Does Not Settle and Contact Survives Sub-mm Root Float
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #447
+- **Branch:** merged via #452
+- **PR:** #452
+- **Paths:** see #452
+- **Started:** 2026-10-11
+- **Last verified:** 2026-10-11 (`5de7f98b`; collated from changes/447-seat-lift-model-foot-boxes-at-the-soft-c.md)
+- **Summary:** Seat lift-model foot boxes at the soft-contact equilibrium depth (0.78-0.86 mm) so the start pose does not settle and contact survives sub-mm root float
+- **Next step:** Shipped in PR #452.
+
 ### DL-#1917 · Sync the Agent-Identity Managed Block: The Owner's Personal Token Is an Approved Agent Identity
 
 - **State:** shipped
