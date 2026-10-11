@@ -55,6 +55,8 @@ _GRIP_WIDTH = 0.60
 class SnatchModelBuilder(ExerciseModelBuilder):
     """Builds a snatch MuJoCo MJCF model with wide grip."""
 
+    seat_feet_at_equilibrium = True
+
     @property
     def exercise_name(self) -> str:
         """Return the canonical exercise name for the snatch model."""

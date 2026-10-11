@@ -33,6 +33,10 @@ from mujoco_models.exercises.contact_policy import (
 from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
 from mujoco_models.shared.body.axes import SIDE_SIGN
+from mujoco_models.shared.body.foot_seating import (
+    equilibrium_foot_penetration,
+    lower_foot_contact_geoms,
+)
 from mujoco_models.shared.body.segment_data import SHOULDER_ADDUCT_MIN
 from mujoco_models.shared.contact_masks import (
     FLOOR_MASKS,
@@ -155,6 +159,11 @@ class ExerciseModelBuilder(ABC):
     @abstractmethod
     def exercise_name(self) -> str:
         """Human-readable exercise name used in the model XML."""
+
+    #: Seat the foot boxes at the soft-contact equilibrium depth (issue #447).
+    #: True for models that stand on the floor and start in static balance;
+    #: see :mod:`mujoco_models.shared.body.foot_seating`.
+    seat_feet_at_equilibrium: bool = False
 
     @property
     def uses_barbell(self) -> bool:
@@ -563,5 +572,8 @@ class ExerciseModelBuilder(ABC):
         self._add_state_sections(root, worldbody)
 
         xml_str = self._finalize_model(root)
+        if self.seat_feet_at_equilibrium:
+            lower_foot_contact_geoms(root, equilibrium_foot_penetration(xml_str))
+            xml_str = self._finalize_model(root)
         logger.debug("Successfully built %s model", self.exercise_name)
         return xml_str
