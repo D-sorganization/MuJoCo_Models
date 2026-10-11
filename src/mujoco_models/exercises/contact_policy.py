@@ -79,3 +79,45 @@ def _add_contact_exclusions(contact: ET.Element) -> None:  # noqa: C901
 
     for b1, b2 in _SIDE_EXCLUSION_PAIRS:
         ET.SubElement(contact, "exclude", name=f"exclude_{b1}_{b2}", body1=b1, body2=b2)
+
+
+_BARBELL_BODY_PREFIX = "barbell"
+
+
+def _add_barbell_exclusions(contact: ET.Element, worldbody: ET.Element) -> None:
+    """Exclude every barbell body from the lifter and from the other bar parts.
+
+    The shaft is held by the grip weld and the sleeves by the sleeve welds, so
+    bar-versus-lifter and shaft-versus-sleeve contacts are non-physical
+    constraint fights (hundreds of kN at the start pose, issue #427).  Bar
+    contact with the floor and with the bench or chair stays enabled.
+
+    Postcondition: one ``<exclude>`` per intra-bar pair and per bar/lifter-body
+    pair; none when the model has no barbell.
+    """
+    bar_names = [
+        name
+        for body in worldbody.findall("body")
+        if (name := body.get("name", "")).startswith(_BARBELL_BODY_PREFIX)
+    ]
+    if not bar_names:
+        return
+    lifter_names = [
+        name
+        for top in worldbody.findall("body")
+        if top.find("freejoint") is not None
+        and not (top.get("name", "")).startswith(_BARBELL_BODY_PREFIX)
+        for body in top.iter("body")
+        if (name := body.get("name", ""))
+    ]
+    pairs = [(a, b) for i, a in enumerate(bar_names) for b in bar_names[i + 1 :]] + [
+        (bar, body) for bar in bar_names for body in lifter_names
+    ]
+    for body1, body2 in pairs:
+        ET.SubElement(
+            contact,
+            "exclude",
+            name=f"exclude_{body1}_{body2}",
+            body1=body1,
+            body2=body2,
+        )

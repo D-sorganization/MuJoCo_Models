@@ -27,6 +27,7 @@ from mujoco_models.exercises.contact_policy import (
     _SERVO_FORCERANGE,
     _SERVO_KP,
     _SERVO_KV,
+    _add_barbell_exclusions,
     _add_contact_exclusions,
 )
 from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
@@ -478,6 +479,9 @@ class ExerciseModelBuilder(ABC):
         """Create the contact section and populate adjacent-segment exclusions."""
         contact = ET.SubElement(root, "contact")
         _add_contact_exclusions(contact)
+        worldbody = root.find("worldbody")
+        if worldbody is not None:
+            _add_barbell_exclusions(contact, worldbody)
         return contact
 
     def _add_state_sections(self, root: ET.Element, worldbody: ET.Element) -> None:
