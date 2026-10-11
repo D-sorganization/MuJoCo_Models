@@ -43,6 +43,8 @@ class SquatModelBuilder(ExerciseModelBuilder):
     point would be shifted ~5 cm inferior.
     """
 
+    seat_feet_at_equilibrium = True
+
     @property
     def exercise_name(self) -> str:
         """Return the canonical exercise name for the back squat model."""

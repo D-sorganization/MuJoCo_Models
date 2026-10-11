@@ -50,6 +50,8 @@ class DeadliftModelBuilder(ExerciseModelBuilder):
     The barbell is welded to both hands and starts on the floor.
     """
 
+    seat_feet_at_equilibrium = True
+
     @property
     def exercise_name(self) -> str:
         """Return the canonical exercise name for the deadlift model."""

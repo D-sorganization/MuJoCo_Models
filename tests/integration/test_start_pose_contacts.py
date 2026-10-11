@@ -124,17 +124,6 @@ def test_feet_touch_floor_at_start(exercise: str) -> None:
     assert foot_floor, f"{exercise}: no foot-floor contact at the start pose"
 
 
-_FOOT_FLOAT = (
-    "Soles are built exactly on the floor (sole_z 0 to 9e-17 m), so a 0.5 mm "
-    "float removes every foot-floor contact. A 1 mm foot-geom margin fixes it "
-    "but changes the qfrc_inverse root force that "
-    "tests/parity/test_engine_physics.py::"
-    "test_inverse_dynamics_static_standing_pose_balances_gravity pins to m*g "
-    "(784.5 N expected), so it needs a decision on that test, not a silent edit."
-)
-
-
-@pytest.mark.xfail(strict=True, reason=_FOOT_FLOAT)
 @pytest.mark.parametrize("exercise", STANDING)
 def test_foot_contact_survives_sub_millimetre_float(exercise: str) -> None:
     """The soles are built exactly on the floor, so contact must not hinge on ULPs.

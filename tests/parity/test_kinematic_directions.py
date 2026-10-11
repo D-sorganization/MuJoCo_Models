@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from mujoco_models.exercises import EXERCISE_REGISTRY
+from mujoco_models.shared.body.foot_seating import equilibrium_foot_penetration
 from mujoco_models.shared.parity import fingerprint as fp_mod
 from mujoco_models.shared.parity._canonical import conformance, kinematics
 
@@ -129,13 +130,20 @@ def test_bench_has_no_human_equipment_penetration_except_the_grip() -> None:
     ["squat", "deadlift", "snatch", "clean_and_jerk", "gait", "sit_to_stand"],
 )
 def test_standing_feet_rest_on_the_ground(exercise: str) -> None:
+    """Soles sit on the floor, or at the derived equilibrium depth (issue #447)."""
     model, data = _keyframe(exercise)
+    seated = exercise in {"squat", "deadlift", "snatch", "clean_and_jerk"}
+    depth = (
+        equilibrium_foot_penetration(EXERCISE_REGISTRY[exercise]().build())
+        if seated
+        else 0.0
+    )
     for side in ("l", "r"):
         geom = model.geom(f"foot_{side}_contact").id
         half = model.geom_size[geom]
         rot = data.geom_xmat[geom].reshape(3, 3)
         lowest = data.geom_xpos[geom][2] - np.abs(rot[2]) @ half
-        assert lowest == pytest.approx(0.0, abs=1e-6)  # on the floor, not in it
+        assert lowest == pytest.approx(-depth, abs=1e-6)
 
 
 def test_feet_point_forward_and_width_is_lateral() -> None:
