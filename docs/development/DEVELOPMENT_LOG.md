@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#427 · Exclude Barbell Self-Contacts and Bar-Lifter Contacts at the Start Pose
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #427
+- **Branch:** fix/427-start-pose-contacts
+- **PR:** #446
+- **Paths:** see #446
+- **Started:** 2026-10-11
+- **Last verified:** 2026-10-11 (`c347a8ca`; collated from changes/427-exclude-barbell-self-contacts-and-bar-li.md)
+- **Summary:** Exclude barbell self-contacts and bar-lifter contacts at the start pose
+- **Next step:** Merge the PR.
+
 ### DL-#440 · Keep Bar Level via Weld Relpose in Tilted Hand Frame Instead of Wrist Counter-Rotation
 
 - **State:** in_review
