@@ -185,7 +185,9 @@ def fingerprint(exercise: str) -> dict[str, Any]:
     }
     pelvis_joint = model.body_jntadr[model.body("pelvis").id]
     base = _zero_pose_qpos(model)
-    extras: dict[str, Any] = {}
+    objective = get_exercise_objective(exercise)
+    # Standard v2.0 conformance criterion 3: the ordered phase names.
+    extras: dict[str, Any] = {"phase_names": [p.name for p in objective.phases]}
     if not builder.uses_barbell:
         human_mass = sum(
             m for n, m in masses.items() if n in conformance.expected_segments(std)
@@ -211,7 +213,7 @@ def fingerprint(exercise: str) -> dict[str, Any]:
         coordinate_aliases=COORDINATE_ALIASES,
         segment_aliases=SEGMENT_ALIASES,
         ground_friction=_ground_friction(model),
-        phase_count=get_exercise_objective(exercise).n_phases,
+        phase_count=objective.n_phases,
         extras=extras,
     )
 

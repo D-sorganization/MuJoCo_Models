@@ -56,10 +56,11 @@ class TestPhaseConstraints:
             assert a < b, f"{name}: fractions not strictly increasing ({a} >= {b})"
 
     @pytest.mark.parametrize("name", sorted(EXPECTED_NAMES))
-    def test_starts_at_zero_ends_at_one(self, name: str):  # type: ignore
+    def test_starts_at_zero(self, name: str):  # type: ignore
+        # A fraction is the phase's start time (standard v2.0 ``t_frac``), so
+        # the last phase may start before 1.0; the range test bounds it.
         phases = EXERCISE_OBJECTIVES[name].phases
         assert phases[0].fraction == 0.0
-        assert phases[-1].fraction == 1.0
 
 
 class TestGetExerciseObjective:
