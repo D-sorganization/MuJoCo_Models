@@ -118,13 +118,19 @@ class TestContactExclusions:
             assert (f"shank_{side}", f"foot_{side}") in exclusions
 
     def test_exclusion_count(self) -> None:
-        """2 central + 6 bilateral * 2 sides + foot_l-foot_r = 15 exclusions."""
+        """15 lifter-segment exclusions (2 central + 6 bilateral * 2 + feet).
+
+        The squat adds barbell exclusions (issue #427): 3 intra-bar pairs plus
+        3 bar bodies x 15 lifter bodies.
+        """
         xml_str = build_squat_model()
         root = ET.fromstring(xml_str)
         contact = root.find("contact")
         assert contact is not None
         excludes = contact.findall("exclude")
-        assert len(excludes) == 15
+        barbell = [e for e in excludes if "barbell" in e.get("name", "")]
+        assert len(excludes) - len(barbell) == 15
+        assert len(barbell) == 3 + 3 * 15
 
 
 class TestGroundPlaneContact:
@@ -203,4 +209,6 @@ class TestBenchPressContact:
         contact = root.find("contact")
         assert contact is not None
         excludes = contact.findall("exclude")
-        assert len(excludes) == 15
+        barbell = [e for e in excludes if "barbell" in e.get("name", "")]
+        assert len(excludes) - len(barbell) == 15
+        assert len(barbell) == 3 + 3 * 15
