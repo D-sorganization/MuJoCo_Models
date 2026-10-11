@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
 | ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-11 | #446 | Exclude barbell self-contacts and bar-lifter contacts at the start pose |
 | 2026-10-10 | #443 | Keep bar level via weld relpose in tilted hand frame instead of wrist counter-rotation |
 | 2026-10-10 | #441 | Fix mirrored shoulder-adduct joint range so the snatch reaches its documented 0.60 m grip width |
 | 2026-10-10 | #437 | Fix conflicting grip-weld constraints at the barbell exercise initial pose |
