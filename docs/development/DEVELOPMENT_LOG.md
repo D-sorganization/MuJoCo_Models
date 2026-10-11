@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#401 · Lift Objectives Consume the Vendored Parity Standard V2.0: Phase Names, Timing and Start/Catch/Lockout Via-Poses Come From the Spec (LIFT-2, UpstreamDrift#11742); Deadlift Now Has the 5 Standard Phases.
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #401
+- **Branch:** claude/lift-2-standard-v2
+- **PR:** #457
+- **Paths:** see #457
+- **Started:** 2026-10-11
+- **Last verified:** 2026-10-11 (`96ff6e19`; collated from changes/401-lift-objectives-consume-the-vendored-par.md)
+- **Summary:** Lift objectives consume the vendored parity standard v2.0: phase names, timing and start/catch/lockout via-poses come from the spec (LIFT-2, UpstreamDrift#11742); deadlift now has the 5 standard phases.
+- **Next step:** Shipped in PR #457.
+
 ### DL-#447 · Seat Lift-Model Foot Boxes at the Soft-Contact Equilibrium Depth (0.78-0.86 mm) so the Start Pose Does Not Settle and Contact Survives Sub-mm Root Float
 
 - **State:** shipped
