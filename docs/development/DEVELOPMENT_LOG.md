@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#1917 · Sync the Agent-Identity Managed Block: The Owner's Personal Token Is an Approved Agent Identity
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #1917
+- **Branch:** merged via #449
+- **PR:** #449
+- **Paths:** see #449
+- **Started:** 2026-10-11
+- **Last verified:** 2026-10-11 (`7c3fa0ea`; collated from changes/1917-sync-the-agent-identity-managed-block-th.md)
+- **Summary:** Sync the agent-identity managed block: the owner's personal token is an approved agent identity
+- **Next step:** Shipped in PR #449.
+
 ### DL-#402 · Add Public Forward_Kinematics API With Real-MuJoCo Test
 
 - **State:** shipped
