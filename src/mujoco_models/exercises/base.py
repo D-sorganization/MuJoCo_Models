@@ -34,8 +34,10 @@ from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
 from mujoco_models.shared.body.axes import SIDE_SIGN
 from mujoco_models.shared.body.foot_seating import (
+    apply_static_hold,
     foot_seating_offset,
     lower_foot_contact_geoms,
+    static_hold_ctrl,
 )
 from mujoco_models.shared.contact_masks import (
     FLOOR_MASKS,
@@ -505,6 +507,8 @@ class ExerciseModelBuilder(ABC):
             xml_str = self._finalize_model(root)
         if self.seat_feet_at_equilibrium:
             lower_foot_contact_geoms(root, foot_seating_offset(xml_str))
+            xml_str = self._finalize_model(root)
+            apply_static_hold(root, static_hold_ctrl(xml_str))
             xml_str = self._finalize_model(root)
         logger.debug("Successfully built %s model", self.exercise_name)
         return xml_str

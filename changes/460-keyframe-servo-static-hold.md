@@ -1,0 +1,1 @@
+Keyframe servos now carry the static load: the start pose `ctrl` includes a gravity/contact feed-forward offset (`tau / kp`, solved with the hinges held rigid), so crouched lift starts no longer sag at t=0. Root vertical drift over the first 20 ms is below 0.1 mm for the standing lifts (#460).
