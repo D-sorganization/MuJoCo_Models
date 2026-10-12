@@ -17,6 +17,15 @@ from mujoco_models.shared.parity.fingerprint import fingerprint
 
 STD = conformance.load_standard()
 LIFTS = ("squat", "deadlift", "bench_press", "snatch", "clean_and_jerk")
+ALL_EXERCISES = (
+    "squat",
+    "deadlift",
+    "bench_press",
+    "snatch",
+    "clean_and_jerk",
+    "gait",
+    "sit_to_stand",
+)
 
 # sha256 of Repository_Management/shared_scripts/model_parity/
 # biomech_parity_standard.json at v2.1.0 (Repository_Management#2079).
@@ -37,7 +46,7 @@ def test_vendored_standard_is_repository_management_v21() -> None:
     assert STD["version"] == "2.1.0"
 
 
-@pytest.mark.parametrize("exercise", LIFTS)
+@pytest.mark.parametrize("exercise", ALL_EXERCISES)
 def test_phase_names_and_timing_come_from_spec(exercise: str) -> None:
     objective = get_exercise_objective(exercise)
     want = spec.exercise_spec(STD, exercise)["phases"]
@@ -92,7 +101,7 @@ def test_unknown_exercise_is_rejected() -> None:
         )
 
 
-@pytest.mark.parametrize("exercise", LIFTS)
+@pytest.mark.parametrize("exercise", ALL_EXERCISES)
 def test_fingerprint_reports_spec_phase_names(exercise: str) -> None:
     fp = fingerprint(exercise)
     assert fp["phase_names"] == spec.phase_names(STD, exercise)

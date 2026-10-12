@@ -4,17 +4,7 @@
     "root_joint": {
       "issue": "#455",
       "reason": "standard v2.0 sets bench_press.root_joint to weld (Repository_Management#2024); the bench-press generator still emits a free pelvis. Welding it at the v2.0 start via-pose root is a separate generator change.",
-      "exercises": [
-        "bench_press"
-      ]
-    },
-    "phase_names": {
-      "issue": "#456",
-      "reason": "standard v2.0 names the gait and sit-to-stand phases; these functional movements still use pack-local names. The five lifts consume the spec (LIFT-2, UpstreamDrift#11742).",
-      "exercises": [
-        "gait",
-        "sit_to_stand"
-      ]
+      "exercises": ["bench_press"]
     }
   }
 }
