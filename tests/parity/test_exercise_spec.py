@@ -106,3 +106,7 @@ def test_fingerprint_reports_spec_phase_names(exercise: str) -> None:
     fp = fingerprint(exercise)
     assert fp["phase_names"] == spec.phase_names(STD, exercise)
     assert fp["phase_count"] == STD["exercises"][exercise]["phase_count"]
+
+
+def test_bench_press_root_is_weld() -> None:
+    assert fingerprint("bench_press")["root_joint"] == "weld"

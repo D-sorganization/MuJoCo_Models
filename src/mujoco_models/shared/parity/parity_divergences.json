@@ -1,10 +1,4 @@
 {
   "schema": "parity-divergences/v1",
-  "divergences": {
-    "root_joint": {
-      "issue": "#455",
-      "reason": "standard v2.0 sets bench_press.root_joint to weld (Repository_Management#2024); the bench-press generator still emits a free pelvis. Welding it at the v2.0 start via-pose root is a separate generator change.",
-      "exercises": ["bench_press"]
-    }
-  }
+  "divergences": {}
 }

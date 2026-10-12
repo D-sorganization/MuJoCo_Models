@@ -13,9 +13,8 @@ Biomechanical notes:
 - Grip width affects shoulder abduction angle and pec activation
 
 The bench is a platform (top at about 0.43 m, standard IPF) just under the
-supine pelvis, which is placed at the via-pose root and welded to the bench.  The standard
-makes the bench root a weld joint; this model still gives the pelvis a free
-joint held by that weld (ledgered as MuJoCo_Models#455).
+supine pelvis, which is placed at the via-pose root and welded to the world/bench
+per parity standard v2.0 (root_joint weld).
 Canonical frame (MuJoCo world): X forward, Y left, Z up; gravity = (0, 0, -9.80665).
 """
 

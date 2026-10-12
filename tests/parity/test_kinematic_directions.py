@@ -37,8 +37,11 @@ def test_axes_and_sides_match_the_standard(exercise: str) -> None:
 def _shank_in_pelvis_frame(model: mujoco.MjModel, hip: str, angle: float) -> np.ndarray:
     data = mujoco.MjData(model)
     data.qpos[:] = model.qpos0
-    adr = model.jnt_qposadr[model.joint("ground_pelvis").id]
-    data.qpos[adr : adr + 7] = [0, 0, 0, 1, 0, 0, 0]
+    try:
+        adr = model.jnt_qposadr[model.joint("ground_pelvis").id]
+        data.qpos[adr : adr + 7] = [0, 0, 0, 1, 0, 0, 0]
+    except KeyError:
+        pass
     data.qpos[model.jnt_qposadr[model.joint(hip).id]] += angle
     mujoco.mj_kinematics(model, data)
     pelvis = model.body("pelvis").id

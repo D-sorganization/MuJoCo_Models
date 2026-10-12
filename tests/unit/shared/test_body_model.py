@@ -77,6 +77,16 @@ class TestCreateFullBody:
         assert fj is not None
         assert fj.get("name") == "ground_pelvis"  # type: ignore
 
+    def test_pelvis_weld_root(self, worldbody: ET.Element) -> None:
+        bodies = create_full_body(worldbody, root_joint="weld")
+        pelvis = bodies["pelvis"]
+        assert pelvis.find("freejoint") is None
+        assert pelvis.find("joint") is None
+
+    def test_invalid_root_joint_rejected(self, worldbody: ET.Element) -> None:
+        with pytest.raises(ValueError, match="unsupported root_joint"):
+            create_full_body(worldbody, root_joint="ball")
+
     def test_torso_has_hinge(self, worldbody: ET.Element) -> None:
         bodies = create_full_body(worldbody)
         torso = bodies["torso"]
