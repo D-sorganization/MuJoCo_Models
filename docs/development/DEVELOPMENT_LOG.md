@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#456 · Name Gait and Sit-to-Stand Phases per Standard V2.0
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #456
+- **Branch:** merged via #463
+- **PR:** #463
+- **Paths:** see #463
+- **Started:** 2026-10-12
+- **Last verified:** 2026-10-12 (`52a2e32a`; collated from changes/456-name-gait-and-sit-to-stand-phases-per-st.md)
+- **Summary:** Name gait and sit-to-stand phases per standard v2.0
+- **Next step:** Shipped in PR #463.
+
 ### DL-#407 · Barbell Lifts Start at the Parity Standard V2.1 Start Via-Pose (Coordinates in the Keyframe, Refs 0, Pelvis Root, Bar, Spec Load); Spec.via_Pose_Phase Replaces the Local Table (UpstreamDrift#11743)
 
 - **State:** shipped
