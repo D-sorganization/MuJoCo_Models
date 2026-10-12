@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#455 · Weld the Bench-Press Root at the Standard V2.0 Via-Pose
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #455
+- **Branch:** merged via #464
+- **PR:** #464
+- **Paths:** see #464
+- **Started:** 2026-10-12
+- **Last verified:** 2026-10-12 (`1020aee6`; collated from changes/455-weld-the-bench-press-root-at-the-standar.md)
+- **Summary:** Weld the bench-press root at the standard v2.0 via-pose
+- **Next step:** Shipped in PR #464.
+
 ### DL-#456 · Name Gait and Sit-to-Stand Phases per Standard V2.0
 
 - **State:** shipped
