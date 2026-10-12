@@ -16,6 +16,7 @@ venv.bak/
 
 # Pytest / Coverage
 .pytest_cache/
+.hypothesis/
 .coverage
 coverage.xml
 htmlcov/

@@ -144,6 +144,14 @@ class ExerciseModelBuilder(ABC):
         return spec_start.start_pose(self.spec_exercise, self.body_spec.height)
 
     @property
+    def root_joint(self) -> str:
+        """Root joint type ('free' or 'weld') from the standard or default."""
+        from mujoco_models.shared.parity._canonical import spec
+        from mujoco_models.shared.parity.standard import STANDARD
+
+        return spec.root_joint(STANDARD, self.spec_exercise)
+
+    @property
     def body_spec(self) -> BodyModelSpec:
         """Forward to the configured body specification."""
         return self.config.body_spec
@@ -397,7 +405,9 @@ class ExerciseModelBuilder(ABC):
         Returns ``(body_bodies, barbell_bodies)`` where ``barbell_bodies`` is
         empty when :attr:`uses_barbell` is ``False``.
         """
-        body_bodies = create_full_body(worldbody, self.body_spec)
+        body_bodies = create_full_body(
+            worldbody, self.body_spec, root_joint=self.root_joint
+        )
         if self.spec_exercise is not None:
             spec_start.place_start_pose(worldbody, self.start_pose)
         barbell_bodies: dict[str, ET.Element] = {}

@@ -74,8 +74,8 @@ class TestBenchPressModelBuilder:
         root = ET.fromstring(build_bench_press_model())
         names = [j.get("name") for j in root.iter("joint") if j.get("name")]
         qpos = [float(v) for v in root.find("keyframe/key").get("qpos").split()]  # type: ignore
-        # qpos: pelvis free joint (7) then hinges in document order.
-        hinge_qpos = dict(zip(names, qpos[7:], strict=False))
+        # qpos: hinges in document order, then barbell free joints.
+        hinge_qpos = dict(zip(names, qpos, strict=False))
         assert hinge_qpos["shoulder_l_flex"] == pytest.approx(1.5)
         assert hinge_qpos["shoulder_l_adduct"] == pytest.approx(-0.3376)
         assert hinge_qpos["elbow_l_flex"] == 0.0
@@ -87,8 +87,8 @@ class TestBenchPressModelBuilder:
         assert quat == pytest.approx(
             [math.cos(math.pi / 4), 0, -math.sin(math.pi / 4), 0], abs=1e-5
         )
-        key = root.find("keyframe/key").get("qpos").split()  # type: ignore
-        assert [float(v) for v in key[3:7]] == pytest.approx(quat, abs=1e-5)
+        assert pelvis.find("freejoint") is None
+        assert pelvis.find("joint") is None
 
     def test_build_has_bench_body(self) -> None:
         xml_str = build_bench_press_model()

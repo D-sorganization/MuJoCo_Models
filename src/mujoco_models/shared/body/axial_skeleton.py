@@ -42,11 +42,16 @@ from mujoco_models.shared.utils.mjcf_helpers import (
 def _build_pelvis(
     worldbody: ET.Element,
     spec: BodyModelSpec,
+    root_joint: str = "free",
 ) -> tuple[ET.Element, float, float]:
-    """Add the pelvis body (with freejoint) to worldbody.
+    """Add the pelvis body (with freejoint if root_joint is 'free') to worldbody.
 
     Returns (pelvis_body, p_len, p_rad) so callers can derive child offsets.
     """
+    if root_joint not in ("free", "weld"):
+        raise ValueError(
+            f"unsupported root_joint: {root_joint!r}, expected 'free' or 'weld'"
+        )
     p_mass, p_len, p_rad = _seg(spec, "pelvis")
     p_inertia = rectangular_prism_inertia(p_mass, p_rad * 2, p_len, p_rad * 2)
     pelvis_body = add_body(
@@ -59,7 +64,8 @@ def _build_pelvis(
         geom_size=(p_rad, p_rad, p_len / 2.0),
         geom_rgba="0.8 0.6 0.4 1",
     )
-    add_free_joint(pelvis_body, name="ground_pelvis")
+    if root_joint == "free":
+        add_free_joint(pelvis_body, name="ground_pelvis")
     return pelvis_body, p_len, p_rad
 
 
@@ -139,6 +145,7 @@ def _build_head(
 def build_axial_skeleton(
     worldbody: ET.Element,
     spec: BodyModelSpec,
+    root_joint: str = "free",
 ) -> dict[str, ET.Element]:
     """Build pelvis, torso, and head -- the axial skeleton.
 
@@ -146,7 +153,7 @@ def build_axial_skeleton(
     segments.  The pelvis height is derived from anthropometric data
     via ``spec.pelvis_height``.
     """
-    pelvis_body, p_len, _p_rad = _build_pelvis(worldbody, spec)
+    pelvis_body, p_len, _p_rad = _build_pelvis(worldbody, spec, root_joint=root_joint)
     torso_body, t_len, _t_rad = _build_torso(pelvis_body, spec, p_len)
     head_body = _build_head(torso_body, spec, t_len)
     return {"pelvis": pelvis_body, "torso": torso_body, "head": head_body}

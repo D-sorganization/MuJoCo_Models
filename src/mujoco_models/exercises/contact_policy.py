@@ -105,8 +105,13 @@ def _add_barbell_exclusions(contact: ET.Element, worldbody: ET.Element) -> None:
     lifter_names = [
         name
         for top in worldbody.findall("body")
-        if top.find("freejoint") is not None
-        and not (top.get("name", "")).startswith(_BARBELL_BODY_PREFIX)
+        if (
+            top.get("name") == "pelvis"
+            or (
+                top.find("freejoint") is not None
+                and not top.get("name", "").startswith(_BARBELL_BODY_PREFIX)
+            )
+        )
         for body in top.iter("body")
         if (name := body.get("name", ""))
     ]
