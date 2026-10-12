@@ -24,13 +24,7 @@ from mujoco_models.exercises.clean_and_jerk.clean_and_jerk_model import (
     build_clean_and_jerk_model,
 )
 from mujoco_models.exercises.deadlift.deadlift_model import build_deadlift_model
-from mujoco_models.exercises.snatch.snatch_model import (
-    _GRIP_WIDTH as SNATCH_GRIP_WIDTH,
-)
-from mujoco_models.exercises.snatch.snatch_model import (
-    SnatchModelBuilder,
-    build_snatch_model,
-)
+from mujoco_models.exercises.snatch.snatch_model import build_snatch_model
 
 pytestmark = [pytest.mark.integration, pytest.mark.requires_mujoco]
 
@@ -142,13 +136,3 @@ def test_grip_weld_orientation_residual_under_1deg_at_initial_pose(
             f"{exercise}: {name} orientation residual {orient_residual:.2f} deg "
             f">= {_MAX_RESIDUAL_DEG:.0f} deg at the initial pose"
         )
-
-
-def test_snatch_achieves_documented_grip_width() -> None:
-    """The snatch start pose must reach its documented 0.60 m grip width
-    (issue #438): the shoulder's abduction range was previously clamped to
-    the mirrored ``SHOULDER_ADDUCT_MIN`` of -30 deg, cutting the achieved
-    width to 0.4585 m per side instead of the full 0.60 m.
-    """
-    achieved = SnatchModelBuilder()._achieved_grip_width(SNATCH_GRIP_WIDTH)
-    assert achieved == pytest.approx(SNATCH_GRIP_WIDTH, abs=1e-3)

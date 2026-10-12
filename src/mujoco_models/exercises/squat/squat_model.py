@@ -2,9 +2,9 @@
 """Back squat model builder for MuJoCo MJCF.
 
 The barbell rests across the upper trapezius / rear deltoids (high-bar
-position) and is rigidly welded to the torso at shoulder height. The
-initial pose places the model in a standing position with slight hip
-and knee flexion (the "unrack" position).
+position) and is rigidly welded to the torso. The model starts at the
+parity standard's ``start`` via-pose (the "unrack" standing position,
+UpstreamDrift#11743), with the palms closed on the bar.
 
 Biomechanical notes:
 - Primary movers: quadriceps, gluteus maximus, hamstrings, erector spinae
@@ -19,20 +19,13 @@ Biomechanical notes:
 from __future__ import annotations
 
 import logging
-import math
 import xml.etree.ElementTree as ET
 
 from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
+from mujoco_models.exercises.spec_start import plates_per_side_kg
 from mujoco_models.shared.utils.mjcf_helpers import add_weld_constraint
 
 logger = logging.getLogger(__name__)
-
-# Slight hip/knee flexion for unrack position (radians)
-_INITIAL_HIP_FLEX = 0.15  # ~8.6 degrees
-_INITIAL_KNEE_FLEX = -0.15  # slight knee bend
-# ~10° external rotation for squat stance; internal rotation is positive in the
-# canonical convention, so external rotation is negative.
-_INITIAL_HIP_ROTATE = math.radians(-10)
 
 
 class SquatModelBuilder(ExerciseModelBuilder):
@@ -44,16 +37,12 @@ class SquatModelBuilder(ExerciseModelBuilder):
     """
 
     seat_feet_at_equilibrium = True
+    spec_exercise = "squat"
 
     @property
     def exercise_name(self) -> str:
         """Return the canonical exercise name for the back squat model."""
         return "back_squat"
-
-    @property
-    def barbell_start_pos(self) -> tuple[float, float, float]:
-        """Bar rests on the upper trapezius: shoulder height, behind the neck (-X)."""
-        return (-0.1, 0.0, self.body_spec.shoulder_height)
 
     def attach_barbell(
         self,
@@ -61,7 +50,8 @@ class SquatModelBuilder(ExerciseModelBuilder):
         body_bodies: dict[str, ET.Element],
         barbell_bodies: dict[str, ET.Element],
     ) -> None:
-        """Weld barbell shaft to torso at upper trap position."""
+        """Weld the barbell shaft to the torso; the ``relpose`` is measured at
+        the spec start pose, with the bar on the upper back."""
         add_weld_constraint(
             equality,
             name="barbell_to_torso",
@@ -88,49 +78,26 @@ class SquatModelBuilder(ExerciseModelBuilder):
                 len(contact_geoms),
             )
 
-    def set_initial_pose(self, worldbody: ET.Element) -> None:
-        """Set standing unrack position: slight hip and knee flexion.
-
-        The lifter starts in a comfortable standing position with the
-        barbell on the back, knees slightly unlocked.  Hip external
-        rotation (~10 deg, a negative angle) opens the stance for squat mechanics.
-
-        Ref values are stored in radians to match <compiler angle='radian'>.
-        """
-        self.set_ref_by_name_map(
-            worldbody,
-            {
-                "hip_l_flex": _INITIAL_HIP_FLEX,
-                "hip_r_flex": _INITIAL_HIP_FLEX,
-                "hip_l_rotate": _INITIAL_HIP_ROTATE,
-                "hip_r_rotate": _INITIAL_HIP_ROTATE,
-                "knee": _INITIAL_KNEE_FLEX,
-            },
-        )
-        logger.debug(
-            "Setting squat initial pose: hip_flex=%.4f rad, knee_flex=%.4f rad, "
-            "hip_rotate=%.4f rad",
-            _INITIAL_HIP_FLEX,
-            _INITIAL_KNEE_FLEX,
-            _INITIAL_HIP_ROTATE,
-        )
-
 
 def build_squat_model(
     body_mass: float = 80.0,
     height: float = 1.75,
-    plate_mass_per_side: float = 60.0,
+    plate_mass_per_side: float | None = None,
 ) -> str:
     """Convenience function to build a squat model MJCF XML string.
 
-    Default: 80 kg person, 1.75 m tall, 140 kg total barbell
-    (20 kg bar + 60 kg per side).
+    Default: 80 kg person, 1.75 m tall, the standard's squat load
+    (20 kg bar + 50 kg per side).
     """
     from mujoco_models.shared.barbell import BarbellSpec
     from mujoco_models.shared.body import BodyModelSpec
 
     config = ExerciseConfig(
         body_spec=BodyModelSpec(total_mass=body_mass, height=height),
-        barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=plate_mass_per_side),
+        barbell_spec=BarbellSpec.mens_olympic(
+            plates_per_side_kg("squat")
+            if plate_mass_per_side is None
+            else plate_mass_per_side
+        ),
     )
     return SquatModelBuilder(config).build()

@@ -69,6 +69,11 @@ def _demote_visual_geom_group(foot_body: ET.Element) -> None:
         visual_geom.set("group", "0")
 
 
+def foot_contact_pos(ankle_height: float) -> str:
+    """Contact-box ``pos`` putting the sole ``ankle_height`` below the ankle."""
+    return f"{_FOOT_CONTACT_X:g} 0 {_FOOT_CONTACT_HALF_SIZE[2] - ankle_height:.6f}"
+
+
 def _add_single_foot_contact_geom(
     foot_body: ET.Element, side: str, ankle_height: float | None = None
 ) -> None:
@@ -81,10 +86,7 @@ def _add_single_foot_contact_geom(
             keyframe pose.  When given, the box bottom is placed exactly on
             the ground (box centre at ``-ankle_height + half_height``).
     """
-    pos = _FOOT_CONTACT_POS
-    if ankle_height is not None:
-        centre_z = -ankle_height + _FOOT_CONTACT_HALF_SIZE[2]
-        pos = f"{_FOOT_CONTACT_X:g} 0 {centre_z:.6f}"
+    pos = _FOOT_CONTACT_POS if ankle_height is None else foot_contact_pos(ankle_height)
     # ⚡ Bolt Optimization: Pass attributes as kwargs to ET.SubElement
     # to avoid Python call frame overhead from multiple .set() calls.
     contact_geom = ET.SubElement(

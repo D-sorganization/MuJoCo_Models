@@ -18,13 +18,14 @@ The clean and jerk is a two-part lift:
 4. Recovery -- bring feet together, stand with bar overhead
 
 Biomechanical notes:
-- Grip width: shoulder width or slightly outside (~0.25-0.30 m from center)
+- Grip width: the standard's clean grip (0.60 m between palm centres)
 - Front rack requires significant wrist/elbow flexibility
 - Jerk phase requires rapid coordination of upper and lower body
 - Primary movers: entire posterior chain + quadriceps + deltoids + triceps
 - MuJoCo Z-up convention: gravity = (0, 0, -9.80665)
 
-The barbell is welded to both hands at clean grip width.
+The barbell is welded to both hands at the standard's ``start`` via-pose
+(UpstreamDrift#11743).
 """
 
 # SPDX-License-Identifier: MIT
@@ -33,26 +34,12 @@ The barbell is welded to both hands at clean grip width.
 from __future__ import annotations
 
 import logging
-import math
 import xml.etree.ElementTree as ET
 
-from mujoco_models.exercises.base import (
-    FLOOR_PULL_HIP_FLEX,
-    FLOOR_PULL_KNEE_FLEX,
-    ExerciseConfig,
-    ExerciseModelBuilder,
-)
+from mujoco_models.exercises.base import ExerciseConfig, ExerciseModelBuilder
+from mujoco_models.exercises.spec_start import plates_per_side_kg
 
 logger = logging.getLogger(__name__)
-
-# Deep hip hinge starting position — same as deadlift (shared constants).
-_INITIAL_HIP_FLEX = FLOOR_PULL_HIP_FLEX
-_INITIAL_KNEE_FLEX = FLOOR_PULL_KNEE_FLEX
-# ~45° external rotation for the front rack; internal rotation is positive in the
-# canonical convention, so external rotation is negative.
-_INITIAL_SHOULDER_ROTATE = math.radians(-45)
-# Clean grip: approximately shoulder width, ~0.25 m from shaft center.
-_GRIP_WIDTH = 0.25
 
 
 class CleanAndJerkModelBuilder(ExerciseModelBuilder):
@@ -63,17 +50,12 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
     """
 
     seat_feet_at_equilibrium = True
+    spec_exercise = "clean_and_jerk"
 
     @property
     def exercise_name(self) -> str:
         """Return the canonical exercise name for the clean and jerk model."""
         return "clean_and_jerk"
-
-    @property
-    def barbell_start_pos(self) -> tuple[float, float, float]:
-        """Bar centre at hand height, raised for the grip's shoulder abduction."""
-        rise = self._grip_vertical_rise(_GRIP_WIDTH)
-        return (0.0, 0.0, self.body_spec.hand_height + rise)
 
     def attach_barbell(
         self,
@@ -81,55 +63,18 @@ class CleanAndJerkModelBuilder(ExerciseModelBuilder):
         body_bodies: dict[str, ET.Element],
         barbell_bodies: dict[str, ET.Element],
     ) -> None:
-        """Weld barbell to both hands at clean grip width.
+        """Weld the barbell shaft to both hands at the spec grip.
 
-        The start pose abducts the shoulders to actually reach
-        ``_GRIP_WIDTH`` (see :meth:`keyframe_angle_offsets`), so the weld's
-        grip width matches the hands' true kinematic position
-        (MuJoCo_Models#408). The per-side ``hand_quat`` keeps the weld
-        satisfied even though the wrist no longer counter-rotates the
-        shoulder abduction's hand tilt (MuJoCo_Models#440).
+        The weld ``relpose`` is measured at the spec start pose, where the
+        palms already sit on the bar at the spec grip width.
         """
-        self._attach_barbell_to_hands(
-            equality,
-            grip_width=self._achieved_grip_width(_GRIP_WIDTH),
-            hand_quat=self._grip_hand_quats(_GRIP_WIDTH),
-        )
-
-    def keyframe_angle_offsets(self) -> dict[str, float]:
-        """Abduct the shoulders so both hands reach the ``_GRIP_WIDTH`` grip."""
-        return self._grip_pose_offsets(_GRIP_WIDTH)
-
-    def set_initial_pose(self, worldbody: ET.Element) -> None:
-        """Set starting position: bar on floor, clean grip, hip hinge.
-
-        Shoulder external rotation prepares the front rack position.
-
-        Ref values are stored in radians to match <compiler angle='radian'>.
-        """
-        self.set_ref_by_name_map(
-            worldbody,
-            {
-                "hip_l_flex": _INITIAL_HIP_FLEX,
-                "hip_r_flex": _INITIAL_HIP_FLEX,
-                "shoulder_l_rotate": _INITIAL_SHOULDER_ROTATE,
-                "shoulder_r_rotate": _INITIAL_SHOULDER_ROTATE,
-                "knee": _INITIAL_KNEE_FLEX,
-            },
-        )
-        logger.debug(
-            "Setting clean & jerk initial pose: hip_flex=%.4f rad, "
-            "knee_flex=%.4f rad, shoulder_rotate=%.4f rad",
-            _INITIAL_HIP_FLEX,
-            _INITIAL_KNEE_FLEX,
-            _INITIAL_SHOULDER_ROTATE,
-        )
+        self._attach_barbell_to_hands(equality)
 
 
 def build_clean_and_jerk_model(
     body_mass: float = 80.0,
     height: float = 1.75,
-    plate_mass_per_side: float = 50.0,
+    plate_mass_per_side: float | None = None,
 ) -> str:
     """Convenience function to build a clean-and-jerk model MJCF XML string.
 
@@ -140,6 +85,10 @@ def build_clean_and_jerk_model(
 
     config = ExerciseConfig(
         body_spec=BodyModelSpec(total_mass=body_mass, height=height),
-        barbell_spec=BarbellSpec.mens_olympic(plate_mass_per_side=plate_mass_per_side),
+        barbell_spec=BarbellSpec.mens_olympic(
+            plates_per_side_kg("clean_and_jerk")
+            if plate_mass_per_side is None
+            else plate_mass_per_side
+        ),
     )
     return CleanAndJerkModelBuilder(config).build()

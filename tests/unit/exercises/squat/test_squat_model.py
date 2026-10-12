@@ -3,12 +3,12 @@
 
 import xml.etree.ElementTree as ET
 
-import pytest
-
 from mujoco_models.exercises.squat.squat_model import (
     SquatModelBuilder,
     build_squat_model,
 )
+from mujoco_models.shared.parity._canonical import spec
+from mujoco_models.shared.parity.standard import STANDARD
 
 
 class TestSquatModelBuilder:
@@ -65,29 +65,17 @@ class TestSquatModelBuilder:
         worldbody = ET.Element("worldbody")
         builder.set_initial_pose(worldbody)
 
-    def test_set_initial_pose_modifies_hip_joints(self) -> None:
-        from mujoco_models.exercises.squat.squat_model import _INITIAL_HIP_FLEX
-
-        builder = SquatModelBuilder()
-        worldbody = ET.Element("worldbody")
-        body = ET.SubElement(worldbody, "body")
-        joint = ET.SubElement(body, "joint", name="hip_l_flex", type="hinge")
-        builder.set_initial_pose(worldbody)
-        assert joint.get("ref") is not None  # type: ignore
-        # ref is stored in radians (matches <compiler angle='radian'>)
-        assert float(joint.get("ref")) == pytest.approx(_INITIAL_HIP_FLEX, rel=1e-4)  # type: ignore
-
-    def test_set_initial_pose_modifies_knee_joints(self) -> None:
-        from mujoco_models.exercises.squat.squat_model import _INITIAL_KNEE_FLEX
-
+    def test_start_pose_is_the_spec_keyframe_not_a_ref(self) -> None:
+        """``ref`` never poses a segment (#407): the start angles are keyframe
+        offsets equal to the standard's squat ``start`` via-pose."""
         builder = SquatModelBuilder()
         worldbody = ET.Element("worldbody")
         body = ET.SubElement(worldbody, "body")
         joint = ET.SubElement(body, "joint", name="knee_r_flex", type="hinge")
         builder.set_initial_pose(worldbody)
-        assert joint.get("ref") is not None  # type: ignore
-        # ref is stored in radians (matches <compiler angle='radian'>)
-        assert float(joint.get("ref")) == pytest.approx(_INITIAL_KNEE_FLEX, rel=1e-4)  # type: ignore
+        assert joint.get("ref") is None
+        want = spec.pose_coordinates(STANDARD, "squat", "start")
+        assert builder.keyframe_angle_offsets() == want
 
     def test_build_has_actuators(self) -> None:
         xml_str = build_squat_model()

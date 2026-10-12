@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""The lift objectives consume the vendored exercise spec (standard v2.0).
+"""The lift objectives consume the vendored exercise spec (standard v2.1).
 
 UpstreamDrift#11742 (LIFT-2), Repository_Management#2060 (Option A): phase
 names, phase timing and the start, catch and lockout via-poses come from the
@@ -19,9 +19,9 @@ STD = conformance.load_standard()
 LIFTS = ("squat", "deadlift", "bench_press", "snatch", "clean_and_jerk")
 
 # sha256 of Repository_Management/shared_scripts/model_parity/
-# biomech_parity_standard.json at v2.0.0 (Repository_Management#2069, d625a18).
-RM_STANDARD_V2_SHA256 = (
-    "351b74be85f64d70020e3e2db8d42f6a512eb876752b9bc7d11ac2253e2f784d"
+# biomech_parity_standard.json at v2.1.0 (Repository_Management#2079).
+RM_STANDARD_V21_SHA256 = (
+    "a0eb6c2bbbfeb70011bad62cf6d21a9245ffabce757c390633b516f542eb3ef8"
 )
 
 
@@ -32,9 +32,9 @@ def _full_pose(exercise: str, pose: str) -> dict[str, float]:
     return out
 
 
-def test_vendored_standard_is_repository_management_v2() -> None:
-    assert conformance.standard_sha256() == RM_STANDARD_V2_SHA256
-    assert STD["version"] == "2.0.0"
+def test_vendored_standard_is_repository_management_v21() -> None:
+    assert conformance.standard_sha256() == RM_STANDARD_V21_SHA256
+    assert STD["version"] == "2.1.0"
 
 
 @pytest.mark.parametrize("exercise", LIFTS)
@@ -56,16 +56,21 @@ def test_start_and_end_poses_are_spec_via_poses(exercise: str) -> None:
 def test_anchored_phases_hold_their_via_pose(exercise: str) -> None:
     objective = get_exercise_objective(exercise)
     poses = spec.exercise_spec(STD, exercise)["via_poses"]
-    anchors = spec_lifts.VIA_POSE_PHASES[exercise]
-    assert set(anchors) == set(poses)
-    for pose, phase in anchors.items():
+    assert set(spec_lifts.via_pose_phases(exercise)) == set(poses)
+    for pose in poses:
+        phase = spec.via_pose_phase(STD, exercise, pose)
         assert objective.get_phase(phase).target_joints == _full_pose(exercise, pose)
 
 
 @pytest.mark.parametrize("exercise", LIFTS)
 def test_start_anchors_the_first_phase(exercise: str) -> None:
     first = spec.phase_names(STD, exercise)[0]
-    assert spec_lifts.VIA_POSE_PHASES[exercise]["start"] == first
+    assert spec.via_pose_phase(STD, exercise, "start") == first
+
+
+def test_pack_carries_no_local_pose_phase_table() -> None:
+    """RM#2077: the pose-to-phase binding lives in the standard only."""
+    assert not hasattr(spec_lifts, "VIA_POSE_PHASES")
 
 
 def test_unanchored_phase_is_the_blend_of_its_anchors() -> None:

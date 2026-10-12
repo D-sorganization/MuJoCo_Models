@@ -36,7 +36,14 @@ the keyframe is not in servo equilibrium (joint servos are soft, issue #407),
 so limb accelerations at t=0 make the contact force differ from ``m*g``.
 Forcing it to ``m*g`` seats the soles 1.1 mm (100 kg) to 6.9 mm (200 kg) deep
 and the root then rises instead of settling; the root-acceleration criterion
-is load independent and removes the root drift.
+is load independent.
+
+The joints are held rigid for the solve (``hold_hinges_rigid``): a crouched
+start (deadlift setup, UpstreamDrift#11743) is far from servo equilibrium, so
+with live servos the root accelerates down at nearly ``g`` at any sole depth.
+With rigid hinges the criterion asks only whether the contact carries the
+whole lifter and bar.  The remaining start-up sag is servo compliance, not
+contact, and is tracked by MuJoCo_Models#460.
 
 Preconditions: the model has a keyframe, the root is the first free joint
 (its z translation is DOF 2) and the foot boxes sit flat at the keyframe.
@@ -50,6 +57,8 @@ import xml.etree.ElementTree as ET
 import mujoco
 import numpy as np
 
+from mujoco_models.shared.body.body_helpers import foot_contact_pos
+
 logger = logging.getLogger(__name__)
 
 ROOT_VERTICAL_DOF = 2  # pelvis free joint, z translation
@@ -57,6 +66,7 @@ _FOOT_GEOM_NAMES = ("foot_l_contact", "foot_r_contact")
 _MAX_DEPTH_M = 0.02  # bracket upper bound; far beyond any soft-contact equilibrium
 _DEPTH_TOLERANCE_M = 1e-9
 _MAX_ITERATIONS = 80
+_RIGID_ARMATURE = 1e9  # kg m^2; freezes hinges for the equilibrium solve only
 
 
 def _foot_geom_ids(model: mujoco.MjModel) -> list[int]:
@@ -85,19 +95,34 @@ def _sole_depth(
 def _root_acceleration(
     model: mujoco.MjModel, data: mujoco.MjData, geom_ids: list[int], depth: float
 ) -> float:
-    """Root vertical acceleration at the keyframe with the soles ``depth`` deep."""
+    """Root vertical acceleration at the keyframe with the soles ``depth`` deep.
+
+    The whole scene (every free body: lifter and bar) is translated down, so
+    the welds stay satisfied and the compiled collision bounds stay valid
+    (moving only the foot geoms leaves MuJoCo's body bounding volumes stale).
+    """
     mujoco.mj_resetDataKeyframe(model, data, 0)
     mujoco.mj_forward(model, data)
     current = _sole_depth(model, data, geom_ids)
-    base = model.geom_pos[geom_ids, 2].copy()
-    model.geom_pos[geom_ids, 2] = base - (depth - current)
-    try:
-        mujoco.mj_forward(model, data)
-        if abs(_sole_depth(model, data, geom_ids) - depth) > 1e-7:
-            raise ValueError("foot contact boxes are not flat at the keyframe")
-        return float(data.qacc[ROOT_VERTICAL_DOF])
-    finally:
-        model.geom_pos[geom_ids, 2] = base
+    free = model.jnt_type == mujoco.mjtJoint.mjJNT_FREE
+    data.qpos[model.jnt_qposadr[free] + 2] -= depth - current
+    mujoco.mj_forward(model, data)
+    if abs(_sole_depth(model, data, geom_ids) - depth) > 1e-7:
+        raise ValueError("foot contact boxes are not flat at the keyframe")
+    return float(data.qacc[ROOT_VERTICAL_DOF])
+
+
+def hold_hinges_rigid(model: mujoco.MjModel) -> None:
+    """Make every hinge effectively rigid in this solve-only model copy.
+
+    A crouched start (deadlift setup, UpstreamDrift#11743) is not in servo
+    equilibrium: at t=0 the position servos exert no torque, so the trunk
+    sags and the root accelerates down at almost ``g`` whatever the sole
+    depth.  A huge armature freezes the joints, so the root acceleration
+    measures only whether the contact carries the whole (rigid) lifter.
+    """
+    hinges = model.jnt_type == mujoco.mjtJoint.mjJNT_HINGE
+    model.dof_armature[model.jnt_dofadr[hinges]] = _RIGID_ARMATURE
 
 
 def equilibrium_foot_penetration(xml: str) -> float:
@@ -118,6 +143,7 @@ def equilibrium_foot_penetration(xml: str) -> float:
     model = mujoco.MjModel.from_xml_string(xml)
     if model.nkey < 1:
         raise ValueError("model needs a keyframe to derive the foot equilibrium")
+    hold_hinges_rigid(model)
     data = mujoco.MjData(model)
     geom_ids = _foot_geom_ids(model)
 
@@ -140,6 +166,22 @@ def equilibrium_foot_penetration(xml: str) -> float:
     return depth
 
 
+def foot_seating_offset(xml: str) -> float:
+    """Metres to lower the soles so they sit at the equilibrium depth.
+
+    The equilibrium depth minus the deepest sole's current depth at the
+    keyframe: a posed start (UpstreamDrift#11743) places the soles on the
+    floor only to the via-pose rounding (tens of micrometres), so the offset
+    absorbs that residual instead of assuming flush soles.
+    """
+    model = mujoco.MjModel.from_xml_string(xml)
+    data = mujoco.MjData(model)
+    mujoco.mj_resetDataKeyframe(model, data, 0)
+    mujoco.mj_kinematics(model, data)
+    current = _sole_depth(model, data, _foot_geom_ids(model))
+    return equilibrium_foot_penetration(xml) - current
+
+
 def lower_foot_contact_geoms(root: ET.Element, depth: float) -> None:
     """Move every ``foot_*_contact`` geom ``depth`` metres down its body z axis.
 
@@ -153,3 +195,21 @@ def lower_foot_contact_geoms(root: ET.Element, depth: float) -> None:
             continue
         x, y, z = (float(v) for v in geom.get("pos", "0 0 0").split())
         geom.set("pos", f"{x:g} {y:g} {z - depth:.9f}")
+
+
+def place_foot_soles(root: ET.Element, ankle_height: float) -> None:
+    """Re-place every foot contact box so its sole is ``ankle_height`` below
+    the ankle (foot body origin).
+
+    A posed start (UpstreamDrift#11743) puts the ankle where the parity
+    standard's ``pose_frame`` does, ``foot.length`` above the floor, so the
+    sole must sit that far below it to stand on the floor.
+
+    Raises:
+        ValueError: ``ankle_height`` is not positive.
+    """
+    if not ankle_height > 0:
+        raise ValueError(f"ankle_height must be positive, got {ankle_height}")
+    for geom in root.iter("geom"):
+        if geom.get("name") in _FOOT_GEOM_NAMES:
+            geom.set("pos", foot_contact_pos(ankle_height))
