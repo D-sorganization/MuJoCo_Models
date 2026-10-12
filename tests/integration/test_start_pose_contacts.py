@@ -142,14 +142,6 @@ def test_foot_contact_survives_sub_millimetre_float(exercise: str) -> None:
     assert any(ground in (a, b) for a, b, _ in _contacts(model, data))
 
 
-_SQUAT_SAG = (
-    "Squat keyframe is not in servo equilibrium: the force-limited joint "
-    "servos let the lifter sag ~3 cm under bar plus body weight, so the "
-    "1 s mean GRF is 0.938 of weight (6.2 % low, measured). Pose issue, not "
-    "a contact defect; tracked by the initial-pose work (MuJoCo_Models#407)."
-)
-
-
 def _mean_grf_over_settle(exercise: str) -> tuple[float, float]:
     """Mean vertical GRF and lifted weight over the first ``_SETTLE_STEPS`` steps.
 
@@ -166,18 +158,7 @@ def _mean_grf_over_settle(exercise: str) -> tuple[float, float]:
     return float(np.mean(samples)), _lifted_weight(model)
 
 
-@pytest.mark.parametrize(
-    "exercise",
-    [
-        pytest.param(
-            name,
-            marks=pytest.mark.xfail(strict=True, reason=_SQUAT_SAG)
-            if name == "squat"
-            else (),
-        )
-        for name in STANDING
-    ],
-)
+@pytest.mark.parametrize("exercise", STANDING)
 def test_static_grf_matches_weight(exercise: str) -> None:
     grf, weight = _mean_grf_over_settle(exercise)
     assert grf == pytest.approx(weight, rel=_GRF_TOLERANCE), (

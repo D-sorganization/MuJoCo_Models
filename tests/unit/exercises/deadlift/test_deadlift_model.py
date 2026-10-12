@@ -3,13 +3,13 @@
 
 import xml.etree.ElementTree as ET
 
-import pytest
-
 from mujoco_models.exercises.deadlift.deadlift_model import (
     PLATE_RADIUS,
     DeadliftModelBuilder,
     build_deadlift_model,
 )
+from mujoco_models.shared.parity._canonical import spec
+from mujoco_models.shared.parity.standard import STANDARD
 
 
 class TestDeadliftModelBuilder:
@@ -60,17 +60,17 @@ class TestDeadliftModelBuilder:
         worldbody = ET.Element("worldbody")
         builder.set_initial_pose(worldbody)
 
-    def test_set_initial_pose_modifies_hip_joints(self) -> None:
-        from mujoco_models.exercises.deadlift.deadlift_model import _INITIAL_HIP_FLEX
-
+    def test_start_pose_is_the_spec_keyframe_not_a_ref(self) -> None:
+        """``ref`` never poses a segment (#407): the start angles are keyframe
+        offsets equal to the standard's deadlift ``start`` via-pose."""
         builder = DeadliftModelBuilder()
         worldbody = ET.Element("worldbody")
         body = ET.SubElement(worldbody, "body")
         joint = ET.SubElement(body, "joint", name="hip_l_flex", type="hinge")
         builder.set_initial_pose(worldbody)
-        assert joint.get("ref") is not None  # type: ignore
-        # ref is stored in radians (matches <compiler angle='radian'>)
-        assert float(joint.get("ref")) == pytest.approx(_INITIAL_HIP_FLEX, rel=1e-4)  # type: ignore
+        assert joint.get("ref") is None
+        want = spec.pose_coordinates(STANDARD, "deadlift", "start")
+        assert builder.keyframe_angle_offsets() == want
 
     def test_build_has_actuators(self) -> None:
         xml_str = build_deadlift_model()
@@ -86,6 +86,7 @@ class TestDeadliftModelBuilder:
         assert sensor is not None
         assert len(sensor.findall("jointpos")) > 0
 
-    def test_default_plate_mass(self) -> None:
+    def test_default_plate_mass_is_the_spec_load(self) -> None:
         builder = DeadliftModelBuilder()
-        assert builder.barbell_spec.plate_mass_per_side == 0.0
+        load = spec.exercise_spec(STANDARD, "deadlift")["load"]
+        assert builder.barbell_spec.plate_mass_per_side == load["plates_per_side_kg"]

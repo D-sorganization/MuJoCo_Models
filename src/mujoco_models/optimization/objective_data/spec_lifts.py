@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: MIT
-"""Lift objectives built from the vendored exercise spec (standard v2.0).
+"""Lift objectives built from the vendored exercise spec (standard v2.1).
 
 UpstreamDrift#11742 (LIFT-2), Repository_Management#2060 (Option A): the
 phase names, the phase timing (``t_frac``) and the start, catch and lockout
 via-poses come from ``_canonical/biomech_parity_standard.json``, never from
-local tables.  The spec poses only those anchors.  Every other phase target is
-the linear blend of the neighbouring anchors at the phase's ``t_frac`` (held
+local tables; each via-pose's phase comes from ``spec.via_pose_phase``
+(standard v2.1, Repository_Management#2077).  The spec poses only those
+anchors.  Every other phase target is the linear blend of the neighbouring anchors at the phase's ``t_frac`` (held
 at the last anchor after it), so this pack adds no pose content of its own; a
 task-target IK solver (#403) will refine the in-between phases.
 
@@ -29,21 +30,15 @@ from mujoco_models.optimization.exercise_objectives import ExerciseObjective, Ph
 from mujoco_models.shared.parity._canonical import conformance, spec
 from mujoco_models.shared.parity.standard import STANDARD
 
-# The named phase each via-pose anchors.  Standard v2.0 names the poses but does
-# not bind them to phases, so the binding is recorded here (one entry per lift).
-VIA_POSE_PHASES: dict[str, dict[str, str]] = {
-    "squat": {"start": "standing", "catch": "bottom", "lockout": "lockout"},
-    "deadlift": {"start": "setup", "lockout": "lockout"},
-    "bench_press": {"start": "unrack", "catch": "chest_touch", "lockout": "lockout"},
-    "snatch": {"start": "setup", "catch": "catch", "lockout": "recovery"},
-    "clean_and_jerk": {
-        "start": "setup",
-        "catch": "rack_catch",
-        "lockout": "overhead_recovery",
-    },
-}
-
 Pose = dict[str, float]
+
+SPEC_LIFTS: tuple[str, ...] = (
+    "squat",
+    "deadlift",
+    "bench_press",
+    "snatch",
+    "clean_and_jerk",
+)
 
 
 def via_pose(exercise: str, pose: str) -> Pose:
@@ -55,6 +50,12 @@ def via_pose(exercise: str, pose: str) -> Pose:
     out = dict.fromkeys(conformance.expected_coordinates(STANDARD), 0.0)
     out.update(spec.pose_coordinates(STANDARD, exercise, pose))
     return out
+
+
+def via_pose_phases(exercise: str) -> dict[str, str]:
+    """``{via-pose: phase it anchors}`` from the standard (v2.1, RM#2077)."""
+    poses = spec.exercise_spec(STANDARD, exercise).get("via_poses", {})
+    return {pose: spec.via_pose_phase(STANDARD, exercise, pose) for pose in poses}
 
 
 def _blend(knots: list[tuple[float, Pose]], t: float) -> Pose:
@@ -75,7 +76,7 @@ def _anchor_knots(
 ) -> list[tuple[float, Pose]]:
     """(t_frac, pose) for every anchored phase, ordered by time."""
     t_of = {str(p["name"]): float(p["t_frac"]) for p in phases}
-    anchors = VIA_POSE_PHASES[exercise]
+    anchors = via_pose_phases(exercise)
     missing = sorted(set(anchors.values()) - set(t_of))
     if missing:
         raise ValueError(f"{exercise}: anchored phases {missing} not in the spec")
@@ -94,10 +95,8 @@ def lift_objective(
         ValueError: *exercise* has no via-poses in the standard or no anchor
             binding, or an anchored phase is missing from the spec.
     """
-    if exercise not in VIA_POSE_PHASES:
-        raise ValueError(
-            f"unknown exercise {exercise!r}; spec lifts: {sorted(VIA_POSE_PHASES)}"
-        )
+    if exercise not in SPEC_LIFTS:
+        raise ValueError(f"unknown exercise {exercise!r}; spec lifts: {SPEC_LIFTS}")
     phases = spec.exercise_spec(STANDARD, exercise)["phases"]
     knots = _anchor_knots(exercise, phases)
     return ExerciseObjective(

@@ -42,7 +42,10 @@ See [docs/architecture/C4.md](docs/architecture/C4.md) for the authoritative Mer
   - `utils/` -- MJCF generation helpers and geometry/inertia calculations
 - **`exercises/`** -- Exercise-specific model builders
   - Each exercise inherits from `ExerciseModelBuilder` (base class)
-  - Customizes barbell attachment and initial pose
+  - Customizes the barbell attachment; the barbell lifts start at the
+    parity standard's `start` via-pose (`exercises/spec_start.py`): joint
+    angles in keyframe 0 (every hinge `ref` stays 0), pelvis root, bar
+    position and the standard plate load
 
 ## MuJoCo Conventions
 

@@ -72,8 +72,13 @@ def test_every_hinge_axis_matches_the_standard(squat_root: ET.Element) -> None:
 
 
 def test_no_human_body_is_rotated_at_the_zero_pose(squat_root: ET.Element) -> None:
-    """Axis literals are canonical only while body frames stay world-aligned."""
-    human = {"pelvis", "torso", "head"} | {
+    """Axis literals are canonical only while body frames stay pelvis-aligned.
+
+    The pelvis is the free root: its ``quat`` is the spec start orientation
+    (UpstreamDrift#11743), which rotates the whole body rigidly.  Every other
+    human body must stay aligned with its parent.
+    """
+    human = {"torso", "head"} | {
         f"{seg}_{s}"
         for seg in ("upper_arm", "forearm", "hand", "thigh", "shank", "foot")
         for s in ("l", "r")

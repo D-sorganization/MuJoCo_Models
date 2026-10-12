@@ -16,12 +16,12 @@ through their public APIs, never reaching into internal segment tables.
 from __future__ import annotations
 
 import logging
-import math
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
+from mujoco_models.exercises import spec_start
 from mujoco_models.exercises.contact_policy import (
     _GROUND_FRICTION,
     _SERVO_FORCERANGE,
@@ -34,28 +34,21 @@ from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
 from mujoco_models.shared.body.axes import SIDE_SIGN
 from mujoco_models.shared.body.foot_seating import (
-    equilibrium_foot_penetration,
+    foot_seating_offset,
     lower_foot_contact_geoms,
 )
-from mujoco_models.shared.body.segment_data import SHOULDER_ADDUCT_MIN
 from mujoco_models.shared.contact_masks import (
     FLOOR_MASKS,
     HUMAN_MASKS,
     apply_masks,
 )
 from mujoco_models.shared.contracts.postconditions import ensure_mjcf_root
-from mujoco_models.shared.contracts.preconditions import require_non_negative
 from mujoco_models.shared.utils.mjcf_helpers import (
     add_weld_constraint,
     serialize_model,
 )
 
 logger = logging.getLogger(__name__)
-
-# Shared initial angles for floor-pull exercises (deadlift, snatch, clean-and-jerk).
-# Defined here so subclasses can import from a single authoritative location.
-FLOOR_PULL_HIP_FLEX: float = 1.3963  # ~80° hip flexion (radians)
-FLOOR_PULL_KNEE_FLEX: float = -1.0472  # ~60° knee flexion (radians)
 
 HandQuat = tuple[float, float, float, float]
 
@@ -113,7 +106,8 @@ class ExerciseModelBuilder(ABC):
     Subclasses must implement:
       - exercise_name: str property
       - attach_barbell(): how the barbell connects to the body
-      - set_initial_pose(): default coordinate values for the start position
+      - spec_exercise (spec lifts) or set_initial_pose()/keyframe_angle_offsets()
+        for the start position
     """
 
     def __init__(self, config: ExerciseConfig | None = None) -> None:
@@ -124,7 +118,30 @@ class ExerciseModelBuilder(ABC):
                 (50th-percentile male anthropometrics, men's Olympic barbell)
                 if ``None``.
         """
-        self.config = config or ExerciseConfig()
+        self.config = config or self.default_config()
+
+    #: Key of the standard exercise whose ``start`` via-pose this model starts
+    #: at (UpstreamDrift#11743); ``None`` for movements the spec does not pose.
+    spec_exercise: str | None = None
+
+    @classmethod
+    def default_config(cls) -> ExerciseConfig:
+        """Config used when none is given: the spec load for a spec lift."""
+        if cls.spec_exercise is None:
+            return ExerciseConfig()
+        plates = spec_start.plates_per_side_kg(cls.spec_exercise)
+        return ExerciseConfig(barbell_spec=BarbellSpec.mens_olympic(plates))
+
+    @property
+    def start_pose(self) -> spec_start.StartPose:
+        """The spec start via-pose, placed for this body's height.
+
+        Raises:
+            ValueError: the exercise has no ``spec_exercise``.
+        """
+        if self.spec_exercise is None:
+            raise ValueError(f"{self.exercise_name} has no spec start via-pose")
+        return spec_start.start_pose(self.spec_exercise, self.body_spec.height)
 
     @property
     def body_spec(self) -> BodyModelSpec:
@@ -145,9 +162,11 @@ class ExerciseModelBuilder(ABC):
     def barbell_start_pos(self) -> tuple[float, float, float]:
         """World position of the barbell shaft centre at the keyframe.
 
-        Default: at hand height on the body midline (X = Y = 0), so hand welds
-        are consistent at the start pose.  Subclasses (squat, bench) override.
+        A spec lift starts the bar at its via-pose ``bar_position_m``.
+        Otherwise: at hand height on the body midline (X = Y = 0).
         """
+        if self.spec_exercise is not None:
+            return self.start_pose.bar_position
         return (0.0, 0.0, self.body_spec.hand_height)
 
     @property
@@ -184,9 +203,13 @@ class ExerciseModelBuilder(ABC):
     ) -> None:
         """Add constraints connecting barbell to body (exercise-specific)."""
 
-    @abstractmethod
-    def set_initial_pose(self, worldbody: ET.Element) -> None:
-        """Set default coordinate values for the starting position."""
+    def set_initial_pose(self, worldbody: ET.Element) -> None:  # noqa: B027
+        """Set joint ``ref`` values for the starting position.
+
+        Default: none.  ``ref`` only relabels a joint's zero angle and never
+        moves a segment (#407), so a spec lift keeps every ref at 0 and holds
+        its start pose in the keyframe (:meth:`keyframe_angle_offsets`).
+        """
 
     def keyframe_angle_offsets(self) -> dict[str, float]:
         """Joint name -> radians added to the joint's ``ref`` in the keyframe.
@@ -195,7 +218,10 @@ class ExerciseModelBuilder(ABC):
         body pose at ``qpos = ref``, so ``ref`` alone never moves a segment.  An
         exercise whose start pose really is posed (bench press) lists the pose
         angle here; the keyframe ``qpos`` and ``ctrl`` hold ``ref + offset``.
+        A spec lift's offsets are its start via-pose coordinates.
         """
+        if self.spec_exercise is not None:
+            return dict(self.start_pose.coordinates)
         return {}
 
     def _post_worldbody_hook(self, worldbody: ET.Element, equality: ET.Element) -> None:
@@ -276,7 +302,9 @@ class ExerciseModelBuilder(ABC):
             not world-aligned at the keyframe (see ``_barbell_relpose_for_hand``).
             Either one quaternion shared by both hands (bench press), or a
             ``{"l": ..., "r": ...}`` mapping for hands tilted oppositely
-            (grip exercises, see ``_grip_hand_quats``, MuJoCo_Models#440).
+            (MuJoCo_Models#440).  With neither ``grip_width`` nor
+            ``grip_offset`` a spec lift's welds get their ``relpose`` from the
+            posed keyframe (see ``spec_start.weld_bar_at_keyframe``).
         """
         for side in ("l", "r"):
             relpose = self._barbell_relpose_for_hand(
@@ -286,108 +314,6 @@ class ExerciseModelBuilder(ABC):
                 hand_quat=_hand_quat_for_side(hand_quat, side),
             )
             self._attach_barbell_to_hand(equality, side=side, relpose=relpose)
-
-    # ------------------------------------------------------------------
-    # Grip-width pose helpers (issue #408)
-    #
-    # A hand's lateral (Y) position at the initial pose is fixed at the
-    # body's shoulder_half_width unless the shoulder is actually abducted.
-    # A grip weld's relpose assumes the hand already sits at the exercise's
-    # documented grip width, so a grip wider than shoulder_half_width needs
-    # real shoulder abduction in the start pose -- not a wider weld offset --
-    # or the two grip welds start violated by the gap between the two.
-    # ------------------------------------------------------------------
-
-    def _grip_abduction_angle(self, grip_width: float) -> float:
-        """Shoulder-abduction magnitude (radians) that spreads both hands to
-        ``grip_width``, clamped to the shoulder's own range of motion.
-
-        Precondition: ``grip_width`` is non-negative.
-        Postcondition: the returned angle lies in ``[0, abduction_limit]``,
-        where ``abduction_limit`` is the magnitude of the joint's negative
-        (abduction) bound, ``-SHOULDER_ADDUCT_MIN`` -- the explicit abduction
-        limit, not ``abs(SHOULDER_ADDUCT_MIN)`` (MuJoCo_Models#438): the two
-        happen to agree only because the abduction bound is the negative one.
-        A grip no wider than the body's natural shoulder width needs no
-        abduction and returns 0.
-        """
-        require_non_negative(grip_width, "grip_width")
-        needed = grip_width - self.body_spec.shoulder_half_width
-        if needed <= 0.0:
-            return 0.0
-        abduction_limit = -SHOULDER_ADDUCT_MIN
-        return min(
-            math.asin(min(needed / self.body_spec.arm_reach_length, 1.0)),
-            abduction_limit,
-        )
-
-    def _achieved_grip_width(self, grip_width: float) -> float:
-        """Lateral hand distance the pose in :meth:`_grip_pose_offsets` reaches.
-
-        Mirrors that method's range-of-motion clamp, so a grip weld built
-        from this value matches the hand's true kinematic position exactly
-        instead of assuming the exercise's nominal ``grip_width`` was reached.
-        """
-        angle = self._grip_abduction_angle(grip_width)
-        if angle == 0.0:
-            return self.body_spec.shoulder_half_width
-        return (
-            self.body_spec.shoulder_half_width
-            + self.body_spec.arm_reach_length * math.sin(angle)
-        )
-
-    def _grip_pose_offsets(self, grip_width: float) -> dict[str, float]:
-        """Keyframe angle offsets that abduct both shoulders toward ``grip_width``.
-
-        The wrist stays at its ``ref`` (no deviation offset): the snatch's
-        documented grip needs ~48 deg of shoulder abduction (#438), which
-        exceeds the wrist's own +30 deg deviate limit, so a wrist
-        counter-rotation can no longer cancel the hand tilt for every grip
-        exercise (MuJoCo_Models#440). Instead ``attach_barbell`` passes the
-        per-side bar orientation from :meth:`_grip_hand_quats`, so the grip
-        weld's relpose follows the tilted hand rather than fighting it.
-        Returns ``{}`` when ``grip_width`` needs no abduction.
-        """
-        angle = self._grip_abduction_angle(grip_width)
-        if angle == 0.0:
-            return {}
-        return {
-            "shoulder_l_adduct": -angle,
-            "shoulder_r_adduct": -angle,
-        }
-
-    def _grip_hand_quats(self, grip_width: float) -> dict[str, HandQuat]:
-        """Per-side bar-in-hand-frame orientation for a ``grip_width`` grip.
-
-        The shoulder abduction in :meth:`_grip_pose_offsets` tilts each hand
-        about the canonical forward axis (``shoulder_{side}_adduct`` and
-        ``wrist_{side}_deviate`` share that axis, see ``shared/body/axes.py``)
-        by the same ``_grip_abduction_angle`` used there, mirrored per side.
-        The returned quaternion is the inverse of that tilt, so a weld using
-        it keeps the bar level and lateral in the world frame even though the
-        wrist no longer counter-rotates (MuJoCo_Models#440).
-        """
-        angle = self._grip_abduction_angle(grip_width)
-        if angle == 0.0:
-            return {"l": _IDENTITY_QUAT, "r": _IDENTITY_QUAT}
-        half = angle / 2.0
-        cos_half, sin_half = math.cos(half), math.sin(half)
-        return {
-            "l": (cos_half, -sin_half, 0.0, 0.0),
-            "r": (cos_half, sin_half, 0.0, 0.0),
-        }
-
-    def _grip_vertical_rise(self, grip_width: float) -> float:
-        """Height the hand gains when the shoulder abducts toward ``grip_width``.
-
-        An abducted arm no longer hangs straight down, so the hand sits this
-        much above the straight-arm ``hand_height``; a caller welding the bar
-        to hands abducted this way must raise ``barbell_start_pos`` by the
-        same amount, or the grip weld starts with a vertical residual
-        (MuJoCo_Models#408).
-        """
-        angle = self._grip_abduction_angle(grip_width)
-        return self.body_spec.arm_reach_length * (1.0 - math.cos(angle))
 
     # ------------------------------------------------------------------
     # Shared pose helper (issue #116)
@@ -472,6 +398,8 @@ class ExerciseModelBuilder(ABC):
         empty when :attr:`uses_barbell` is ``False``.
         """
         body_bodies = create_full_body(worldbody, self.body_spec)
+        if self.spec_exercise is not None:
+            spec_start.place_start_pose(worldbody, self.start_pose)
         barbell_bodies: dict[str, ET.Element] = {}
         if self.uses_barbell:
             barbell_bodies = create_barbell_bodies(
@@ -572,8 +500,11 @@ class ExerciseModelBuilder(ABC):
         self._add_state_sections(root, worldbody)
 
         xml_str = self._finalize_model(root)
+        if self.spec_exercise is not None and self.uses_barbell:
+            spec_start.weld_bar_at_keyframe(root, xml_str)
+            xml_str = self._finalize_model(root)
         if self.seat_feet_at_equilibrium:
-            lower_foot_contact_geoms(root, equilibrium_foot_penetration(xml_str))
+            lower_foot_contact_geoms(root, foot_seating_offset(xml_str))
             xml_str = self._finalize_model(root)
         logger.debug("Successfully built %s model", self.exercise_name)
         return xml_str

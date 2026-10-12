@@ -11,6 +11,8 @@ from mujoco_models.exercises.bench_press.bench_press_model import (
     BenchPressModelBuilder,
     build_bench_press_model,
 )
+from mujoco_models.shared.parity._canonical import spec
+from mujoco_models.shared.parity.standard import STANDARD
 
 
 class TestBenchPressModelBuilder:
@@ -56,29 +58,27 @@ class TestBenchPressModelBuilder:
         assert "barbell_to_hand_l" in weld_names
         assert "barbell_to_hand_r" in weld_names
 
-    def test_set_initial_pose_sets_elbow_ref(self) -> None:
+    def test_set_initial_pose_leaves_refs_at_zero(self) -> None:
+        """``ref`` never poses a segment (#407): the start pose is the keyframe."""
         builder = BenchPressModelBuilder()
         worldbody = ET.Element("worldbody")
         body = ET.SubElement(worldbody, "body")
         joint = ET.SubElement(body, "joint", name="elbow_l_flex", type="hinge")
         builder.set_initial_pose(worldbody)
-        assert float(joint.get("ref")) == pytest.approx(0.0)  # type: ignore
+        assert joint.get("ref") is None
 
-    def test_shoulder_pose_is_a_keyframe_angle_not_a_ref(self) -> None:
-        """``ref`` never moves a segment, so the arm raise is a keyframe offset."""
-        offsets = BenchPressModelBuilder().keyframe_angle_offsets()
-        assert offsets == {
-            "shoulder_l_flex": pytest.approx(math.pi / 2),
-            "shoulder_r_flex": pytest.approx(math.pi / 2),
-        }
+    def test_start_pose_is_the_spec_unrack_keyframe(self) -> None:
+        """The keyframe angles are the standard's bench ``start`` via-pose."""
+        want = spec.pose_coordinates(STANDARD, "bench_press", "start")
+        assert BenchPressModelBuilder().keyframe_angle_offsets() == want
         root = ET.fromstring(build_bench_press_model())
         names = [j.get("name") for j in root.iter("joint") if j.get("name")]
         qpos = [float(v) for v in root.find("keyframe/key").get("qpos").split()]  # type: ignore
         # qpos: pelvis free joint (7) then hinges in document order.
         hinge_qpos = dict(zip(names, qpos[7:], strict=False))
-        assert hinge_qpos["shoulder_l_flex"] == pytest.approx(math.pi / 2)
-        assert hinge_qpos["shoulder_r_flex"] == pytest.approx(math.pi / 2)
-        assert hinge_qpos["shoulder_l_adduct"] == 0.0
+        assert hinge_qpos["shoulder_l_flex"] == pytest.approx(1.5)
+        assert hinge_qpos["shoulder_l_adduct"] == pytest.approx(-0.3376)
+        assert hinge_qpos["elbow_l_flex"] == 0.0
 
     def test_lifter_is_supine_on_the_bench(self) -> None:
         root = ET.fromstring(build_bench_press_model())
