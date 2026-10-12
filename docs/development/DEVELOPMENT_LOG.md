@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#407 · Barbell Lifts Start at the Parity Standard V2.1 Start Via-Pose (Coordinates in the Keyframe, Refs 0, Pelvis Root, Bar, Spec Load); Spec.via_Pose_Phase Replaces the Local Table (UpstreamDrift#11743)
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #407
+- **Branch:** merged via #461
+- **PR:** #461
+- **Paths:** see #461
+- **Started:** 2026-10-12
+- **Last verified:** 2026-10-12 (`21949281`; collated from changes/407-barbell-lifts-start-at-the-parity-standa.md)
+- **Summary:** Barbell lifts start at the parity standard v2.1 start via-pose (coordinates in the keyframe, refs 0, pelvis root, bar, spec load); spec.via_pose_phase replaces the local table (UpstreamDrift#11743)
+- **Next step:** Shipped in PR #461.
+
 ### DL-#401 · Lift Objectives Consume the Vendored Parity Standard V2.0: Phase Names, Timing and Start/Catch/Lockout Via-Poses Come From the Spec (LIFT-2, UpstreamDrift#11742); Deadlift Now Has the 5 Standard Phases.
 
 - **State:** shipped
