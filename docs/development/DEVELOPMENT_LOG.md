@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#400 · Bring Src Files Under the 300-Line Budget and Enforce It in CI
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #400
+- **Branch:** refactor/400-module-line-budget
+- **PR:** #466
+- **Paths:** see #466
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`eb788964`; collated from changes/400-bring-src-files-under-the-300-line-budge.md)
+- **Summary:** Bring src files under the 300-line budget and enforce it in CI
+- **Next step:** Merge the PR.
+
 ### DL-#411 · \ Import Pinocchio_Models URDF Into MuJoCo and Compare Fingerprints\
 
 - **State:** in_review
