@@ -15,6 +15,11 @@ from mujoco_models.grip import (
     grip_wrenches,
 )
 from mujoco_models.kinematics import SegmentPose, forward_kinematics
+from mujoco_models.shared.parity.urdf_import import (
+    load_pinocchio_urdf,
+    pinocchio_urdf_fingerprint,
+    resolve_pinocchio_urdf,
+)
 from mujoco_models.video import render_video
 
 __all__ = [
@@ -28,5 +33,8 @@ __all__ = [
     "forward_kinematics",
     "grip_wrenches",
     "inverse_dynamics",
+    "load_pinocchio_urdf",
+    "pinocchio_urdf_fingerprint",
     "render_video",
+    "resolve_pinocchio_urdf",
 ]
