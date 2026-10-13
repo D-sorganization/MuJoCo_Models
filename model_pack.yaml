@@ -1,11 +1,9 @@
-schema: model_pack/v1
-repo: MuJoCo_Models
-package: mujoco_models
-engine: mujoco
-engine_version: ">=3.0,<4"
-anthropometrics: winter_2009
-format: mjcf
-models_root: src/mujoco_models/exercises
+# SPDX-License-Identifier: MIT
+schema_version: "2.0"
+package:
+  name: mujoco_models
+  version: "0.1.0"
+  description: "MuJoCo MJCF human biomechanical models and exercise suites"
 exercises:
   - id: squat
     path: src/mujoco_models/exercises/squat
@@ -34,6 +32,6 @@ capabilities:
   inverse_dynamics:
     { level: full, evidence: tests/parity/test_engine_physics.py }
   contact_grf: { level: full, evidence: src/mujoco_models/grf.py }
-  urdf_import: { level: none, evidence: null }
+  urdf_import: { level: full, evidence: tests/parity/test_pinocchio_urdf.py }
   urdf_export: { level: none, evidence: null }
   video_export: { level: full, evidence: src/mujoco_models/video.py }
