@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#460 · Give-Keyframe-Servos-a-Static-Hold-so-Crouched-Starts-Do-Not-Sag
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #460
+- **Branch:** merged via #468
+- **PR:** #468
+- **Paths:** see #468
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`079ba317`; collated from changes/460-give-keyframe-servos-a-static-hold-so-cr.md)
+- **Summary:** Give-keyframe-servos-a-static-hold-so-crouched-starts-do-not-sag
+- **Next step:** Shipped in PR #468.
+
 ### DL-#455 · Weld the Bench-Press Root at the Standard V2.0 Via-Pose
 
 - **State:** shipped
