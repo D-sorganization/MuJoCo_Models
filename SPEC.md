@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
 | ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-13 | #468 | Give-keyframe-servos-a-static-hold-so-crouched-starts-do-not-sag |
 | 2026-10-12 | #464 | Weld the bench-press root at the standard v2.0 via-pose |
 | 2026-10-12 | #463 | Name gait and sit-to-stand phases per standard v2.0 |
 | 2026-10-12 | #461 | Barbell lifts start at the parity standard v2.1 start via-pose (coordinates in the keyframe, refs 0, pelvis root, bar, spec load); spec.via_pose_phase replaces the local table (UpstreamDrift#11743) |
