@@ -87,10 +87,19 @@ def test_no_self_contacts_between_body_segments() -> None:
 
 
 def _static_hold_torque(xml: str) -> np.ndarray:
-    """Hinge torque that carries the keyframe with every hinge held rigid."""
+    """Hinge torque that carries the keyframe with every hinge held rigid.
+
+    Solved with the servos at the bare pose (zero servo torque), as
+    ``static_hold_ctrl`` does before it adds the offset.  The keyframe ctrl
+    already carries that offset, and its servo torque would shift the contact
+    solve and so the torque being measured.
+    """
     model = mujoco.MjModel.from_xml_string(xml)
     hold_hinges_rigid(model)
     _, data = _load_model(model)
+    hinge_qposadr = model.jnt_qposadr[model.actuator_trnid[:, 0]]
+    data.ctrl[:] = model.key_qpos[0][hinge_qposadr]
+    mujoco.mj_forward(model, data)
     return np.asarray(data.qfrc_bias - data.qfrc_constraint - data.qfrc_passive)
 
 
