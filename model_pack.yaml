@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: MIT
-schema_version: "2.0"
-package:
-  name: mujoco_models
-  version: "0.1.0"
-  description: "MuJoCo MJCF human biomechanical models and exercise suites"
+schema: model_pack/v1
+repo: MuJoCo_Models
+package: mujoco_models
+engine: mujoco
+engine_version: ">=3.0,<4"
+anthropometrics: winter_2009
+format: mjcf
+models_root: src/mujoco_models/exercises
 exercises:
   - id: squat
     path: src/mujoco_models/exercises/squat

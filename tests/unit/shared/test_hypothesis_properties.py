@@ -22,8 +22,11 @@ from mujoco_models.shared.utils.geometry import (
 )
 
 hypothesis = pytest.importorskip("hypothesis")
-from hypothesis import given, settings  # noqa: E402
+from hypothesis import HealthCheck, given, settings  # noqa: E402
 from hypothesis import strategies as st  # noqa: E402
+
+settings.register_profile("ci", suppress_health_check=[HealthCheck.too_slow])
+settings.load_profile("ci")
 
 # Strategies for physically plausible ranges
 positive_float = st.floats(min_value=0.01, max_value=1e4, allow_nan=False)
