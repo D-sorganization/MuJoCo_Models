@@ -82,11 +82,6 @@ def test_start_pose_is_in_vertical_equilibrium(exercise: str) -> None:
     assert abs(data.qacc[ROOT_VERTICAL_DOF]) < _RESIDUAL_ACC
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Keyframe servos carry no static load, so crouched spec starts sag "
-    "(MuJoCo_Models#460).",
-)
 @pytest.mark.parametrize("exercise", sorted(BUILDERS))
 def test_root_does_not_settle_at_start(exercise: str) -> None:
     model, data = _start(exercise)

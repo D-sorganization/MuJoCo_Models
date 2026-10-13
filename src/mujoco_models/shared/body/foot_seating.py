@@ -213,3 +213,50 @@ def place_foot_soles(root: ET.Element, ankle_height: float) -> None:
     for geom in root.iter("geom"):
         if geom.get("name") in _FOOT_GEOM_NAMES:
             geom.set("pos", foot_contact_pos(ankle_height))
+
+
+def static_hold_ctrl(xml: str) -> list[float]:
+    """Return keyframe ``ctrl`` that holds the start pose against its static load.
+
+    The position servos receive ``ctrl`` = pose, so at t=0 they exert no torque
+    and a crouched start sags under body + bar weight (MuJoCo_Models#460).  The
+    torque each hinge needs to carry the keyframe is solved with every hinge
+    held rigid (see :func:`hold_hinges_rigid`) as the generalized bias force
+    minus the passive and constraint forces, and is converted to a servo set
+    point offset ``tau / kp``.  Gains and force limits are left untouched.
+
+    Postcondition: one value per actuator, equal to the keyframe ``ctrl`` plus
+    the feed-forward offset.
+
+    Raises:
+        ValueError: the model has no keyframe.
+    """
+    model = mujoco.MjModel.from_xml_string(xml)
+    if model.nkey < 1:
+        raise ValueError("model needs a keyframe to derive the static hold")
+    hold_hinges_rigid(model)
+    data = mujoco.MjData(model)
+    mujoco.mj_resetDataKeyframe(model, data, 0)
+    mujoco.mj_forward(model, data)
+    torque = data.qfrc_bias - data.qfrc_constraint - data.qfrc_passive
+    ctrl = [float(v) for v in model.key_ctrl[0]]
+    for actuator in range(model.nu):
+        joint = model.actuator_trnid[actuator, 0]
+        kp = float(model.actuator_gainprm[actuator, 0])
+        ctrl[actuator] += float(torque[model.jnt_dofadr[joint]]) / kp
+    return ctrl
+
+
+def apply_static_hold(root: ET.Element, ctrl: list[float]) -> None:
+    """Write *ctrl* into the model's first keyframe.
+
+    Precondition: *root* has a ``<keyframe><key>`` whose ``ctrl`` has the same
+    length as *ctrl*.
+    """
+    key = root.find("keyframe/key")
+    if key is None:
+        raise ValueError("model needs a keyframe to hold")
+    existing = key.get("ctrl", "").split()
+    if len(existing) != len(ctrl):
+        raise ValueError(f"expected {len(existing)} ctrl values, got {len(ctrl)}")
+    key.set("ctrl", " ".join(f"{v:.9g}" for v in ctrl))
