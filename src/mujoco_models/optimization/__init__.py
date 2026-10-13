@@ -1,12 +1,10 @@
 # SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
 """Trajectory optimization and exercise objectives for barbell models.
 
 Provides exercise-specific optimization objectives, trajectory optimization,
 and inverse kinematics keyframe generation for MuJoCo barbell exercise models.
 """
-
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 D-sorganization
 
 from __future__ import annotations
 
@@ -21,7 +19,13 @@ from mujoco_models.optimization.exercise_objectives import (
     Phase,
     get_exercise_objective,
 )
-from mujoco_models.optimization.inverse_kinematics import solve_ik_keyframes
+from mujoco_models.optimization.inverse_kinematics import (
+    IKResult,
+    _phase_to_array,
+    solve_ik_keyframes,
+    solve_task_target_ik,
+    solve_task_target_trajectory,
+)
 from mujoco_models.optimization.trajectory_optimizer import (
     TrajectoryConfig,
     TrajectoryResult,
@@ -36,14 +40,18 @@ __all__ = [
     "DEADLIFT_OBJECTIVE",
     "EXERCISE_OBJECTIVES",
     "ExerciseObjective",
+    "IKResult",
     "Phase",
     "SNATCH_OBJECTIVE",
     "SQUAT_OBJECTIVE",
     "TrajectoryConfig",
     "TrajectoryResult",
+    "_phase_to_array",
     "compute_balance_cost",
     "compute_bar_path_cost",
     "get_exercise_objective",
     "interpolate_phases",
     "solve_ik_keyframes",
+    "solve_task_target_ik",
+    "solve_task_target_trajectory",
 ]

@@ -21,10 +21,16 @@ from mujoco_models.grip import (
     grip_wrenches,
 )
 from mujoco_models.kinematics import SegmentPose, forward_kinematics
+from mujoco_models.optimization.inverse_kinematics import (
+    IKResult,
+    solve_task_target_ik,
+    solve_task_target_trajectory,
+)
 from mujoco_models.video import render_video
 
 __all__ = [
     "FootGRF",
+    "IKResult",
     "ModelBuildError",
     "MuJoCoModelError",
     "PreconditionError",
@@ -38,5 +44,7 @@ __all__ = [
     "grip_wrenches",
     "inverse_dynamics",
     "render_video",
+    "solve_task_target_ik",
+    "solve_task_target_trajectory",
     "standing_grf",
 ]
