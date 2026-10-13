@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#406 · Promote Standing GRF to a Public API With CoP Output
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #406
+- **Branch:** merged via #472
+- **PR:** #472
+- **Paths:** see #472
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`ad05ee40`; collated from changes/406-promote-standing-grf-to-a-public-api-wit.md)
+- **Summary:** Promote standing GRF to a public API with CoP output
+- **Next step:** Shipped in PR #472.
+
 ### DL-#412 · Add Offscreen MP4 Video Rendering With MUJOCO_GL=Egl
 
 - **State:** shipped
