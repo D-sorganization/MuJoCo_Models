@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
 | ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-13 | #473 | Add offscreen MP4 video rendering with MUJOCO_GL=egl |
 | 2026-10-13 | #470 | Per-hand grip wrench extraction from weld equality constraints and static hold analysis (LIFT-4) |
 | 2026-10-13 | #468 | Give-keyframe-servos-a-static-hold-so-crouched-starts-do-not-sag |
 | 2026-10-12 | #464 | Weld the bench-press root at the standard v2.0 via-pose |
