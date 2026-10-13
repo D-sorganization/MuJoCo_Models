@@ -25,7 +25,11 @@ from mujoco_models.grip import (
     export_grip_wrench_series,
     grip_wrenches,
 )
-from mujoco_models.kinematics import SegmentPose, forward_kinematics
+from mujoco_models.kinematics import (
+    SegmentPose,
+    forward_kinematics,
+    initial_state,
+)
 from mujoco_models.optimization.inverse_kinematics import (
     IKResult,
     solve_task_target_ik,
@@ -54,6 +58,7 @@ __all__ = [
     "export_grip_wrench_series",
     "forward_kinematics",
     "grip_wrenches",
+    "initial_state",
     "inverse_dynamics",
     "load_pinocchio_urdf",
     "pinocchio_urdf_fingerprint",

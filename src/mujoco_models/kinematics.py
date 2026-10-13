@@ -73,4 +73,30 @@ def forward_kinematics(
     }
 
 
-__all__ = ["SegmentPose", "forward_kinematics"]
+def initial_state(
+    exercise: str | ExerciseModelBuilder | mujoco.MjModel,
+    *,
+    keyframe: int = 0,
+) -> tuple[mujoco.MjModel, mujoco.MjData]:
+    """Create and return a compiled model and MjData at the declared initial pose (#407).
+
+    Resets the simulation data to the exercise's declared keyframe initial pose
+    (default: keyframe 0) and computes kinematics and forward dynamics via
+    :func:`mujoco.mj_forward`.
+
+    Args:
+        exercise: Exercise identifier string, builder instance, or compiled MjModel.
+        keyframe: Keyframe index to initialize (default 0).
+
+    Returns:
+        Tuple of ``(model, data)`` where ``data.qpos`` equals the initial pose.
+    """
+    model = _resolve_model(exercise)
+    data = mujoco.MjData(model)
+    if model.nkey > keyframe:
+        mujoco.mj_resetDataKeyframe(model, data, keyframe)
+    mujoco.mj_forward(model, data)
+    return model, data
+
+
+__all__ = ["SegmentPose", "forward_kinematics", "initial_state"]
