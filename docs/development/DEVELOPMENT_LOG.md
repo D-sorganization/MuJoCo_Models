@@ -158,6 +158,32 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#404 · Add Forward Dynamics Controller and Rollout API Tracking Joint Trajectories
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #404
+- **Branch:** merged via #478
+- **PR:** #478
+- **Paths:** see #478
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`0878bffe`; collated from changes/404-add-forward-dynamics-controller-and-roll.md)
+- **Summary:** Add forward dynamics controller and rollout API tracking joint trajectories
+- **Next step:** Shipped in PR #478.
+
+### DL-#392 · Re-Sync Vendored Model-Parity Bundle to Repository_Management Main (Standard V2.1, assemble.py Phase_Names From RM#2089)
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #392
+- **Branch:** merged via #484
+- **PR:** #484
+- **Paths:** see #484
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`ce868d5d`; collated from changes/392-parity-bundle-resync.md)
+- **Summary:** Re-sync vendored model-parity bundle to Repository_Management main (standard v2.1, assemble.py phase_names from RM#2089)
+- **Next step:** Shipped in PR #484.
+
 ### DL-#403 · Implement Task-Target Inverse Kinematics Solver
 
 - **State:** shipped
@@ -255,10 +281,10 @@ reachable from any live state and `abandoned` from `parked`.
 - **Owner:** unassigned
 - **Issue:** #407
 - **Branch:** merged via #461
-- **PR:** #461
+- **PR:** #461, #481
 - **Paths:** see #461
 - **Started:** 2026-10-12
-- **Last verified:** 2026-10-12 (`21949281`; collated from changes/407-barbell-lifts-start-at-the-parity-standa.md)
+- **Last verified:** 2026-10-13 (`d298213c`; collated from changes/407-apply-real-exercise-initial-poses-via-in.md)
 - **Summary:** Barbell lifts start at the parity standard v2.1 start via-pose (coordinates in the keyframe, refs 0, pelvis root, bar, spec load); spec.via_pose_phase replaces the local table (UpstreamDrift#11743)
 - **Next step:** Shipped in PR #461.
 
