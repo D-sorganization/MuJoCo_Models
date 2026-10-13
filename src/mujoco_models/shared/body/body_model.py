@@ -42,6 +42,7 @@ __all__ = [
 def create_full_body(
     worldbody: ET.Element,
     spec: BodyModelSpec | None = None,
+    root_joint: str = "free",
 ) -> dict[str, ET.Element]:
     """Build the full-body model and append bodies to worldbody.
 
@@ -61,7 +62,7 @@ def create_full_body(
     )
 
     # Stage 1: axial skeleton (pelvis, torso, head)
-    bodies = build_axial_skeleton(worldbody, spec)
+    bodies = build_axial_skeleton(worldbody, spec, root_joint=root_joint)
 
     # Stage 2: upper limbs (shoulders -> hands)
     build_upper_limbs(bodies, spec)

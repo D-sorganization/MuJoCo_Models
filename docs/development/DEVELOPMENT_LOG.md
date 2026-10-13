@@ -132,6 +132,71 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#412 · Add Offscreen MP4 Video Rendering With MUJOCO_GL=Egl
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #412
+- **Branch:** merged via #473
+- **PR:** #473
+- **Paths:** see #473
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`b236e5b3`; collated from changes/412-add-offscreen-mp4-video-rendering-with-m.md)
+- **Summary:** Add offscreen MP4 video rendering with MUJOCO_GL=egl
+- **Next step:** Shipped in PR #473.
+
+### DL-#444 · Per-Hand Grip Wrench Extraction From Weld Equality Constraints and Static Hold Analysis (LIFT-4)
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #444
+- **Branch:** merged via #470
+- **PR:** #470
+- **Paths:** see #470
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`d2730935`; collated from changes/444-per-hand-grip-wrench-extraction-from-wel.md)
+- **Summary:** Per-hand grip wrench extraction from weld equality constraints and static hold analysis (LIFT-4)
+- **Next step:** Shipped in PR #470.
+
+### DL-#460 · Give-Keyframe-Servos-a-Static-Hold-so-Crouched-Starts-Do-Not-Sag
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #460
+- **Branch:** merged via #468
+- **PR:** #468
+- **Paths:** see #468
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`079ba317`; collated from changes/460-give-keyframe-servos-a-static-hold-so-cr.md)
+- **Summary:** Give-keyframe-servos-a-static-hold-so-crouched-starts-do-not-sag
+- **Next step:** Shipped in PR #468.
+
+### DL-#455 · Weld the Bench-Press Root at the Standard V2.0 Via-Pose
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #455
+- **Branch:** merged via #464
+- **PR:** #464
+- **Paths:** see #464
+- **Started:** 2026-10-12
+- **Last verified:** 2026-10-12 (`1020aee6`; collated from changes/455-weld-the-bench-press-root-at-the-standar.md)
+- **Summary:** Weld the bench-press root at the standard v2.0 via-pose
+- **Next step:** Shipped in PR #464.
+
+### DL-#456 · Name Gait and Sit-to-Stand Phases per Standard V2.0
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #456
+- **Branch:** merged via #463
+- **PR:** #463
+- **Paths:** see #463
+- **Started:** 2026-10-12
+- **Last verified:** 2026-10-12 (`52a2e32a`; collated from changes/456-name-gait-and-sit-to-stand-phases-per-st.md)
+- **Summary:** Name gait and sit-to-stand phases per standard v2.0
+- **Next step:** Shipped in PR #463.
+
 ### DL-#407 · Barbell Lifts Start at the Parity Standard V2.1 Start Via-Pose (Coordinates in the Keyframe, Refs 0, Pelvis Root, Bar, Spec Load); Spec.via_Pose_Phase Replaces the Local Table (UpstreamDrift#11743)
 
 - **State:** shipped

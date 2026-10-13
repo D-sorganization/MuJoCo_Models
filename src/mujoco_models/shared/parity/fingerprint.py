@@ -183,7 +183,11 @@ def fingerprint(exercise: str) -> dict[str, Any]:
         for j in range(model.njnt)
         if model.jnt_type[j] == _HINGE
     }
-    pelvis_joint = model.body_jntadr[model.body("pelvis").id]
+    pelvis_id = model.body("pelvis").id
+    has_free_pelvis = (
+        model.body_jntnum[pelvis_id] > 0
+        and model.jnt_type[model.body_jntadr[pelvis_id]] == _FREE
+    )
     base = _zero_pose_qpos(model)
     objective = get_exercise_objective(exercise)
     # Standard v2.0 conformance criterion 3: the ordered phase names.
@@ -199,7 +203,7 @@ def fingerprint(exercise: str) -> dict[str, Any]:
         engine_version=mujoco.__version__,
         exercise=exercise,
         std=std,
-        root_joint="free" if model.jnt_type[pelvis_joint] == _FREE else "fixed",
+        root_joint="free" if has_free_pelvis else "weld",
         gravity_engine=model.opt.gravity.tolist(),
         segment_masses_kg=masses,
         coordinate_limits_rad=limits,

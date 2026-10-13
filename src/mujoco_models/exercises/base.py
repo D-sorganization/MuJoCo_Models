@@ -41,8 +41,10 @@ from mujoco_models.exercises.model_scaffold import (
 from mujoco_models.shared.barbell import BarbellSpec, create_barbell_bodies
 from mujoco_models.shared.body import BodyModelSpec, create_full_body
 from mujoco_models.shared.body.foot_seating import (
+    apply_static_hold,
     foot_seating_offset,
     lower_foot_contact_geoms,
+    static_hold_ctrl,
 )
 from mujoco_models.shared.contracts.postconditions import ensure_mjcf_root
 from mujoco_models.shared.utils.mjcf_helpers import serialize_model
@@ -92,6 +94,14 @@ class ExerciseModelBuilder(ABC):
         if self.spec_exercise is None:
             raise ValueError(f"{self.exercise_name} has no spec start via-pose")
         return spec_start.start_pose(self.spec_exercise, self.body_spec.height)
+
+    @property
+    def root_joint(self) -> str:
+        """Root joint type ('free' or 'weld') from the standard or default."""
+        from mujoco_models.shared.parity._canonical import spec
+        from mujoco_models.shared.parity.standard import STANDARD
+
+        return spec.root_joint(STANDARD, self.spec_exercise)
 
     @property
     def body_spec(self) -> BodyModelSpec:
@@ -220,7 +230,9 @@ class ExerciseModelBuilder(ABC):
         Returns ``(body_bodies, barbell_bodies)`` where ``barbell_bodies`` is
         empty when :attr:`uses_barbell` is ``False``.
         """
-        body_bodies = create_full_body(worldbody, self.body_spec)
+        body_bodies = create_full_body(
+            worldbody, self.body_spec, root_joint=self.root_joint
+        )
         if self.spec_exercise is not None:
             spec_start.place_start_pose(worldbody, self.start_pose)
         barbell_bodies: dict[str, ET.Element] = {}
@@ -281,6 +293,8 @@ class ExerciseModelBuilder(ABC):
             xml_str = self._finalize_model(root)
         if self.seat_feet_at_equilibrium:
             lower_foot_contact_geoms(root, foot_seating_offset(xml_str))
+            xml_str = self._finalize_model(root)
+            apply_static_hold(root, static_hold_ctrl(xml_str))
             xml_str = self._finalize_model(root)
         logger.debug("Successfully built %s model", self.exercise_name)
         return xml_str
