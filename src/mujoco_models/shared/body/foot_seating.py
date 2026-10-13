@@ -120,9 +120,18 @@ def hold_hinges_rigid(model: mujoco.MjModel) -> None:
     sags and the root accelerates down at almost ``g`` whatever the sole
     depth.  A huge armature freezes the joints, so the root acceleration
     measures only whether the contact carries the whole (rigid) lifter.
+
+    The huge armature dominates the mass matrix, so the constraint solver's
+    convergence measures (scaled by the compile-time mean inertia) are tiny
+    whatever the root does.  MuJoCo >= 3.15 then accepts the zeroed warm
+    start of a freshly reset ``MjData`` after zero iterations, reporting a
+    root acceleration of exactly 0 over a band of depths (issue #486).  The
+    warm start is disabled so every solve starts from the unconstrained
+    acceleration and iterates to the real constraint force.
     """
     hinges = model.jnt_type == mujoco.mjtJoint.mjJNT_HINGE
     model.dof_armature[model.jnt_dofadr[hinges]] = _RIGID_ARMATURE
+    model.opt.disableflags |= mujoco.mjtDisableBit.mjDSBL_WARMSTART
 
 
 def equilibrium_foot_penetration(xml: str) -> float:
