@@ -25,7 +25,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+video = [
+    "imageio>=2.31.0",
+    "imageio-ffmpeg>=0.4.8",
+]
 dev = [
+    "imageio>=2.31.0",
+    "imageio-ffmpeg>=0.4.8",
     "pytest>=9.0.3",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.0.0",

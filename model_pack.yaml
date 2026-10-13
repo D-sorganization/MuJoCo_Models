@@ -30,4 +30,4 @@ capabilities:
   contact_grf: {level: full, evidence: src/mujoco_models/grf.py}
   urdf_import: {level: none, evidence: null}
   urdf_export: {level: none, evidence: null}
-  video_export: {level: none, evidence: null}
+  video_export: {level: full, evidence: src/mujoco_models/video.py}
