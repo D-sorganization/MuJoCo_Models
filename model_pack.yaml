@@ -28,10 +28,8 @@ capabilities:
   forward_kinematics: { level: partial, evidence: null } # engine-native only, no repo API
   inverse_kinematics:
     { level: full, evidence: tests/unit/optimization/test_task_target_ik.py }
-  forward_dynamics: {
-      level: partial,
-      evidence: tests/parity/test_engine_physics.py,
-    } # engine steps the model; no controller API
+  forward_dynamics:
+    { level: full, evidence: tests/integration/test_forward_dynamics.py }
   inverse_dynamics:
     { level: full, evidence: tests/parity/test_engine_physics.py }
   contact_grf: { level: full, evidence: src/mujoco_models/grf.py }
