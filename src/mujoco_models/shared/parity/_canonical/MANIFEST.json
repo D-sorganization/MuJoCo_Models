@@ -1,6 +1,6 @@
 {
   "files": {
-    "assemble.py": "caa49fb6daab9fe8745b9aecd599f9b73a18fa0e254b627c038e93410acdffb9",
+    "assemble.py": "3acfc47df26d3e6e68ece36766632c280da516530c2a7d95c97c0712f4d4a72c",
     "biomech_parity_standard.json": "a0eb6c2bbbfeb70011bad62cf6d21a9245ffabce757c390633b516f542eb3ef8",
     "conformance.py": "967d48c60b6cd7261fd68df0b22aa8a0ace2f8d304d69c694b65170b6300c336",
     "kinematics.py": "37aa9c2b7a3b3a3a4ec2b579024436d1929c7606d283743caee469547c88a294",

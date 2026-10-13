@@ -190,8 +190,10 @@ def fingerprint(exercise: str) -> dict[str, Any]:
     )
     base = _zero_pose_qpos(model)
     objective = get_exercise_objective(exercise)
-    # Standard v2.0 conformance criterion 3: the ordered phase names.
-    extras: dict[str, Any] = {"phase_names": [p.name for p in objective.phases]}
+    # Standard v2.0 conformance criterion 3: the ordered phase names, a core
+    # assemble_fingerprint field since Repository_Management#2089.
+    phase_names = [p.name for p in objective.phases]
+    extras: dict[str, Any] = {}
     if not builder.uses_barbell:
         human_mass = sum(
             m for n, m in masses.items() if n in conformance.expected_segments(std)
@@ -218,6 +220,7 @@ def fingerprint(exercise: str) -> dict[str, Any]:
         segment_aliases=SEGMENT_ALIASES,
         ground_friction=_ground_friction(model),
         phase_count=objective.n_phases,
+        phase_names=phase_names,
         extras=extras,
     )
 
