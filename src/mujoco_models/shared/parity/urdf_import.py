@@ -94,7 +94,7 @@ def sanitize_urdf_for_mujoco(urdf_str: str) -> str:
     2. Ensures moving virtual links have inertia >= mjMINVAL so MuJoCo doesn't
        reject them.
     """
-    root = ET.fromstring(urdf_str)
+    root = ET.fromstring(urdf_str)  # nosec B314 -- urdf is internal/trusted XML
 
     child_links: set[str] = set()
     for j in root.findall("joint"):
