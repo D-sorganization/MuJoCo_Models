@@ -8,7 +8,7 @@ import mujoco
 import numpy as np
 import pytest
 
-from mujoco_models.dynamics import inverse_dynamics
+from mujoco_models.dynamics import inverse_dynamics, inverse_dynamics_with_contacts
 from mujoco_models.exceptions import ValidationError
 from mujoco_models.exercises.gait.gait_model import GaitModelBuilder
 
@@ -143,3 +143,38 @@ def test_inverse_dynamics_non_finite_inputs_raise(
     qacc_nan[0] = float("nan")
     with pytest.raises(ValidationError, match="qacc contains non-finite"):
         inverse_dynamics("gait", q, qacc=qacc_nan)
+
+
+_NO_FREE_JOINT_XML = (
+    '<mujoco><worldbody><body name="arm"><joint name="hinge" type="hinge"/>'
+    '<geom type="capsule" size="0.05 0.2"/></body></worldbody></mujoco>'
+)
+
+
+@pytest.mark.unit
+def test_contact_inverse_dynamics_requires_a_free_root_joint() -> None:
+    """The root residual is defined only for a floating-base model."""
+    model = mujoco.MjModel.from_xml_string(_NO_FREE_JOINT_XML)
+    with pytest.raises(ValidationError, match="free root joint"):
+        inverse_dynamics_with_contacts(model, np.zeros(model.nq))
+
+
+@pytest.mark.unit
+def test_contact_inverse_dynamics_report_shapes(
+    gait_model_and_q: tuple[mujoco.MjModel, np.ndarray],
+) -> None:
+    model, q = gait_model_and_q
+    report = inverse_dynamics_with_contacts(model, q)
+    assert report.qfrc_inverse.shape == (model.nv,)
+    assert report.qfrc_contact.shape == (model.nv,)
+    assert report.root_residual.shape == (6,)
+    assert report.root_contact.shape == (6,)
+
+
+@pytest.mark.unit
+def test_contact_inverse_dynamics_validates_inputs(
+    gait_model_and_q: tuple[mujoco.MjModel, np.ndarray],
+) -> None:
+    _, q = gait_model_and_q
+    with pytest.raises(ValidationError, match="qacc must have shape"):
+        inverse_dynamics_with_contacts("gait", q, qacc=[1.0, 2.0])

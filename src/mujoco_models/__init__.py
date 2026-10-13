@@ -7,7 +7,11 @@ from mujoco_models.controllers import (
     RolloutResult,
     simulate_rollout,
 )
-from mujoco_models.dynamics import inverse_dynamics
+from mujoco_models.dynamics import (
+    ContactInverseDynamics,
+    inverse_dynamics,
+    inverse_dynamics_with_contacts,
+)
 from mujoco_models.exceptions import (
     ModelBuildError,
     MuJoCoModelError,
@@ -43,6 +47,7 @@ from mujoco_models.shared.parity.urdf_import import (
 from mujoco_models.video import render_video
 
 __all__ = [
+    "ContactInverseDynamics",
     "FootGRF",
     "IKResult",
     "ModelBuildError",
@@ -60,6 +65,7 @@ __all__ = [
     "grip_wrenches",
     "initial_state",
     "inverse_dynamics",
+    "inverse_dynamics_with_contacts",
     "load_pinocchio_urdf",
     "pinocchio_urdf_fingerprint",
     "render_video",

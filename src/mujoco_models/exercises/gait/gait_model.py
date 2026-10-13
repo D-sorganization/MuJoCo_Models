@@ -52,6 +52,8 @@ class GaitModelBuilder(ExerciseModelBuilder):
     No barbell is used; the model is for walking/running biomechanics.
     """
 
+    seat_feet_at_equilibrium = True  # issue #453, as the lifts (#447)
+
     @property
     def exercise_name(self) -> str:
         """Return the canonical exercise name for the gait model."""
