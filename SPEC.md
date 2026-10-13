@@ -244,6 +244,9 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-13 | #481 | Apply real exercise initial poses via initial_state API (#407) |
+| 2026-10-13 | #478 | Add forward dynamics controller and rollout API tracking joint trajectories |
+| 2026-10-13 | #484 | Re-sync vendored model-parity bundle to Repository_Management main (standard v2.1, assemble.py phase_names from RM#2089) |
 | 2026-10-13 | #477 | Implement task-target inverse kinematics solver |
 | 2026-10-13 | #466 | Bring src files under the 300-line budget and enforce it in CI |
 | 2026-10-13 | #475 | \ Import Pinocchio_Models URDF into MuJoCo and compare fingerprints\ |
