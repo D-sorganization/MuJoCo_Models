@@ -2,6 +2,11 @@
 # Copyright (c) 2026 D-sorganization
 """MuJoCo Models — biomechanical exercise models for MuJoCo simulation."""
 
+from mujoco_models.controllers import (
+    PDGravityController,
+    RolloutResult,
+    simulate_rollout,
+)
 from mujoco_models.dynamics import inverse_dynamics
 from mujoco_models.exceptions import (
     ModelBuildError,
@@ -38,7 +43,9 @@ __all__ = [
     "IKResult",
     "ModelBuildError",
     "MuJoCoModelError",
+    "PDGravityController",
     "PreconditionError",
+    "RolloutResult",
     "SegmentPose",
     "StandingGRF",
     "ValidationError",
@@ -52,6 +59,7 @@ __all__ = [
     "pinocchio_urdf_fingerprint",
     "render_video",
     "resolve_pinocchio_urdf",
+    "simulate_rollout",
     "solve_task_target_ik",
     "solve_task_target_trajectory",
     "standing_grf",
