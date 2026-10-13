@@ -15,6 +15,7 @@ from mujoco_models.grip import (
     grip_wrenches,
 )
 from mujoco_models.kinematics import SegmentPose, forward_kinematics
+from mujoco_models.video import render_video
 
 __all__ = [
     "ModelBuildError",
@@ -27,4 +28,5 @@ __all__ = [
     "forward_kinematics",
     "grip_wrenches",
     "inverse_dynamics",
+    "render_video",
 ]
