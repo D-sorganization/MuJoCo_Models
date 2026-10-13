@@ -24,6 +24,9 @@ from mujoco_models.exercises.gait.gait_model import (
     GaitModelBuilder,
     build_gait_model,
 )
+from mujoco_models.exercises.sit_to_stand.sit_to_stand_model import (
+    build_sit_to_stand_model,
+)
 from mujoco_models.exercises.snatch.snatch_model import build_snatch_model
 from mujoco_models.exercises.squat.squat_model import build_squat_model
 from mujoco_models.shared.body.foot_seating import (
@@ -39,6 +42,8 @@ BUILDERS = {
     "deadlift": build_deadlift_model,
     "snatch": build_snatch_model,
     "clean_and_jerk": build_clean_and_jerk_model,
+    "gait": build_gait_model,
+    "sit_to_stand": build_sit_to_stand_model,
 }
 _DRIFT_STEPS = 20
 # Root vertical drift over the first 20 ms.  Flush soles drift 0.36-0.41 mm.
@@ -94,26 +99,13 @@ def test_root_does_not_settle_at_start(exercise: str) -> None:
 def test_equilibrium_is_independent_of_current_seating() -> None:
     """Deriving on an unseated build gives the depth the seated build uses."""
     builder = GaitModelBuilder()
+    builder.seat_feet_at_equilibrium = False
     unseated = builder.build()
     builder.seat_feet_at_equilibrium = True
     seated = builder.build()
     assert equilibrium_foot_penetration(unseated) == pytest.approx(
         equilibrium_foot_penetration(seated), abs=1e-8
     )
-
-
-def test_gait_model_keeps_soles_on_the_floor() -> None:
-    """Gait stays unseated: mj_inverse counts contact force in qfrc_inverse.
-
-    The parity test pins the standing root force to m*g; with the soles at the
-    contact equilibrium the contact carries the weight and the root force is
-    ~0, so gait is deliberately outside this change (issue #447).
-    """
-    model = mujoco.MjModel.from_xml_string(build_gait_model())
-    data = mujoco.MjData(model)
-    mujoco.mj_resetDataKeyframe(model, data, 0)
-    mujoco.mj_forward(model, data)
-    assert max(_sole_depths(model, data)) < 1e-9
 
 
 def test_equilibrium_rejects_model_without_keyframe() -> None:

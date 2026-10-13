@@ -43,11 +43,16 @@ class Wrench:
 
 
 def dense_efc_jacobian(model: mujoco.MjModel, data: mujoco.MjData) -> np.ndarray:
-    """Dense ``(nefc, nv)`` constraint Jacobian for dense or sparse layouts."""
+    """Dense ``(nefc, nv)`` constraint Jacobian for dense or sparse layouts.
+
+    The layout is the model's (``mj_isSparse``).  The sparse row metadata
+    (``efc_J_rownnz``/``rowadr``/``colind``) is not written in the dense
+    layout and may hold stale memory, so it must not decide the layout.
+    """
     nefc, nv = int(data.nefc), int(model.nv)
     if nefc == 0 or nv == 0:
         return np.zeros((nefc, nv), dtype=np.float64)
-    if data.efc_J_rownnz is not None and np.any(data.efc_J_rownnz[:nefc] > 0):
+    if mujoco.mj_isSparse(model):
         dense = np.zeros((nefc, nv), dtype=np.float64)
         mujoco.mju_sparse2dense(
             dense,
