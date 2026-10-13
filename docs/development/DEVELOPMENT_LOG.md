@@ -158,6 +158,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#403 · Implement Task-Target Inverse Kinematics Solver
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #403
+- **Branch:** merged via #477
+- **PR:** #477
+- **Paths:** see #477
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`f2ea0ae0`; collated from changes/403-implement-task-target-inverse-kinematics.md)
+- **Summary:** Implement task-target inverse kinematics solver
+- **Next step:** Shipped in PR #477.
+
 ### DL-#406 · Promote Standing GRF to a Public API With CoP Output
 
 - **State:** shipped

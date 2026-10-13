@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-13 | #477 | Implement task-target inverse kinematics solver |
 | 2026-10-13 | #466 | Bring src files under the 300-line budget and enforce it in CI |
 | 2026-10-13 | #475 | \ Import Pinocchio_Models URDF into MuJoCo and compare fingerprints\ |
 | 2026-10-13 | #472 | Promote standing GRF to a public API with CoP output |
