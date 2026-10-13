@@ -21,6 +21,11 @@ from mujoco_models.grip import (
     grip_wrenches,
 )
 from mujoco_models.kinematics import SegmentPose, forward_kinematics
+from mujoco_models.optimization.inverse_kinematics import (
+    IKResult,
+    solve_task_target_ik,
+    solve_task_target_trajectory,
+)
 from mujoco_models.shared.parity.urdf_import import (
     load_pinocchio_urdf,
     pinocchio_urdf_fingerprint,
@@ -30,6 +35,7 @@ from mujoco_models.video import render_video
 
 __all__ = [
     "FootGRF",
+    "IKResult",
     "ModelBuildError",
     "MuJoCoModelError",
     "PreconditionError",
@@ -46,5 +52,7 @@ __all__ = [
     "pinocchio_urdf_fingerprint",
     "render_video",
     "resolve_pinocchio_urdf",
+    "solve_task_target_ik",
+    "solve_task_target_trajectory",
     "standing_grf",
 ]
