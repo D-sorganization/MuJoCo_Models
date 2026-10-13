@@ -102,6 +102,36 @@ def test_equilibrium_is_independent_of_current_seating() -> None:
     )
 
 
+def _converged_root_acceleration(xml: str, depth: float) -> float:
+    """Root vertical acceleration at ``depth`` from a solve run to exhaustion.
+
+    ``tolerance = 0`` makes the constraint solver iterate until it stops
+    improving, so the result cannot be an early-terminated warm start.
+    """
+    model = mujoco.MjModel.from_xml_string(xml)
+    hold_hinges_rigid(model)
+    model.opt.tolerance = 0.0
+    data = mujoco.MjData(model)
+    mujoco.mj_resetDataKeyframe(model, data, 0)
+    mujoco.mj_forward(model, data)
+    free = model.jnt_type == mujoco.mjtJoint.mjJNT_FREE
+    data.qpos[model.jnt_qposadr[free] + 2] -= depth - max(_sole_depths(model, data))
+    mujoco.mj_forward(model, data)
+    return float(data.qacc[ROOT_VERTICAL_DOF])
+
+
+def test_derived_depth_is_a_converged_equilibrium() -> None:
+    """The bisection must not land on an unconverged solve (issue #486).
+
+    MuJoCo >= 3.15 can accept the zeroed warm start of a freshly reset
+    ``MjData`` after zero solver iterations when the hinges are held rigid,
+    reporting a root acceleration of exactly 0 over a band of depths.
+    """
+    xml = GaitModelBuilder().build()
+    depth = equilibrium_foot_penetration(xml)
+    assert abs(_converged_root_acceleration(xml, depth)) < _RESIDUAL_ACC
+
+
 def test_gait_model_keeps_soles_on_the_floor() -> None:
     """Gait stays unseated: mj_inverse counts contact force in qfrc_inverse.
 
