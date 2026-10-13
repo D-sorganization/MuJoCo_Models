@@ -132,6 +132,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#444 · Per-Hand Grip Wrench Extraction From Weld Equality Constraints and Static Hold Analysis (LIFT-4)
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #444
+- **Branch:** merged via #470
+- **PR:** #470
+- **Paths:** see #470
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`d2730935`; collated from changes/444-per-hand-grip-wrench-extraction-from-wel.md)
+- **Summary:** Per-hand grip wrench extraction from weld equality constraints and static hold analysis (LIFT-4)
+- **Next step:** Shipped in PR #470.
+
 ### DL-#460 · Give-Keyframe-Servos-a-Static-Hold-so-Crouched-Starts-Do-Not-Sag
 
 - **State:** shipped
