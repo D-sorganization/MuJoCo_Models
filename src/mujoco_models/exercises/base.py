@@ -10,9 +10,6 @@ Law of Demeter: Exercise builders interact with BarbellSpec and BodyModelSpec
 through their public APIs, never reaching into internal segment tables.
 """
 
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 D-sorganization
-
 from __future__ import annotations
 
 import logging
@@ -105,33 +102,25 @@ class ExerciseModelBuilder(ABC):
 
     @property
     def body_spec(self) -> BodyModelSpec:
-        """Forward to the configured body specification."""
         return self.config.body_spec
 
     @property
     def barbell_spec(self) -> BarbellSpec:
-        """Forward to the configured barbell specification."""
         return self.config.barbell_spec
 
     @property
     def gravity(self) -> tuple[float, float, float]:
-        """Forward to the configured gravity vector."""
         return self.config.gravity
 
     @property
     def barbell_start_pos(self) -> tuple[float, float, float]:
-        """World position of the barbell shaft centre at the keyframe.
-
-        A spec lift starts the bar at its via-pose ``bar_position_m``.
-        Otherwise: at hand height on the body midline (X = Y = 0).
-        """
+        """World position of the barbell shaft centre at the keyframe."""
         if self.spec_exercise is not None:
             return self.start_pose.bar_position
         return (0.0, 0.0, self.body_spec.hand_height)
 
     @property
     def grip_offset(self) -> tuple[float, ...] | None:
-        """Optional grip offset for subclasses that need a custom weld pose."""
         return None
 
     @property
@@ -139,19 +128,11 @@ class ExerciseModelBuilder(ABC):
     def exercise_name(self) -> str:
         """Human-readable exercise name used in the model XML."""
 
-    #: Seat the foot boxes at the soft-contact equilibrium depth (issue #447).
-    #: True for models that stand on the floor and start in static balance;
-    #: see :mod:`mujoco_models.shared.body.foot_seating`.
     seat_feet_at_equilibrium: bool = False
 
     @property
     def uses_barbell(self) -> bool:
-        """Return True if this exercise builds and attaches a barbell.
-
-        Override in subclasses (e.g. gait, sit-to-stand) that do not
-        use a barbell so that barbell bodies, welds, and attachment
-        logic are skipped entirely rather than created with zero mass.
-        """
+        """Return True if this exercise builds and attaches a barbell."""
         return True
 
     @abstractmethod
@@ -164,34 +145,16 @@ class ExerciseModelBuilder(ABC):
         """Add constraints connecting barbell to body (exercise-specific)."""
 
     def set_initial_pose(self, worldbody: ET.Element) -> None:  # noqa: B027
-        """Set joint ``ref`` values for the starting position.
-
-        Default: none. ``ref`` only relabels a joint's zero angle and never
-        moves a segment (#407), so a spec lift keeps every ref at 0 and holds
-        its start pose in the keyframe (:meth:`keyframe_angle_offsets`).
-        """
+        """Set joint ``ref`` values for the starting position."""
 
     def keyframe_angle_offsets(self) -> dict[str, float]:
-        """Joint name -> radians added to the joint's ``ref`` in the keyframe.
-
-        A joint's ``ref`` is the value of its zero angle: the XML geometry is the
-        body pose at ``qpos = ref``, so ``ref`` alone never moves a segment. An
-        exercise whose start pose really is posed (bench press) lists the pose
-        angle here; the keyframe ``qpos`` and ``ctrl`` hold ``ref + offset``.
-        A spec lift's offsets are its start via-pose coordinates.
-        """
+        """Joint name -> radians added to the joint's ``ref`` in the keyframe."""
         if self.spec_exercise is not None:
             return dict(self.start_pose.coordinates)
         return {}
 
     def _post_worldbody_hook(self, worldbody: ET.Element, equality: ET.Element) -> None:
-        """No-op hook called after worldbody is built, before actuator generation.
-
-        Subclasses may override to inject additional bodies or constraints
-        (e.g. BenchPressModelBuilder adds the bench body here).
-        This is an intentional empty method -- not abstract -- so the base class
-        remains instantiable and subclasses are not required to override it.
-        """
+        """Hook called after worldbody is built, before actuator generation."""
 
     _barbell_relpose_for_hand = staticmethod(barbell_relpose_for_hand)
     _attach_barbell_to_hand = staticmethod(attach_barbell_to_hand)
