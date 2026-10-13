@@ -1,0 +1,89 @@
+{
+  "schema": "urdf-import-divergences/v1",
+  "divergences": {
+    "segment_mass.squat.torso": {
+      "issue": "#411",
+      "reason": "Pinocchio squat URDF welds barbell to torso which MuJoCo merges into torso (168.4 kg) vs native separate bodies (28.4 kg)."
+    },
+    "segment_mass.deadlift.hand_l": {
+      "issue": "#411",
+      "reason": "Pinocchio deadlift URDF welds barbell to hand_l which MuJoCo merges into hand_l (180.48 kg) vs native separate bodies (0.48 kg)."
+    },
+    "segment_mass.bench_press.hand_l": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF welds barbell to hand_l which MuJoCo merges into hand_l (120.48 kg) vs native separate bodies (0.48 kg)."
+    },
+    "segment_mass.bench_press.pelvis": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF welds pelvis to bench which MuJoCo merges into the fixed world frame."
+    },
+    "segment_mass.snatch.hand_l": {
+      "issue": "#411",
+      "reason": "Pinocchio snatch URDF welds barbell to hand_l which MuJoCo merges into hand_l (100.48 kg) vs native separate bodies (0.48 kg)."
+    },
+    "segment_mass.clean_and_jerk.hand_l": {
+      "issue": "#411",
+      "reason": "Pinocchio clean_and_jerk URDF welds barbell to hand_l which MuJoCo merges into hand_l (120.48 kg) vs native separate bodies (0.48 kg)."
+    },
+    "segment_mass.sit_to_stand.pelvis": {
+      "issue": "#411",
+      "reason": "Pinocchio sit_to_stand URDF welds chair to pelvis which MuJoCo merges into pelvis (16.36 kg) vs native separate chair body (11.36 kg)."
+    },
+    "segment_origin.bench_press.torso": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.head": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.upper_arm_l": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.forearm_l": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.hand_l": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.upper_arm_r": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.forearm_r": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.hand_r": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.thigh_l": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.shank_l": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.foot_l": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.thigh_r": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.shank_r": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    },
+    "segment_origin.bench_press.foot_r": {
+      "issue": "#411",
+      "reason": "Pinocchio bench_press URDF root fixture welds pelvis to bench, orienting segments in horizontal supine pose."
+    }
+  }
+}
