@@ -16,6 +16,8 @@ import logging
 import mujoco
 import numpy as np
 
+from mujoco_models.grf import compute_grf
+
 logger = logging.getLogger(__name__)
 
 SETTLE_S = 0.3
@@ -25,19 +27,7 @@ GRAVITY_MPS2 = 9.80665
 
 def _vertical_floor_force(model: mujoco.MjModel, data: mujoco.MjData) -> float:
     """Sum the world-vertical force the floor exerts on the feet (newtons)."""
-    ground = model.geom("ground").id
-    wrench = np.zeros(6)
-    total = 0.0
-    for i in range(data.ncon):
-        con = data.contact[i]
-        geoms = (con.geom1, con.geom2)
-        if ground not in geoms:
-            continue
-        mujoco.mj_contactForce(model, data, i, wrench)
-        # Contact frame rows -> world; the normal points geom1 -> geom2.
-        world = con.frame.reshape(3, 3).T @ wrench[:3]
-        total += float(world[2]) if geoms[0] == ground else -float(world[2])
-    return total
+    return float(compute_grf(model, data).total.force_n[2])
 
 
 def standing_vertical_grf_n(
