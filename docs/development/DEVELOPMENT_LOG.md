@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#411 · \ Import Pinocchio_Models URDF Into MuJoCo and Compare Fingerprints\
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #411
+- **Branch:** feat/411-pinocchio-urdf-fingerprint
+- **PR:** #475
+- **Paths:** see #475
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`d4d35632`; collated from changes/411-import-pinocchio-models-urdf-into-mujoco.md)
+- **Summary:** \ Import Pinocchio_Models URDF into MuJoCo and compare fingerprints\
+- **Next step:** \Merge the PR.\
+
 ### DL-#427 · Exclude Barbell Self-Contacts and Bar-Lifter Contacts at the Start Pose
 
 - **State:** in_review

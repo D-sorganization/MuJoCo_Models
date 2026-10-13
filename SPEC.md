@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                           |
 | ---------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-13 | #475 | \ Import Pinocchio_Models URDF into MuJoCo and compare fingerprints\ |
 | 2026-10-13 | #472 | Promote standing GRF to a public API with CoP output |
 | 2026-10-13 | #473 | Add offscreen MP4 video rendering with MUJOCO_GL=egl |
 | 2026-10-13 | #470 | Per-hand grip wrench extraction from weld equality constraints and static hold analysis (LIFT-4) |
