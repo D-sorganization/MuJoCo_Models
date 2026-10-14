@@ -134,11 +134,15 @@ def test_bench_lifter_is_supine_with_hands_above_the_shoulders() -> None:
     "so they sink 44 mm into the bench at the spec start (MuJoCo_Models#459).",
 )
 def test_bench_has_no_human_equipment_penetration_except_the_grip() -> None:
+    # Geometric distance, not data.contact: the upper-arm/bench pair is excluded
+    # from collision (MuJoCo_Models#496), which hides the overlap from contacts.
     model, data = _keyframe("bench_press")
     bench = model.geom("bench_contact").id
-    for c in data.contact[: data.ncon]:
-        if bench in (c.geom1, c.geom2):
-            assert c.dist >= -1e-6
+    fromto = np.zeros(6)
+    for geom in range(model.ngeom):
+        if model.geom_contype[geom] == 2:  # human segment geoms
+            dist = mujoco.mj_geomDistance(model, data, geom, bench, 1.0, fromto)
+            assert dist >= -1e-6
 
 
 @pytest.mark.parametrize(

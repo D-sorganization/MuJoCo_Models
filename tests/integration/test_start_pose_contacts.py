@@ -164,3 +164,66 @@ def test_static_grf_matches_weight(exercise: str) -> None:
     assert grf == pytest.approx(weight, rel=_GRF_TOLERANCE), (
         f"{exercise}: GRF {grf:.1f} N vs weight {weight:.1f} N"
     )
+
+
+# --- Issue #496: bench-press start pose, contacts classified by pair class -----
+
+_BENCH_SUPPORT_BODIES = ("pelvis", "torso")
+# Reference lifter used by the UpstreamDrift pack audit (UpstreamDrift#11743).
+_AUDIT_LIFTER = {"body_mass": 80.0, "height": 1.78, "plate_mass_per_side": 50.0}
+
+
+def _classify_pair(model: mujoco.MjModel, geom_a: int, geom_b: int) -> str:
+    """Return ``ground``, ``bench_support`` or ``other`` for one contact pair.
+
+    ``ground`` is the floor against anything; ``bench_support`` is the bench
+    against the pelvis or torso; everything else (bar against body, bar against
+    bench, body self-contact, limb against bench) is ``other``.
+    """
+    bodies = {_geom_body_name(model, geom_a), _geom_body_name(model, geom_b)}
+    if "world" in bodies:
+        return "ground"
+    if "bench" in bodies and bodies - {"bench"} <= set(_BENCH_SUPPORT_BODIES):
+        return "bench_support"
+    return "other"
+
+
+def _bench_force_by_class(**builder_kwargs: float) -> tuple[dict, list]:
+    """Sum normal force per pair class at the bench start keyframe (one forward)."""
+    model = mujoco.MjModel.from_xml_string(build_bench_press_model(**builder_kwargs))
+    data = mujoco.MjData(model)
+    mujoco.mj_resetDataKeyframe(model, data, 0)
+    mujoco.mj_forward(model, data)
+    totals = {"ground": 0.0, "bench_support": 0.0, "other": 0.0}
+    detail = []
+    for index, (a, b, force) in enumerate(_contacts(model, data)):
+        cls = _classify_pair(model, a, b)
+        totals[cls] += abs(force)
+        detail.append(
+            (
+                cls,
+                _geom_name(model, a),
+                _geom_name(model, b),
+                force,
+                float(data.contact[index].dist),
+            )
+        )
+    return totals, detail
+
+
+@pytest.mark.parametrize("kwargs", [{}, _AUDIT_LIFTER], ids=["default", "audit"])
+def test_bench_press_other_contacts_below_one_newton(kwargs: dict) -> None:
+    """Issue #496: bar/limb/self contacts at the bench start carry under 1 N."""
+    totals, detail = _bench_force_by_class(**kwargs)
+    others = [row for row in detail if row[0] == "other"]
+    assert totals["other"] < _MAX_NON_GROUND_N, (
+        f"bench_press: {totals['other']:.1f} N of non-support contact: {others}"
+    )
+
+
+def test_bench_press_support_force_not_above_body_weight() -> None:
+    """Bench support plus floor may carry at most the supported weight."""
+    model = mujoco.MjModel.from_xml_string(build_bench_press_model(**_AUDIT_LIFTER))
+    totals, _ = _bench_force_by_class(**_AUDIT_LIFTER)
+    weight = _lifted_weight(model)
+    assert totals["bench_support"] + totals["ground"] <= weight

@@ -73,6 +73,27 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
         """Add the bench under the supine lifter and weld the pelvis to it."""
         self._add_bench(worldbody, equality)
 
+    def _add_contact_section(self, root: ET.Element) -> ET.Element:
+        """Add the shared exclusions plus the upper-arm versus bench exclusions.
+
+        Issue #496: the body model centres each limb capsule on its proximal
+        joint, so the lower half of the upper-arm capsule sits behind the
+        shoulder.  Supine, that half reaches below the bench top and
+        penetrated it by about 4.4 cm (about 1.2 kN per arm at the start
+        keyframe).  The real arm is outside the 0.24 m wide bench, so the
+        pair never carries support; torso and pelvis keep the bench contact.
+        """
+        contact = super()._add_contact_section(root)
+        for side in ("l", "r"):
+            ET.SubElement(
+                contact,
+                "exclude",
+                name=f"exclude_upper_arm_{side}_bench",
+                body1=f"upper_arm_{side}",
+                body2="bench",
+            )
+        return contact
+
     def _bench_top(self, root_z: float) -> float:
         """Bench top height: just under the supine pelvis box at ``root_z``.
 
