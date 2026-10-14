@@ -40,6 +40,9 @@ BENCH_HEIGHT = 0.43  # IPF standard bench height (meters)
 _BENCH_OFFSET_X = -0.30
 _PELVIS_CLEARANCE = 0.001  # bench top sits just below the supine pelvis box
 _BENCH_HALF_SIZE = (0.65, 0.12, 0.02)  # length (X), width (Y), thickness (Z)
+BENCH_MASS = (
+    1e-4  # near-zero mass (kg) — bench mass is borne by ground (standard parity)
+)
 
 
 class BenchPressModelBuilder(ExerciseModelBuilder):
@@ -101,6 +104,7 @@ class BenchPressModelBuilder(ExerciseModelBuilder):
             name="bench_contact",
             type="box",
             size=" ".join(f"{v:g}" for v in _BENCH_HALF_SIZE),
+            mass=f"{BENCH_MASS:g}",
             rgba="0.5 0.35 0.2 1",
             condim="3",
             friction="0.8 0.005 0.0001",

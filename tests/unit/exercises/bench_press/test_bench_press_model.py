@@ -8,6 +8,7 @@ import pytest
 
 from mujoco_models.exercises.bench_press.bench_press_model import (
     BENCH_HEIGHT,
+    BENCH_MASS,
     BenchPressModelBuilder,
     build_bench_press_model,
 )
@@ -40,6 +41,25 @@ class TestBenchPressModelBuilder:
 
     def test_bench_height_constant(self) -> None:
         assert BENCH_HEIGHT == 0.43
+
+    def test_bench_mass_constant(self) -> None:
+        assert BENCH_MASS == 1e-4
+
+    def test_bench_mass_parity(self) -> None:
+        """The bench mass is near-zero (borne by ground), matching cross-engine parity."""
+        import mujoco
+
+        xml_str = build_bench_press_model()
+        root = ET.fromstring(xml_str)
+        bench_geom = root.find(".//geom[@name='bench_contact']")
+        assert bench_geom is not None
+        assert float(bench_geom.get("mass", "0")) == pytest.approx(1e-4)
+
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        bench_body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "bench")
+        assert model.body_mass[bench_body_id] == pytest.approx(1e-4, rel=1e-5)
+        # Total lifter (80kg) + barbell (120kg) + bench (1e-4kg) = 200.0001kg
+        assert sum(model.body_mass) == pytest.approx(200.0001, rel=1e-5)
 
     def test_custom_params(self) -> None:
         xml_str = build_bench_press_model(
