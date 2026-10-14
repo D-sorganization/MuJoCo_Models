@@ -18,6 +18,32 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#428 · Set Bench Mass to 1E-4 to Match Cross-Engine Parity Standard
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #428
+- **Branch:** fix/428-bench-mass
+- **PR:** #490
+- **Paths:** see #490
+- **Started:** 2026-10-14
+- **Last verified:** 2026-10-14 (`6d0cc53c`; collated from changes/428-set-bench-mass-to-1e-4-to-match-cross-en.md)
+- **Summary:** Set bench mass to 1e-4 to match cross-engine parity standard
+- **Next step:** Merge the PR.
+
+### DL-#453 · Contact-Aware Inverse Dynamics: Inverse_Dynamics_With_Contacts Reports the Contact Generalized Force Next to the Free-Root Residual; Gait and Sit-to-Stand Feet Seated at the Contact Equilibrium Like the Lifts; Grip.Dense_Efc_Jacobian Picks the Jacobian Layout From Mj_isSparse Instead of the Unset Sparse Row Metadata (MuJoCo 3.15 Segfault and Zero Contact Load)
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #453
+- **Branch:** fix/453-id-contacts
+- **PR:** #482
+- **Paths:** see #482
+- **Started:** 2026-10-13
+- **Last verified:** 2026-10-13 (`376412d7`; collated from changes/453-contact-aware-inverse-dynamics-inverse-d.md)
+- **Summary:** Contact-aware inverse dynamics: inverse_dynamics_with_contacts reports the contact generalized force next to the free-root residual; gait and sit-to-stand feet seated at the contact equilibrium like the lifts; grip.dense_efc_jacobian picks the Jacobian layout from mj_isSparse instead of the unset sparse row metadata (MuJoCo 3.15 segfault and zero contact load)
+- **Next step:** Merge the PR.
+
 ### DL-#400 · Bring Src Files Under the 300-Line Budget and Enforce It in CI
 
 - **State:** in_review

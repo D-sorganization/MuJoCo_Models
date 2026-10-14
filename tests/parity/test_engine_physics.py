@@ -7,10 +7,11 @@ import mujoco
 import numpy as np
 import pytest
 
-from mujoco_models.dynamics import inverse_dynamics
+from mujoco_models.dynamics import inverse_dynamics, inverse_dynamics_with_contacts
 from mujoco_models.exercises.deadlift.deadlift_model import build_deadlift_model
 from mujoco_models.exercises.gait.gait_model import build_gait_model
 from mujoco_models.exercises.squat.squat_model import build_squat_model
+from mujoco_models.shared.body.foot_seating import hold_hinges_rigid
 
 BARBELL_BUILDERS = {
     "squat": build_squat_model,
@@ -19,7 +20,10 @@ BARBELL_BUILDERS = {
 
 
 def _load(xml: str) -> tuple[mujoco.MjModel, mujoco.MjData]:
-    model = mujoco.MjModel.from_xml_string(xml)
+    return _load_model(mujoco.MjModel.from_xml_string(xml))
+
+
+def _load_model(model: mujoco.MjModel) -> tuple[mujoco.MjModel, mujoco.MjData]:
     data = mujoco.MjData(model)
     mujoco.mj_resetDataKeyframe(model, data, 0)
     mujoco.mj_forward(model, data)
@@ -82,14 +86,40 @@ def test_no_self_contacts_between_body_segments() -> None:
     assert np.abs(data.efc_force).max() < 1e4
 
 
+def _static_hold_torque(xml: str) -> np.ndarray:
+    """Hinge torque that carries the keyframe with every hinge held rigid.
+
+    Solved with the servos at the bare pose (zero servo torque), as
+    ``static_hold_ctrl`` does before it adds the offset.  The keyframe ctrl
+    already carries that offset, and its servo torque would shift the contact
+    solve and so the torque being measured.
+    """
+    model = mujoco.MjModel.from_xml_string(xml)
+    hold_hinges_rigid(model)
+    _, data = _load_model(model)
+    hinge_qposadr = model.jnt_qposadr[model.actuator_trnid[:, 0]]
+    data.ctrl[:] = model.key_qpos[0][hinge_qposadr]
+    mujoco.mj_forward(model, data)
+    return np.asarray(data.qfrc_bias - data.qfrc_constraint - data.qfrc_passive)
+
+
 def test_keyframe_ctrl_matches_pose() -> None:
-    model, _ = _load(build_gait_model())
+    """Servo set points are the pose plus the static-hold feed-forward.
+
+    Gait is seated like the lifts (issue #453), so its keyframe ctrl carries
+    the ``tau / kp`` offset that holds the pose against its own weight.
+    """
+    xml = build_gait_model()
+    model, _ = _load(xml)
     assert model.nkey == 1
     ctrl = model.key_ctrl[0]
     assert ctrl.shape == (model.nu,)
+    hold = _static_hold_torque(xml)
     for a in range(model.nu):
         jid = model.actuator_trnid[a, 0]
-        assert ctrl[a] == pytest.approx(model.key_qpos[0][model.jnt_qposadr[jid]])
+        offset = hold[model.jnt_dofadr[jid]] / model.actuator_gainprm[a, 0]
+        pose = model.key_qpos[0][model.jnt_qposadr[jid]]
+        assert ctrl[a] == pytest.approx(pose + offset)
     assert np.isfinite(model.actuator_gainprm[:, 0]).all()
     assert (model.actuator_forcelimited == 1).all()
 
@@ -98,7 +128,10 @@ def test_inverse_dynamics_static_standing_pose_balances_gravity() -> None:
     """At a static standing pose, inverse dynamics must balance gravity (issue #405).
 
     The returned generalized force must balance gravity: qfrc_inverse matches
-    mj_inverse output to 1e-9, and root vertical force is about m*g.
+    mj_inverse output to 1e-9, and the root vertical force plus the foot
+    contact force is about m*g.  The soles are seated at the contact
+    equilibrium (issue #453), so the contacts carry most of the weight and the
+    root entry is only the residual they do not explain.
     """
     model, data = _load(build_gait_model())
     q = data.qpos.copy()
@@ -115,12 +148,15 @@ def test_inverse_dynamics_static_standing_pose_balances_gravity() -> None:
     mujoco.mj_inverse(model, d_direct)
     np.testing.assert_allclose(torques, d_direct.qfrc_inverse, atol=1e-9)
 
-    # 2. Root vertical force balances gravity (about m * g)
+    # 2. Root residual plus contact force balances gravity (about m * g)
     total_mass = float(np.sum(model.body_mass))
     g = float(abs(model.opt.gravity[2]))
     expected_root_vertical_f = total_mass * g
+    report = inverse_dynamics_with_contacts("gait", q, qvel, qacc)
+    assert report.contact_count > 0
     # Root pelvis freejoint vertical translation is DOF index 2 (Z-up)
-    assert torques[2] == pytest.approx(expected_root_vertical_f, rel=1e-3)
+    supported = report.root_residual[2] + report.root_contact[2]
+    assert supported == pytest.approx(expected_root_vertical_f, rel=1e-3)
 
 
 def test_inverse_dynamics_dynamic_motion_matches_mj_inverse() -> None:

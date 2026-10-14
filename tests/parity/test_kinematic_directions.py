@@ -146,9 +146,9 @@ def test_bench_has_no_human_equipment_penetration_except_the_grip() -> None:
     ["squat", "deadlift", "snatch", "clean_and_jerk", "gait", "sit_to_stand"],
 )
 def test_standing_feet_rest_on_the_ground(exercise: str) -> None:
-    """Soles sit on the floor, or at the derived equilibrium depth (issue #447)."""
+    """Soles sit on the floor, or at the derived equilibrium depth (#447, #453)."""
     model, data = _keyframe(exercise)
-    seated = exercise in {"squat", "deadlift", "snatch", "clean_and_jerk"}
+    seated = EXERCISE_REGISTRY[exercise]().seat_feet_at_equilibrium
     depth = (
         equilibrium_foot_penetration(EXERCISE_REGISTRY[exercise]().build())
         if seated
