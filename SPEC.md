@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-14 | #497 | Exclude upper-arm versus bench contact at the bench-press start pose |
 | 2026-10-14 | #494 | Run requires_mujoco tests in the CI tests job (drop the marker exclusion) |
 | 2026-10-14 | #487 | Foot-seating equilibrium solve disables the constraint warm start so MuJoCo 3.15 cannot terminate it at zero iterations |
 | 2026-10-14 | #490 | Set bench mass to 1e-4 to match cross-engine parity standard |
