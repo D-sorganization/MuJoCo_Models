@@ -210,5 +210,8 @@ class TestBenchPressContact:
         assert contact is not None
         excludes = contact.findall("exclude")
         barbell = [e for e in excludes if "barbell" in e.get("name", "")]
-        assert len(excludes) - len(barbell) == 15
+        arm_bench = [e for e in excludes if e.get("name", "").endswith("_bench")]
+        # 15 shared adjacent-segment pairs plus the two upper-arm/bench pairs (#496).
+        assert len(excludes) - len(barbell) - len(arm_bench) == 15
+        assert len(arm_bench) == 2
         assert len(barbell) == 3 + 3 * 15
