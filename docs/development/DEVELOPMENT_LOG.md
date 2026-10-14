@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#486 · Foot-Seating Equilibrium Solve Disables the Constraint Warm Start so MuJoCo 3.15 Cannot Terminate It at Zero Iterations
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #486
+- **Branch:** fix/486-foot-seating
+- **PR:** #487
+- **Paths:** see #487
+- **Started:** 2026-10-14
+- **Last verified:** 2026-10-14 (`c438da20`; collated from changes/486-foot-seating-equilibrium-solve-disables.md)
+- **Summary:** Foot-seating equilibrium solve disables the constraint warm start so MuJoCo 3.15 cannot terminate it at zero iterations
+- **Next step:** Merge the PR; consider running requires_mujoco integration tests in CI (separate workflow PR).
+
 ### DL-#428 · Set Bench Mass to 1E-4 to Match Cross-Engine Parity Standard
 
 - **State:** in_review
