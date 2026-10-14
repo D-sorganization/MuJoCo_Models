@@ -244,7 +244,7 @@ jobs:
           PY
           # requires_mujoco tests run here too: mujoco is a hard dependency of
           # .[dev], and excluding them hid the MuJoCo 3.15 foot-seating
-          # regression (#486). rendering tests self-skip without GL (#493).
+          # regression (#486). rendering tests require display context and are excluded (#493).
           python -u -m pytest \
             -p pytest_cov \
             -p pytest_timeout \
@@ -252,7 +252,7 @@ jobs:
             -p no:xvfb \
             --timeout=60 \
             --timeout-method=signal \
-            -m "not slow and not benchmark" \
+            -m "not slow and not benchmark and not rendering" \
             --cov=src \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
