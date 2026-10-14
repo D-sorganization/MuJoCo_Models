@@ -97,10 +97,12 @@ def test_build_limb_body_writes_capsule_body() -> None:
     assert child.get("pos") == "0.100000 0.200000 0.300000"
     inertial = child.find("inertial")
     assert inertial is not None
+    assert inertial.get("pos") == "0.000000 0.000000 -0.250000"
     assert inertial.get("mass") == "3.500000"
     assert inertial.get("diaginertia") == "1.000000 2.000000 3.000000"
     geom = child.find("geom")
     assert geom is not None
+    assert geom.get("pos") == "0.000000 0.000000 -0.250000"
     assert geom.get("type") == "capsule"
     assert geom.get("size") == "0.040000 0.250000"
 

@@ -1,11 +1,9 @@
 # SPDX-License-Identifier: MIT
+# Copyright (c) 2026 D-sorganization
 """Helper functions for body model assembly.
 
 Extracted from body_model.py to keep modules under the 300-line budget.
 """
-
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 D-sorganization
 
 from __future__ import annotations
 
@@ -112,12 +110,10 @@ def _iter_foot_bodies(
     # Unrolled loop and direct tuple construction avoids generator expression overhead,
     # yielding a ~3x speedup.
     t: tuple[tuple[str, ET.Element], ...] = ()
-    foot_l_val = bodies.get("foot_l")
-    if foot_l_val is not None:
-        t += (("l", foot_l_val),)
-    foot_r_val = bodies.get("foot_r")
-    if foot_r_val is not None:
-        t += (("r", foot_r_val),)
+    if (fl := bodies.get("foot_l")) is not None:
+        t += (("l", fl),)
+    if (fr := bodies.get("foot_r")) is not None:
+        t += (("r", fr),)
     return t
 
 
@@ -179,6 +175,7 @@ def _build_limb_body(
     geom_euler: tuple[float, ...] | None = None,
 ) -> ET.Element:
     """Create the capsule body for one side of a bilateral limb."""
+    mid_z = -length / 2.0
     return add_body(
         parent_el,
         name=body_name,
@@ -189,6 +186,8 @@ def _build_limb_body(
         geom_size=(radius, length / 2.0),
         geom_rgba="0.8 0.6 0.4 1",
         geom_euler=geom_euler,
+        inertial_pos=(0.0, 0.0, mid_z),
+        geom_pos=(0.0, 0.0, mid_z),
     )
 
 

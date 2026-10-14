@@ -80,6 +80,7 @@ def _build_torso(
     """
     t_mass, t_len, t_rad = _seg(spec, "torso")
     t_inertia = rectangular_prism_inertia(t_mass, t_rad * 2, t_len, t_rad * 2)
+    mid_z = t_len / 2.0
     torso_body = add_body(
         pelvis_body,
         name="torso",
@@ -89,6 +90,8 @@ def _build_torso(
         geom_type="box",
         geom_size=(t_rad * 0.8, t_rad, t_len / 2.0),
         geom_rgba="0.8 0.6 0.4 1",
+        inertial_pos=(0.0, 0.0, mid_z),
+        geom_pos=(0.0, 0.0, mid_z),
     )
     add_hinge_joint(
         torso_body,
@@ -120,8 +123,9 @@ def _build_head(
     t_len: float,
 ) -> ET.Element:
     """Add head (with neck hinge) as child of torso."""
-    h_mass, _h_len, h_rad = _seg(spec, "head")
+    h_mass, h_len, h_rad = _seg(spec, "head")
     h_inertia = sphere_inertia(h_mass, h_rad)
+    mid_z = h_len / 2.0
     head_body = add_body(
         torso_body,
         name="head",
@@ -131,6 +135,8 @@ def _build_head(
         geom_type="sphere",
         geom_size=(h_rad,),
         geom_rgba="0.9 0.75 0.6 1",
+        inertial_pos=(0.0, 0.0, mid_z),
+        geom_pos=(0.0, 0.0, mid_z),
     )
     add_hinge_joint(
         head_body,

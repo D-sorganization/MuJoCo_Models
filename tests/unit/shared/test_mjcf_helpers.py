@@ -141,6 +141,23 @@ class TestAddBody:
         )
         assert "1.500000" in body.get("pos")  # type: ignore
 
+    def test_inertial_pos_and_geom_pos(self, worldbody: ET.Element) -> None:
+        body = add_body(
+            worldbody,
+            name="segment",
+            pos=(0, 0, 0),
+            mass=2.0,
+            inertia_diag=(0.1, 0.1, 0.1),
+            inertial_pos=(0.0, 0.0, -0.15),
+            geom_pos=(0.0, 0.0, -0.15),
+        )
+        inertial = body.find("inertial")
+        assert inertial is not None
+        assert inertial.get("pos") == "0.000000 0.000000 -0.150000"
+        geom = body.find("geom")
+        assert geom is not None
+        assert geom.get("pos") == "0.000000 0.000000 -0.150000"
+
 
 class TestAddHingeJoint:
     def test_creates_hinge(self) -> None:

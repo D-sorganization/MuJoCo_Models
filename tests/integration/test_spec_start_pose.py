@@ -181,20 +181,7 @@ def test_barbell_mass_is_the_spec_load(lift) -> None:
     assert got == pytest.approx(want, rel=_TOL["mass_rel"]), exercise
 
 
-_SEGMENT_COM_AT_JOINT = pytest.mark.xfail(
-    strict=True,
-    reason="Segment centres of mass sit on the proximal joint, not mid-segment: "
-    "the pull starts' CoM is 52-55 mm behind mid-foot (MuJoCo_Models#459).",
-)
-
-
-@pytest.mark.parametrize(
-    "exercise",
-    [
-        pytest.param(name, marks=_SEGMENT_COM_AT_JOINT) if name in PULLS else name
-        for name in STANDING
-    ],
-)
+@pytest.mark.parametrize("exercise", STANDING)
 def test_combined_com_is_over_mid_foot(exercise: str) -> None:
     """Body + bar centre of mass sits horizontally over mid-foot (x = y = 0)."""
     model, data = _keyframe(exercise)

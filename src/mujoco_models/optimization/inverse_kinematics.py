@@ -112,6 +112,7 @@ def solve_task_target_ik(
     else:
         d.qpos[:] = m.qpos0.copy()
 
+    mujoco.mj_fwdPosition(m, d)
     _sync_welds(m, d)
     mujoco.mj_fwdPosition(m, d)
     converged = False
