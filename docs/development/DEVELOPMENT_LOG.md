@@ -197,6 +197,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#493 · Run Requires_Mujoco Tests in the CI Tests Job (Drop the Marker Exclusion)
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #493
+- **Branch:** merged via #494
+- **PR:** #494
+- **Paths:** see #494
+- **Started:** 2026-10-14
+- **Last verified:** 2026-10-14 (`a89f115c`; collated from changes/493-run-requires-mujoco-tests-in-the-ci-test.md)
+- **Summary:** Run requires_mujoco tests in the CI tests job (drop the marker exclusion)
+- **Next step:** Shipped in PR #494.
+
 ### DL-#404 · Add Forward Dynamics Controller and Rollout API Tracking Joint Trajectories
 
 - **State:** shipped

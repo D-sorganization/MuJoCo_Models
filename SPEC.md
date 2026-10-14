@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-14 | #494 | Run requires_mujoco tests in the CI tests job (drop the marker exclusion) |
 | 2026-10-14 | #487 | Foot-seating equilibrium solve disables the constraint warm start so MuJoCo 3.15 cannot terminate it at zero iterations |
 | 2026-10-14 | #490 | Set bench mass to 1e-4 to match cross-engine parity standard |
 | 2026-10-13 | #482 | Contact-aware inverse dynamics: inverse_dynamics_with_contacts reports the contact generalized force next to the free-root residual; gait and sit-to-stand feet seated at the contact equilibrium like the lifts; grip.dense_efc_jacobian picks the Jacobian layout from mj_isSparse instead of the unset sparse row metadata (MuJoCo 3.15 segfault and zero contact load) |
