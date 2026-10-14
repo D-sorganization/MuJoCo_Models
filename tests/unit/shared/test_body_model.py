@@ -174,3 +174,56 @@ class TestPelvisHeightDerivation:
     @pytest.fixture()
     def worldbody(self) -> ET.Element:
         return ET.Element("worldbody")
+
+
+class TestSegmentCenterOfMass:
+    """Issue #459: Segment centres of mass and capsules sit at mid-segment."""
+
+    @pytest.fixture()
+    def worldbody(self) -> ET.Element:
+        return ET.Element("worldbody")
+
+    def test_torso_and_head_at_mid_segment(self, worldbody: ET.Element) -> None:
+        spec = BodyModelSpec()
+        bodies = create_full_body(worldbody, spec)
+
+        torso = bodies["torso"]
+        t_len = spec.height * 0.288
+        t_ipos = [float(v) for v in torso.find("inertial").get("pos", "").split()]  # type: ignore[union-attr]
+        t_gpos = [float(v) for v in torso.find("geom").get("pos", "").split()]  # type: ignore[union-attr]
+        assert t_ipos == pytest.approx([0.0, 0.0, t_len / 2.0])
+        assert t_gpos == pytest.approx([0.0, 0.0, t_len / 2.0])
+
+        head = bodies["head"]
+        h_len = spec.height * 0.130
+        h_ipos = [float(v) for v in head.find("inertial").get("pos", "").split()]  # type: ignore[union-attr]
+        h_gpos = [float(v) for v in head.find("geom").get("pos", "").split()]  # type: ignore[union-attr]
+        assert h_ipos == pytest.approx([0.0, 0.0, h_len / 2.0])
+        assert h_gpos == pytest.approx([0.0, 0.0, h_len / 2.0])
+
+    def test_pelvis_centered_at_origin(self, worldbody: ET.Element) -> None:
+        spec = BodyModelSpec()
+        bodies = create_full_body(worldbody, spec)
+        pelvis = bodies["pelvis"]
+        p_ipos = [float(v) for v in pelvis.find("inertial").get("pos", "").split()]  # type: ignore[union-attr]
+        assert p_ipos == pytest.approx([0.0, 0.0, 0.0])
+
+    @pytest.mark.parametrize(
+        "seg",
+        ["upper_arm", "forearm", "hand", "thigh", "shank", "foot"],
+    )
+    def test_limb_segments_at_mid_segment(
+        self, worldbody: ET.Element, seg: str
+    ) -> None:
+        from mujoco_models.shared.body.segment_data import SEGMENT_TABLE
+
+        spec = BodyModelSpec()
+        bodies = create_full_body(worldbody, spec)
+        expected_z = -spec.height * SEGMENT_TABLE[seg]["length_frac"] / 2.0
+
+        for side in ("l", "r"):
+            body = bodies[f"{seg}_{side}"]
+            ipos = [float(v) for v in body.find("inertial").get("pos", "").split()]  # type: ignore[union-attr]
+            gpos = [float(v) for v in body.find("geom").get("pos", "").split()]  # type: ignore[union-attr]
+            assert ipos == pytest.approx([0.0, 0.0, expected_z]), f"{seg}_{side} ipos"
+            assert gpos == pytest.approx([0.0, 0.0, expected_z]), f"{seg}_{side} gpos"

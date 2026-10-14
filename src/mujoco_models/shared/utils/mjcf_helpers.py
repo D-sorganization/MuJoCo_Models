@@ -40,6 +40,7 @@ def _build_geom_attrs(
     geom_rgba: str,
     geom_size: tuple[float, ...] | None,
     geom_euler: tuple[float, ...] | None,
+    geom_pos: tuple[float, float, float] | None = None,
 ) -> dict[str, str]:
     """Build the attribute dict for an MJCF ``<geom>`` element."""
     attrs: dict[str, str] = {
@@ -47,6 +48,9 @@ def _build_geom_attrs(
         "type": geom_type,
         "rgba": geom_rgba,
     }
+
+    if geom_pos is not None:
+        attrs["pos"] = vec3_str(*geom_pos)
 
     # ⚡ Bolt Optimization:
     # Hardcode string formatting for common tuple lengths (1, 2, 3)
@@ -86,6 +90,8 @@ def add_body(
     geom_size: tuple[float, ...] | None = None,
     geom_rgba: str = "0.8 0.6 0.4 1",
     geom_euler: tuple[float, ...] | None = None,
+    inertial_pos: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    geom_pos: tuple[float, float, float] | None = None,
 ) -> ET.Element:
     """Create an MJCF ``<body>`` with ``<inertial>`` and ``<geom>`` children.
 
@@ -94,20 +100,23 @@ def add_body(
     *inertia_diag* is (Ixx, Iyy, Izz) in kg·m².
     *geom_type* is a MuJoCo type string (cylinder, box, capsule, sphere).
     *geom_size* and *geom_euler* are forwarded verbatim to the ``<geom>``.
+    *inertial_pos* and *geom_pos* configure the center-of-mass and geom offsets.
     Returns the created ``<body>`` element.
     """
     body = ET.SubElement(parent, "body", name=name, pos=vec3_str(*pos))
     ET.SubElement(
         body,
         "inertial",
-        pos="0 0 0",
+        pos=vec3_str(*inertial_pos),
         mass="%.6f" % mass,  # noqa: UP031
         diaginertia=diag_inertia_str(*inertia_diag),
     )
     ET.SubElement(
         body,
         "geom",
-        attrib=_build_geom_attrs(name, geom_type, geom_rgba, geom_size, geom_euler),
+        attrib=_build_geom_attrs(
+            name, geom_type, geom_rgba, geom_size, geom_euler, geom_pos
+        ),
     )
     return body
 

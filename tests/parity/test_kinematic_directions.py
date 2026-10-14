@@ -128,11 +128,6 @@ def test_bench_lifter_is_supine_with_hands_above_the_shoulders() -> None:
         assert hand[2] > shoulder[2] + 0.5  # arms point at the ceiling
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Upper-arm capsules are centred on the shoulder joint, not mid-segment, "
-    "so they sink 44 mm into the bench at the spec start (MuJoCo_Models#459).",
-)
 def test_bench_has_no_human_equipment_penetration_except_the_grip() -> None:
     # Geometric distance, not data.contact: the upper-arm/bench pair is excluded
     # from collision (MuJoCo_Models#496), which hides the overlap from contacts.
