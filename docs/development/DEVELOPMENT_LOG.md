@@ -210,6 +210,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#459 · Place Human Segment Inertial Frames and Capsules at Mid-Segment
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #459
+- **Branch:** fix/issue-459-segment-com-mid-segment
+- **PR:** #499
+- **Paths:** see #499
+- **Started:** 2026-10-14
+- **Last verified:** 2026-10-14 (`9dc692d3`; collated from changes/459-place-human-segment-inertial-frames-and.md)
+- **Summary:** Place human segment inertial frames and capsules at mid-segment
+- **Next step:** Shipped in PR #499.
+
 ### DL-#493 · Run Requires_Mujoco Tests in the CI Tests Job (Drop the Marker Exclusion)
 
 - **State:** shipped
