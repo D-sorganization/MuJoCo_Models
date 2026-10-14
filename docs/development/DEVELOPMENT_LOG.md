@@ -18,6 +18,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Active
 
+### DL-#496 · Exclude Upper-Arm Versus Bench Contact at the Bench-Press Start Pose
+
+- **State:** in_review
+- **Owner:** unassigned
+- **Issue:** #496
+- **Branch:** fix/496-bench-start-contacts
+- **PR:** #497
+- **Paths:** see #497
+- **Started:** 2026-10-14
+- **Last verified:** 2026-10-14 (`8d8dffe8`; collated from changes/496-exclude-upper-arm-versus-bench-contact-a.md)
+- **Summary:** Exclude upper-arm versus bench contact at the bench-press start pose
+- **Next step:** Merge the PR.
+
 ### DL-#486 · Foot-Seating Equilibrium Solve Disables the Constraint Warm Start so MuJoCo 3.15 Cannot Terminate It at Zero Iterations
 
 - **State:** in_review
