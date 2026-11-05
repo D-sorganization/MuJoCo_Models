@@ -244,6 +244,7 @@ edited here and `tests/parity/` verifies their hashes against `MANIFEST.json`.
 
 | Date       | PR    | Changes                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-05 | #511 | Delete the legacy .agent/ skill and workflow copies; agy and Codex read .agents/ (Repository_Management#2567) |
 | 2026-10-14 | #499 | Place human segment inertial frames and capsules at mid-segment |
 | 2026-10-14 | #497 | Exclude upper-arm versus bench contact at the bench-press start pose |
 | 2026-10-14 | #494 | Run requires_mujoco tests in the CI tests job (drop the marker exclusion) |
