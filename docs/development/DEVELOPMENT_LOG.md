@@ -210,6 +210,19 @@ reachable from any live state and `abandoned` from `parked`.
 
 ## Shipped (Last 90 Days)
 
+### DL-#2567 · Delete the Legacy .agent/ Skill and Workflow Copies; Agy and Codex Read .agents/ (Repository_Management#2567)
+
+- **State:** shipped
+- **Owner:** unassigned
+- **Issue:** #2567
+- **Branch:** merged via #511
+- **PR:** #511
+- **Paths:** see #511
+- **Started:** 2026-11-05
+- **Last verified:** 2026-11-05 (`aa069c67`; collated from changes/2567-delete-the-legacy-agent-skill-and-workfl.md)
+- **Summary:** Delete the legacy .agent/ skill and workflow copies; agy and Codex read .agents/ (Repository_Management#2567)
+- **Next step:** Shipped in PR #511.
+
 ### DL-#459 · Place Human Segment Inertial Frames and Capsules at Mid-Segment
 
 - **State:** shipped
